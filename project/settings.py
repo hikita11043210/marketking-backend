@@ -137,7 +137,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
    "http://localhost:3000",
-   "https://1e32-60-149-69-123.ngrok-free.app",
+   "https://c04a-60-149-69-123.ngrok-free.app",
 ]
 
 AUTH_USER_MODEL = 'api.User'
@@ -219,7 +219,9 @@ EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', 'https://api.ebay.com/oauth/a
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
 EBAY_RUNAME = os.getenv('EBAY_RUNAME')
 EBAY_REDIRECT_URI = os.getenv('EBAY_REDIRECT_URI')
-EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX', 'True').lower() == 'true'
-EBAY_SANDBOX_URL = os.getenv('EBAY_SANDBOX_URL', 'https://api.sandbox.ebay.com')
-EBAY_PRODUCTION_URL = os.getenv('EBAY_PRODUCTION_URL', 'https://api.ebay.com')
+EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX').lower() == 'true'
+EBAY_SANDBOX_URL = os.getenv('EBAY_SANDBOX_URL')
+EBAY_SANDBOX_AUTH_URL = os.getenv('EBAY_SANDBOX_AUTH_URL')
+EBAY_PRODUCTION_URL = os.getenv('EBAY_PRODUCTION_URL')
+EBAY_PRODUCTION_AUTH_URL = os.getenv('EBAY_PRODUCTION_AUTH_URL')
 EBAY_API_SITE_ID = os.getenv('EBAY_API_SITE_ID', '0')

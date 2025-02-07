@@ -73,10 +73,8 @@ class EbayAuthService:
                 encoded_params.append(f'{k}={encoded_value}')
             
             # Sandboxの場合はURLを変更
-            auth_url = 'https://auth.sandbox.ebay.com/oauth2/authorize' if self.is_sandbox else 'https://auth.ebay.com/oauth2/authorize'
+            auth_url = settings.EBAY_SANDBOX_AUTH_URL if self.is_sandbox else settings.EBAY_PRODUCTION_AUTH_URL
             final_url = f"{auth_url}?{'&'.join(encoded_params)}"
-            
-            logger.info(f"Generated OAuth URL: {final_url}")  # URLをログに出力
             return final_url
             
         except Exception as e:

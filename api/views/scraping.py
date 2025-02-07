@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..services.scraping.yahoo_auction import YahooAuctionService
 import logging
+from django.http import JsonResponse
 
 logger = logging.getLogger(__name__)
 
@@ -62,3 +63,22 @@ class YahooAuctionCategorySearchView(APIView):
                 'success': False,
                 'message': 'カテゴリ検索に失敗しました'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+class YahooAuctionDetailView(APIView):
+    """
+    ヤフオクの商品詳細API
+    """
+    def get(self, request):
+        try:
+            service = YahooAuctionService()
+            result = service.get_item_detail(request.query_params)
+
+            return Response({
+                'success': True,
+                'message': '商品詳細が取得されました',
+                'data': result
+            })
+        except ValueError as e:
+            return Response({
+                'success': False,
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
