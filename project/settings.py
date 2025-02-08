@@ -217,7 +217,6 @@ LOGGING = {
 # eBay OAuth Scopes
 EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', 'https://api.ebay.com/oauth/api_scope https://api.ebay.com/oauth/api_scope/sell.marketing.readonly https://api.ebay.com/oauth/api_scope/sell.marketing https://api.ebay.com/oauth/api_scope/sell.inventory.readonly https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account.readonly https://api.ebay.com/oauth/api_scope/sell.account https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly https://api.ebay.com/oauth/api_scope/sell.fulfillment').split()
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
-EBAY_RUNAME = os.getenv('EBAY_RUNAME')
 EBAY_REDIRECT_URI = os.getenv('EBAY_REDIRECT_URI')
 EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX').lower() == 'true'
 EBAY_SANDBOX_URL = os.getenv('EBAY_SANDBOX_URL')

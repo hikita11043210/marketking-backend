@@ -2,10 +2,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..services.scraping.yahoo_auction import YahooAuctionService
+from ..services.currency import CurrencyService
 import logging
-from django.http import JsonResponse
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)    
 
 class YahooAuctionItemSearchView(APIView):
     """
@@ -70,13 +70,23 @@ class YahooAuctionDetailView(APIView):
     def get(self, request):
         try:
             service = YahooAuctionService()
+            # Yahooオークションの詳細情報取得
             result = service.get_item_detail(request.query_params)
+
+            # # 為替レートの取得
+            # currency_service = CurrencyService()
+            # result['data']['current_price_in_tax'] = currency_service.convert_currency(result['data']['current_price'], 'JPY', 'USD')
+            # result['data']['buy_now_price_in_tax'] = currency_service.convert_currency(result['data']['buy_now_price'], 'JPY', 'USD')
+
+            # # 利率をかけた価格を作成
+            # result['data']['current_price_in_tax'] = currency_service.convert_currency(result['data']['current_price'], 'JPY', 'USD')
 
             return Response({
                 'success': True,
                 'message': '商品詳細が取得されました',
                 'data': result
             })
+
         except ValueError as e:
             return Response({
                 'success': False,

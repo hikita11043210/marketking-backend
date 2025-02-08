@@ -97,26 +97,11 @@ class YahooAuctionService:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            with open(f"debug_{datetime.now().strftime('%Y%m%d%H%M%S')}.html", "w", encoding="utf-8") as f:
-                f.write(soup.prettify())
-                # raise ValueError("商品ページの構造が変更されています")
-            print("★★開始★★")
-            # メタデータからの情報取得
-
-            # 商品基本情報（複数パターン対応）
-            detail = {
-                'title': '',
-                'current_price': '',
-                'current_price_in_tax': '',
-                'buy_now_price': '',
-                'buy_now_price_in_tax': '',
-                'start_time': '',
-                'end_time': '',
-                'auction_id': '',
-            }
+            # 商品基本情報
+            data = {}
 
             # タイトル
-            detail['title'] = soup.find('meta', property='og:title')['content'].split(' - ')[0]
+            data['title'] = soup.find('meta', property='og:title')['content'].split(' - ')[0]
 
             # 商品価格
             price_rows = soup.find_all('div', class_='Price__row')
@@ -129,69 +114,44 @@ class YahooAuctionService:
                 # 現在価格
                 if title_text == '現在':
                     if value:
-                        detail['current_price'] = value.text.split('円')[0].strip()
+                        data['current_price'] = value.text.split('円')[0].strip()
                         tax_span = value.find('span', class_='Price__tax')
                         tax = tax_span.text.replace('（税込', '').replace('（税', '').replace('円）', '').strip() if tax_span else '0'
-                        detail['current_price_in_tax'] = tax
+                        data['current_price_in_tax'] = tax
                 # 即決価格
                 elif title_text == '即決':
                     if value:
-                        detail['buy_now_price'] = value.text.split('円')[0].strip()
+                        data['buy_now_price'] = value.text.split('円')[0].strip()
                         tax_span = value.find('span', class_='Price__tax')
                         tax = tax_span.text.replace('（税込', '').replace('（税', '').replace('円）', '').strip() if tax_span else '0'
-                        detail['buy_now_price_in_tax'] = tax
+                        data['buy_now_price_in_tax'] = tax
 
-            # price_rows = soup.find_all('tr', class_='Section__tableRow')
-            # for row in price_rows:
-            #     title = row.find('th', class_='Section__tableHead')
-            #     if not title:
-            #         continue
-            #     title_text = title.get_text(strip=True)
+            # 商品詳細テーブルの解析
+            price_rows = soup.find_all('tr', class_='Section__tableRow')
+            for row in price_rows:
+                tableHead = row.find('th', class_='Section__tableHead')
+                tableData = row.find('td', class_='Section__tableData')
+                if not tableHead or not tableData:
+                    continue
 
-            #     if(title_text == '出品者'):
-            #         detail[]
-            #     value = row.find('td', class_='Section__tableData')
-            #     if not value:
-            #         continue
+                title_text = tableHead.get_text(strip=True)
 
-
-
-            print(detail)
-
-            #     'current_price': meta_data['price'],
-            #     'currency': meta_data['currency'],
-            #     'auction_status': {
-            #         'end_time': soup.select_one('time[datetime]')['datetime'],
-            #         'bid_count': int(re.search(r'\d+', main_container.select_one('span.BidCount').text).group())
-            #     },
-            #     'item_details': {
-            #         'category': [li.text.strip() for li in soup.select('ol.Breadcrumb li')][1:],
-            #         'brand': re.search(r'ブランド: (.+?)<', str(soup)).group(1)
-            #     },
-            #     'shipping_info': {
-            #         'cost': (soup.select_one('dt:contains("送料") + dd').text 
-            #                 if soup.select_one('dt:contains("送料")') else '不明'),
-            #         'method': [m.text.strip() for m in soup.select('div.ShippingMethod li')]
-            #     },
-            #     'description': meta_data['description']
-            # }
-
-            # # 価格情報のフォールバック
-            # if not detail['current_price']:
-            #     price_element = soup.select_one('span.Price, div.CurrentPrice')
-            #     if price_element:
-            #         detail['current_price'] = re.sub(r'\D', '', price_element.text)
-
-            # # 商品詳細テーブル（汎用的な取得方法）
-            # for dl in soup.select('dl.ItemInfo'):
-            #     key = dl.select_one('dt').text.strip().replace('：', '')
-            #     value = dl.select_one('dd').text.strip()
-            #     detail['item_details'][key] = value
+                if title_text == 'オークションID':
+                    data['auction_id'] = tableData.get_text(strip=True)
+                elif title_text == 'カテゴリ':
+                    categories = tableData.find_all('a')
+                    data['categories'] = [cat.get_text(strip=True) for cat in categories]
+                elif title_text == '状態':
+                    condition = tableData.find('a')
+                    data['condition'] = condition.get_text(strip=True)
+                elif title_text == '開始日時':
+                    data['start_time'] = tableData.get_text(strip=True)
+                elif title_text == '終了日時':
+                    data['end_time'] = tableData.get_text(strip=True)
 
             # 画像取得部分の修正
             image_elements = soup.select('li.ProductImage__image img, div.Thumbnail__item img')
             all_images = set()
-
             for img in image_elements:
                 # 通常のsrc属性と遅延読み込み用のdata-srcをチェック
                 image_url = img.get('data-src') or img.get('src')
@@ -203,32 +163,45 @@ class YahooAuctionService:
                 all_images, 
                 key=lambda x: int(re.search(r'(\d+)\.jpg', x).group(1)) if re.search(r'(\d+)\.jpg', x) else 0
             )
-            detail['images'] = {
-                'all': sorted_images
+            data['images'] = {
+                'url': sorted_images
             }
 
-            # # JSON-LDデータからの情報抽出
-            # script_data = soup.find('script', type='application/ld+json')
-            # if script_data:
-            #     try:
-            #         product_data = json.loads(script_data.string)
-            #         detail.update({
-            #             'condition': product_data[0].get('offers', {}).get('itemCondition'),
-            #             'availability': product_data[0].get('offers', {}).get('availability')
-            #         })
-            #     except JSONDecodeError:
-            #         pass
+            # 必須キーの定義
+            required_keys = [
+                'title',
+                'current_price',
+                'current_price_in_tax',
+                'buy_now_price',
+                'buy_now_price_in_tax',
+                'start_time',
+                'end_time',
+                'auction_id',
+                'categories',
+                'condition',
+                'images'
+            ]
+
+            # 存在しないキーを確認
+            missing_keys = []
+            for key in required_keys:
+                if key not in data or data[key] == '':
+                    missing_keys.append(key)
+
+            # 必須キーが不足している場合、デバッグ用HTMLを生成
+            # if missing_keys:
+            #     with open(f"debug_{datetime.now().strftime('%Y%m%d%H%M%S')}.html", "w", encoding="utf-8") as f:
+            #         f.write(soup.prettify())
 
             return {
-                'success': True,
-                'data': detail
+                'data': data,
+                'missing_keys': missing_keys
             }
 
         except requests.RequestException as e:
             logger.error(f"リクエストエラー: {str(e)}")
-            print("error")
-            print(e)
             return {'success': False, 'error': e}
+
         except Exception as e:
             logger.error(f"スクレイピングエラー: {str(e)}")
             return {'success': False, 'error': 'データ解析に失敗しました'}
