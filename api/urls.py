@@ -2,9 +2,10 @@ from django.urls import path, include
 from rest_framework.authtoken import views as token_views
 from .views.user import UserListCreateAPIView, UserDetailAPIView
 from .views.setting import SettingAPIView
-from .views.scraping import YahooAuctionItemSearchView, YahooAuctionCategorySearchView, YahooAuctionDetailView
+from .views.yahoo_auction import ItemSearchView, ItemDetailView
 from .views.shipping_calculator import ShippingCalculatorView
 from .views.price_calculator import PriceCalculatorView
+from .views.translator import TranslatorView
 from .views.ebay import (
     EbayAuthView,
     EbayRegisterView,
@@ -18,11 +19,11 @@ urlpatterns = [
     path('users/', UserListCreateAPIView.as_view(), name='user-list-create'),
     path('users/<int:pk>/', UserDetailAPIView.as_view(), name='user-detail'),
     path('settings/', SettingAPIView.as_view(), name='settings'),
-    path('search/yahoo-auction/items/', YahooAuctionItemSearchView.as_view(), name='yahoo-auction-item-search'),
-    path('search/yahoo-auction/detail/', YahooAuctionDetailView.as_view(), name='yahoo-auction-detail'),
-    path('search/yahoo-auction/categories/', YahooAuctionCategorySearchView.as_view(), name='yahoo-auction-category-search'),
+    path('yahoo-auction/items/', ItemSearchView.as_view(), name='yahoo-auction-item'),
+    path('yahoo-auction/detail/', ItemDetailView.as_view(), name='yahoo-auction-detail'),
     path('shipping-calculator/', ShippingCalculatorView.as_view(), name='shipping-calculator'),
     path('price-calculator/', PriceCalculatorView.as_view(), name='price-calculator'),
+    path('translate/', TranslatorView.as_view(), name='translate'),
     path('ebay/auth/', EbayAuthView.as_view(), name='ebay-auth'),
     path('ebay/register/', EbayRegisterView.as_view(), name='ebay-register'),
     path('ebay/categories/', EbayCategoriesView.as_view(), name='ebay-categories'),

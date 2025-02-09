@@ -16,7 +16,7 @@ class YahooAuctionService:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
 
-    def search_items(self, params):
+    def get_items(self, params):
         """
         Yahoo!オークションの検索を実行し、結果を取得する
 
@@ -78,7 +78,7 @@ class YahooAuctionService:
 
             return {
                 'items': items,
-                'total_count': total_count
+                'total': total_count
             }
 
         except requests.RequestException as e:
@@ -227,15 +227,6 @@ class YahooAuctionService:
             'price_ex_tax': base_price if not tax_included else None,
             'price_in_tax': base_price + tax if not tax_included else base_price,
             'tax_included': tax_included
-        }
-
-    def search_categories(self, params):
-        """
-        カテゴリ検索を実行
-        """
-        # TODO: カテゴリ検索の実装
-        return {
-            'categories': []
         }
 
     def _parse_search_results(self, soup):

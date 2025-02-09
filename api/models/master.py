@@ -59,9 +59,9 @@ class Setting(models.Model):
     ebay_access_token = models.TextField(null=True, blank=True)
     ebay_token_expires_at = models.DateTimeField(null=True, blank=True)
     rate = models.IntegerField(null=True, blank=True)
+    deepl_api_key = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
 
     class Meta:
         db_table = 'm_setting'

@@ -213,8 +213,7 @@ LOGGING = {
     },
 } 
 
-# Google OAuth2の設定
-# eBay OAuth Scopes
+# env
 EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', 'https://api.ebay.com/oauth/api_scope https://api.ebay.com/oauth/api_scope/sell.marketing.readonly https://api.ebay.com/oauth/api_scope/sell.marketing https://api.ebay.com/oauth/api_scope/sell.inventory.readonly https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account.readonly https://api.ebay.com/oauth/api_scope/sell.account https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly https://api.ebay.com/oauth/api_scope/sell.fulfillment').split()
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
 EBAY_REDIRECT_URI = os.getenv('EBAY_REDIRECT_URI')
@@ -224,3 +223,4 @@ EBAY_SANDBOX_AUTH_URL = os.getenv('EBAY_SANDBOX_AUTH_URL')
 EBAY_PRODUCTION_URL = os.getenv('EBAY_PRODUCTION_URL')
 EBAY_PRODUCTION_AUTH_URL = os.getenv('EBAY_PRODUCTION_AUTH_URL')
 EBAY_API_SITE_ID = os.getenv('EBAY_API_SITE_ID', '0')
+DEEPL_API_URL = os.getenv('DEEPL_API_URL')
