@@ -13,9 +13,13 @@ from .views.ebay import (
     EbayPoliciesView
 )
 from .views.test_data import TestDataView
+from .views.auth import LoginView, RefreshTokenView, LogoutView
 
 urlpatterns = [
-    path('token/', token_views.obtain_auth_token),  # ログイン用エンドポイント
+    # 認証関連のエンドポイント
+    path('auth/login/', LoginView.as_view(), name='auth-login'),
+    path('auth/refresh/', RefreshTokenView.as_view(), name='auth-refresh'),
+    path('auth/logout/', LogoutView.as_view(), name='auth-logout'),
     path('users/', UserListCreateAPIView.as_view(), name='user-list-create'),
     path('users/<int:pk>/', UserDetailAPIView.as_view(), name='user-detail'),
     path('settings/', SettingAPIView.as_view(), name='settings'),

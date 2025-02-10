@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import logging
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,9 +33,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,9 +44,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'api',
+    'rest_framework_simplejwt.token_blacklist',
+    'social_django',  # Google認証用
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,7 +57,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -71,6 +72,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',  # Google認証用
+                'social_django.context_processors.login_redirect',  # Google認証用
             ],
         },
     },
@@ -136,8 +139,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-   "http://localhost:3000",
-   "https://c04a-60-149-69-123.ngrok-free.app",
+    "http://localhost:3000",
+    "https://c04a-60-149-69-123.ngrok-free.app",
 ]
 
 AUTH_USER_MODEL = 'api.User'
@@ -163,28 +166,32 @@ CORS_ALLOW_HEADERS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '5/minute',
+        'user': '10/minute'
+    }
 }
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
+    'social_core.backends.google.GoogleOAuth2',  # Google認証用
 )
-
-# Cache settings
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/0'),
-    }
-}
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {message}',
@@ -214,13 +221,40 @@ LOGGING = {
 } 
 
 # env
-EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', 'https://api.ebay.com/oauth/api_scope https://api.ebay.com/oauth/api_scope/sell.marketing.readonly https://api.ebay.com/oauth/api_scope/sell.marketing https://api.ebay.com/oauth/api_scope/sell.inventory.readonly https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account.readonly https://api.ebay.com/oauth/api_scope/sell.account https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly https://api.ebay.com/oauth/api_scope/sell.fulfillment').split()
+EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', '').split()
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
 EBAY_REDIRECT_URI = os.getenv('EBAY_REDIRECT_URI')
-EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX').lower() == 'true'
+EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX', 'False').lower() == 'true'
 EBAY_SANDBOX_URL = os.getenv('EBAY_SANDBOX_URL')
 EBAY_SANDBOX_AUTH_URL = os.getenv('EBAY_SANDBOX_AUTH_URL')
 EBAY_PRODUCTION_URL = os.getenv('EBAY_PRODUCTION_URL')
 EBAY_PRODUCTION_AUTH_URL = os.getenv('EBAY_PRODUCTION_AUTH_URL')
 EBAY_API_SITE_ID = os.getenv('EBAY_API_SITE_ID', '0')
 DEEPL_API_URL = os.getenv('DEEPL_API_URL')
+
+# JWT設定
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY', SECRET_KEY),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+}
+
+# Cookie設定
+JWT_COOKIE_NAME = 'access_token'
+JWT_REFRESH_COOKIE_NAME = 'refresh_token'
+JWT_COOKIE_SECURE = False  # 開発環境ではFalse
+JWT_COOKIE_SAMESITE = 'Lax'  # 開発環境ではLax
+
+# Google OAuth2 settings (将来の実装用)
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_SECRET', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]

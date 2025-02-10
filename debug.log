@@ -1,0 +1,305 @@
+INFO 2025-02-10 14:05:38,291 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:05:39,973 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:05:40,580 autoreload Watching for file changes with StatReloader
+ERROR 2025-02-10 14:05:53,046 log Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to localhost:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+INFO 2025-02-10 14:06:22,137 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:06:23,557 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:08:18,051 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\urls.py changed, reloading.
+INFO 2025-02-10 14:08:18,660 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:08:27,939 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:08:28,557 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:08:43,795 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:08:44,439 autoreload Watching for file changes with StatReloader
+WARNING 2025-02-10 14:08:48,350 log Not Found: /api/v1/auth/login
+INFO 2025-02-10 14:08:55,891 autoreload Watching for file changes with StatReloader
+WARNING 2025-02-10 14:09:07,113 log Not Found: /api/v1/auth/login
+INFO 2025-02-10 14:09:21,729 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:09:22,469 autoreload Watching for file changes with StatReloader
+ERROR 2025-02-10 14:09:24,662 log Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to localhost:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-02-10 14:10:01,955 log Internal Server Error: /api/v1/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 416, in initial
+    self.check_throttles(request)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 359, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\throttling.py", line 123, in allow_request
+    self.history = self.cache.get(self.key, [])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 187, in get
+    return self._cache.get(key, default)
+           ^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 172, in _cache
+    return self._class(self._servers, **self._options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 39, in __init__
+    import redis
+ModuleNotFoundError: No module named 'redis'
+INFO 2025-02-10 14:10:19,417 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:10:20,359 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:10:22,367 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:10:23,191 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:10:28,626 autoreload Watching for file changes with StatReloader
+ERROR 2025-02-10 14:10:33,494 log Internal Server Error: /api/v1/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 416, in initial
+    self.check_throttles(request)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 359, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\throttling.py", line 123, in allow_request
+    self.history = self.cache.get(self.key, [])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 187, in get
+    return self._cache.get(key, default)
+           ^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 172, in _cache
+    return self._class(self._servers, **self._options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 39, in __init__
+    import redis
+ModuleNotFoundError: No module named 'redis'
+ERROR 2025-02-10 14:10:42,420 log Internal Server Error: /api/v1/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 416, in initial
+    self.check_throttles(request)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 359, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\throttling.py", line 123, in allow_request
+    self.history = self.cache.get(self.key, [])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 187, in get
+    return self._cache.get(key, default)
+           ^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 172, in _cache
+    return self._class(self._servers, **self._options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 39, in __init__
+    import redis
+ModuleNotFoundError: No module named 'redis'
+INFO 2025-02-10 14:10:57,038 autoreload Watching for file changes with StatReloader
+ERROR 2025-02-10 14:11:01,952 log Internal Server Error: /api/v1/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 416, in initial
+    self.check_throttles(request)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 359, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\throttling.py", line 123, in allow_request
+    self.history = self.cache.get(self.key, [])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 187, in get
+    return self._cache.get(key, default)
+           ^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 172, in _cache
+    return self._class(self._servers, **self._options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\cache\backends\redis.py", line 39, in __init__
+    import redis
+ModuleNotFoundError: No module named 'redis'
+INFO 2025-02-10 14:18:37,625 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:21:16,518 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:21:17,602 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:22:59,915 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\auth.py changed, reloading.
+INFO 2025-02-10 14:23:01,148 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:26:18,858 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 14:26:19,917 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 14:33:04,818 autoreload Watching for file changes with StatReloader
+ERROR 2025-02-10 14:33:38,206 log Internal Server Error: /api/v1/auth/login/
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django_redis\cache.py", line 29, in _decorator
+    return method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django_redis\cache.py", line 99, in _get
+    return self.client.get(key, default=default, version=version, client=client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django_redis\client\default.py", line 260, in get
+    raise ConnectionInterrupted(connection=client) from e
+django_redis.exceptions.ConnectionInterrupted: Redis ConnectionError: Error 10061 connecting to 127.0.0.1:6379. 対象のコンピューターによって拒否されたため、接続できませんでした。.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 416, in initial
+    self.check_throttles(request)
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\views.py", line 359, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\rest_framework\throttling.py", line 123, in allow_request
+    self.history = self.cache.get(self.key, [])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django_redis\cache.py", line 92, in get
+    value = self._get(key, default, version, client)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django_redis\cache.py", line 36, in _decorator
+    raise e.__cause__
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django_redis\client\default.py", line 258, in get
+    value = client.get(key)
+            ^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\redis\commands\core.py", line 1822, in get
+    return self.execute_command("GET", name, keys=[name])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\redis\client.py", line 559, in execute_command
+    return self._execute_command(*args, **options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\redis\client.py", line 565, in _execute_command
+    conn = self.connection or pool.get_connection(command_name, **options)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\redis\connection.py", line 1422, in get_connection
+    connection.connect()
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\redis\connection.py", line 363, in connect
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 10061 connecting to 127.0.0.1:6379. 対象のコンピューターによって拒否されたため、接続できませんでした。.
+INFO 2025-02-10 19:00:55,998 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 19:00:59,643 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 19:01:05,030 autoreload C:\Users\hikita\dev\private\MarketKing\backend\project\settings.py changed, reloading.
+INFO 2025-02-10 19:01:05,926 autoreload Watching for file changes with StatReloader
+INFO 2025-02-10 19:01:36,730 autoreload Watching for file changes with StatReloader
+WARNING 2025-02-10 19:01:53,989 log Unauthorized: /api/v1/auth/login/
+WARNING 2025-02-10 23:22:40,196 log Unauthorized: /api/v1/auth/login/
+INFO 2025-02-10 23:22:58,647 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\auth.py changed, reloading.
+INFO 2025-02-10 23:22:59,697 autoreload Watching for file changes with StatReloader
