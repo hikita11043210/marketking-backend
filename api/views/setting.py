@@ -18,6 +18,8 @@ class SettingAPIView(APIView):
                     'ebay_client_id': setting.ebay_client_id,
                     'ebay_dev_id': setting.ebay_dev_id,
                     'ebay_client_secret': setting.ebay_client_secret,
+                    'rate': setting.rate,
+                    'deepl_api_key': setting.deepl_api_key,
                     'created_at': setting.created_at.isoformat(),
                     'updated_at': setting.updated_at.isoformat()
                 }
@@ -34,7 +36,7 @@ class SettingAPIView(APIView):
             setting = Setting.get_settings()
 
             # 更新するフィールドのみを処理
-            for field in ['yahoo_client_id', 'yahoo_client_secret', 'ebay_client_id', 'ebay_client_secret', 'ebay_dev_id']:
+            for field in ['yahoo_client_id', 'yahoo_client_secret', 'ebay_client_id', 'ebay_client_secret', 'ebay_dev_id', 'rate', 'deepl_api_key']:
                 if field in request.data:
                     setattr(setting, field, request.data[field])
             
@@ -49,6 +51,8 @@ class SettingAPIView(APIView):
                     'ebay_client_id': setting.ebay_client_id,
                     'ebay_dev_id': setting.ebay_dev_id,
                     'ebay_client_secret': setting.ebay_client_secret,
+                    'rate': setting.rate,
+                    'deepl_api_key': setting.deepl_api_key,
                     'created_at': setting.created_at.isoformat(),
                     'updated_at': setting.updated_at.isoformat()
                 }

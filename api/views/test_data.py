@@ -6,9 +6,6 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
 from ..services.ebay_auth import EbayAuthService
-from ..services.ebay_inventory import EbayInventoryService
-from ..services.ebay_categories import EbayCategoriesService
-from ..services.ebay_policies import EbayPoliciesService
 import logging
 from rest_framework.decorators import api_view
 from django.conf import settings
@@ -45,7 +42,6 @@ class TestDataView(APIView):
                     f'{base_url}/sell/account/v1/payment_policy?marketplace_id=EBAY_JP',
                     headers=headers
                 )
-                print("Current Payment Policies:", payment_policies.text)
 
                 if payment_policies.status_code != 200:
                     return Response({
@@ -73,8 +69,6 @@ class TestDataView(APIView):
                     headers=headers,
                     data=json.dumps(payment_policy)
                 )
-
-                print("Policy Response:", policy_response.text)  # デバッグ用
 
                 if policy_response.status_code == 201:
                     return Response({

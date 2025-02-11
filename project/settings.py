@@ -15,6 +15,7 @@ import os
 from dotenv import load_dotenv
 import logging
 from datetime import timedelta
+from cryptography.fernet import Fernet
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -222,9 +223,9 @@ LOGGING = {
 } 
 
 # env
-EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', '').split()
+EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', '').split(',')
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
-EBAY_REDIRECT_URI = os.getenv('FRONTEND_URL') + '/settings'
+EBAY_REDIRECT_URI = os.getenv('EBAY_REDIRECT_URI')
 EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX', 'False').lower() == 'true'
 EBAY_SANDBOX_URL = os.getenv('EBAY_SANDBOX_URL')
 EBAY_SANDBOX_AUTH_URL = os.getenv('EBAY_SANDBOX_AUTH_URL')
@@ -259,3 +260,6 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
 ]
+
+# 暗号化キーの設定
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()  # バイト列に変換

@@ -3,6 +3,7 @@
         "corsheaders",
         "DEEPL",
         "dotenv",
+        "Fernet",
         "levelname",
         "simplejwt",
         "zacn"

@@ -1,182 +1,122 @@
-from django.conf import settings
-from django.core.cache import cache
-from django.core.exceptions import ValidationError
 import requests
-import logging
-from typing import Dict, Optional
+from django.conf import settings
+from api.models import EbayToken, Setting
 from datetime import datetime, timedelta
-from django.utils import timezone
-from ..models import Setting
+from typing import Optional, Dict
+import base64
+import logging
 
 logger = logging.getLogger(__name__)
 
 class EbayAuthService:
+    """eBayの認証に関するサービスクラス"""
     def __init__(self):
+        setting = Setting.get_settings()
+        self.client_id = setting.ebay_client_id
+        self.client_secret = setting.ebay_client_secret
+        self.dev_id = setting.ebay_dev_id
+        self.is_sandbox = settings.EBAY_IS_SANDBOX
+        self.auth_url = settings.EBAY_SANDBOX_AUTH_URL if self.is_sandbox else settings.EBAY_PRODUCTION_AUTH_URL
+        self.api_url = settings.EBAY_SANDBOX_URL if self.is_sandbox else settings.EBAY_PRODUCTION_URL
+        self.scopes = settings.EBAY_OAUTH_SCOPES
+
+    def _get_basic_auth(self) -> str:
+        """Basic認証用のヘッダー値を生成"""
+        credentials = f"{self.client_id}:{self.client_secret}"
+        encoded = base64.b64encode(credentials.encode()).decode()
+        return f"Basic {encoded}"
+
+    def get_auth_url(self) -> str:
+        """認証URLを生成"""
+        # スコープをスペース区切りの文字列に変換
+        scope_string = ' '.join(str(scope).strip() for scope in self.scopes)
+        
+        params = {
+            'client_id': self.client_id,
+            'response_type': 'code',
+            'redirect_uri': settings.EBAY_REDIRECT_URI,
+            'scope': scope_string,
+            'prompt': 'login'
+        }
+        query_string = '&'.join(f'{k}={v}' for k, v in params.items())
+        return f"{self.auth_url}?{query_string}"
+
+    def _make_token_request(self, data: Dict) -> Dict:
+        """トークンリクエストを実行"""
+        token_url = f"{self.api_url}/identity/v1/oauth2/token"
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': self._get_basic_auth()
+        }
+
         try:
-            setting = Setting.objects.get()
-            if not all([
-                setting.ebay_client_id,
-                setting.ebay_client_secret,
-                setting.ebay_dev_id
-            ]):
-                missing_fields = []
-                if not setting.ebay_client_id:
-                    missing_fields.append("Client ID")
-                if not setting.ebay_client_secret:
-                    missing_fields.append("Client Secret")
-                if not setting.ebay_dev_id:
-                    missing_fields.append("Dev ID")
-                raise ValidationError(f"以下のeBay認証情報が設定されていません: {', '.join(missing_fields)}")
-            
-            self.client_id = setting.ebay_client_id
-            self.client_secret = setting.ebay_client_secret
-            self.dev_id = setting.ebay_dev_id
-            self.is_sandbox = getattr(settings, 'EBAY_IS_SANDBOX', True)
-            self.base_url = getattr(settings, 'EBAY_SANDBOX_URL') if self.is_sandbox else getattr(settings, 'EBAY_PRODUCTION_URL')
-            
-        except Setting.DoesNotExist:
-            raise ValidationError("eBayの認証情報が設定されていません。各種設定画面で設定してください。")
+            response = requests.post(token_url, headers=headers, data=data)
+            response.raise_for_status()  # Raises HTTPError for 4XX/5XX responses
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP error occurred: {e.response.text}")
+            raise Exception(f"eBay API error: {e.response.text}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error occurred: {str(e)}")
+            raise Exception(f"Network error: {str(e)}")
+
+    def get_application_token(self) -> str:
+        """アプリケーショントークンを取得"""
+        data = {
+            'grant_type': 'client_credentials',
+            'scope': ' '.join(str(scope).strip() for scope in self.scopes)
+        }
+
+        try:
+            token_data = self._make_token_request(data)
+            return token_data['access_token']
         except Exception as e:
-            logger.error(f"Failed to initialize EbayAuthService: {str(e)}")
+            logger.error(f"Failed to get application token: {str(e)}")
             raise
 
-    def get_authorization_url(self, state: str = '') -> str:
-        """認可URLを生成"""
+    def exchange_code_for_token(self, code: str, user_id: int) -> EbayToken:
+        """認証コードをユーザートークンと交換"""
+        data = {
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': settings.EBAY_REDIRECT_URI
+        }
         try:
-            # redirect_uriが設定されているか確認
-            if not settings.EBAY_REDIRECT_URI:
-                logger.error("EBAY_REDIRECT_URI is not set")
-                raise ValidationError("リダイレクトURLが設定されていません")
-
-            # scopeが設定されているか確認
-            if not settings.EBAY_OAUTH_SCOPES:
-                logger.error("EBAY_OAUTH_SCOPES is not set")
-                raise ValidationError("OAuth scopeが設定されていません")
-
-            params = {
-                'client_id': self.client_id,
-                'response_type': 'code',
-                'redirect_uri': settings.EBAY_REDIRECT_URI,
-                'scope': ' '.join(settings.EBAY_OAUTH_SCOPES),
-                'prompt': 'login',
-                'state': state
-            }
-            
-            # URLエンコード（スコープは特別な処理が必要）
-            encoded_params = []
-            for k, v in params.items():
-                if k == 'scope':
-                    # スコープは空白文字をそのまま保持
-                    encoded_value = requests.utils.quote(str(v), safe=' ')
-                else:
-                    encoded_value = requests.utils.quote(str(v))
-                encoded_params.append(f'{k}={encoded_value}')
-            
-            # Sandboxの場合はURLを変更
-            auth_url = settings.EBAY_SANDBOX_AUTH_URL if self.is_sandbox else settings.EBAY_PRODUCTION_AUTH_URL
-            final_url = f"{auth_url}?{'&'.join(encoded_params)}"
-            return final_url
-            
-        except Exception as e:
-            logger.error(f"Failed to generate authorization URL: {str(e)}")
-            raise ValidationError("認可URLの生成に失敗しました")
-
-    def exchange_code_for_tokens(self, code: str) -> Dict[str, str]:
-        """認可コードをトークンと交換"""
-        try:
-            # redirect_uriが設定されているか確認
-            if not settings.EBAY_REDIRECT_URI:
-                raise ValidationError("リダイレクトURLが設定されていません")
-
-
-            token_url = f"{self.base_url}/identity/v1/oauth2/token"
-            data = {
-                'grant_type': 'authorization_code',
-                'code': code,
-                'redirect_uri': settings.EBAY_REDIRECT_URI
-            }
-            
-            response = requests.post(
-                token_url,
-                data=data,
-                auth=(self.client_id, self.client_secret),
-                headers={'Content-Type': 'application/x-www-form-urlencoded'}
+            token_data = self._make_token_request(data)
+            expires_at = datetime.now() + timedelta(seconds=token_data['expires_in'])
+            # 既存のトークンを削除
+            EbayToken.objects.filter(user_id=user_id).delete()
+            # 新しいトークンを作成
+            token = EbayToken.objects.create(
+                user_id=user_id,
+                access_token=token_data['access_token'],
+                refresh_token=token_data['refresh_token'],
+                expires_at=expires_at,
+                scope=' '.join(str(scope).strip() for scope in self.scopes)
             )
-            
-            if not response.ok:
-                logger.error(f"Token exchange failed: {response.status_code}")
-                logger.error(f"Response: {response.content.decode('utf-8')}")
-                raise ValidationError("トークンの取得に失敗しました1")
-
-            token_data = response.json()
-            
-            # トークンを保存
-            setting = Setting.objects.get()
-            setting.ebay_access_token = token_data.get('access_token')
-            setting.ebay_refresh_token = token_data.get('refresh_token')
-            setting.ebay_token_expires_at = timezone.now() + timedelta(seconds=token_data.get('expires_in', 7200))
-            setting.save()
-            
-            return {
-                'access_token': token_data.get('access_token'),
-                'refresh_token': token_data.get('refresh_token'),
-                'expires_in': token_data.get('expires_in')
-            }
-            
+            return token
         except Exception as e:
-            logger.error(f"Failed to exchange code for tokens: {str(e)}")
-            raise ValidationError("トークンの取得に失敗しました2")
+            logger.error(f"Failed to exchange code for token: {str(e)}")
+            raise
 
+    def refresh_token(self, ebay_token: EbayToken) -> Optional[EbayToken]:
+        """リフレッシュトークンを使用して新しいアクセストークンを取得"""
+        data = {
+            'grant_type': 'refresh_token',
+            'refresh_token': ebay_token.refresh_token,
+            'scope': ebay_token.scope
+        }
 
-    def get_access_token(self) -> str:
-        """アクセストークンを取得（必要に応じてリフレッシュ）"""
         try:
-            setting = Setting.objects.get()
-            
-            # アクセストークンが存在しない場合はエラー
-            if not setting.ebay_access_token:
-                raise ValidationError("eBayとの連携が必要です")
+            token_data = self._make_token_request(data)
+            expires_at = datetime.now() + timedelta(seconds=token_data['expires_in'])
 
-            # トークンの有効期限をチェック
-            if setting.ebay_token_expires_at and setting.ebay_token_expires_at > timezone.now():
-                return setting.ebay_access_token
+            ebay_token.access_token = token_data['access_token']
+            ebay_token.refresh_token = token_data.get('refresh_token', ebay_token.refresh_token)
+            ebay_token.expires_at = expires_at
+            ebay_token.save()
 
-            # リフレッシュトークンが存在しない場合はエラー
-            if not setting.ebay_refresh_token:
-                raise ValidationError("eBayとの再連携が必要です")
-
-            # トークンをリフレッシュ
-            token_url = f"{self.base_url}/identity/v1/oauth2/token"
-            data = {
-                'grant_type': 'refresh_token',
-                'refresh_token': setting.ebay_refresh_token,
-            }
-            
-            response = requests.post(
-                token_url,
-                data=data,
-                auth=(self.client_id, self.client_secret),
-                headers={'Content-Type': 'application/x-www-form-urlencoded'}
-            )
-            
-            if not response.ok:
-                logger.error(f"Token refresh failed: {response.status_code}")
-                logger.error(f"Response: {response.content.decode('utf-8')}")
-                raise ValidationError("トークンの更新に失敗しました")
-
-            token_data = response.json()
-            
-            # 新しいトークンを保存
-            setting.ebay_access_token = token_data.get('access_token')
-            if token_data.get('refresh_token'):  # リフレッシュトークンも更新される場合
-                setting.ebay_refresh_token = token_data.get('refresh_token')
-            setting.ebay_token_expires_at = timezone.now() + timedelta(seconds=token_data.get('expires_in', 7200))
-            setting.save()
-
-            return setting.ebay_access_token
-            
-        except Setting.DoesNotExist:
-            raise ValidationError("eBayの認証情報が設定されていません")
+            return ebay_token
         except Exception as e:
-            logger.error(f"Failed to get access token: {str(e)}")
-            raise ValidationError("アクセストークンの取得に失敗しました") 
+            logger.error(f"Failed to refresh token: {str(e)}")
+            return None 
