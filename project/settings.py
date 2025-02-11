@@ -140,8 +140,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://c04a-60-149-69-123.ngrok-free.app",
+    os.getenv('FRONTEND_URL'),
 ]
+
 
 AUTH_USER_MODEL = 'api.User'
 
@@ -223,7 +224,7 @@ LOGGING = {
 # env
 EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', '').split()
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
-EBAY_REDIRECT_URI = os.getenv('EBAY_REDIRECT_URI')
+EBAY_REDIRECT_URI = os.getenv('FRONTEND_URL') + '/settings'
 EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX', 'False').lower() == 'true'
 EBAY_SANDBOX_URL = os.getenv('EBAY_SANDBOX_URL')
 EBAY_SANDBOX_AUTH_URL = os.getenv('EBAY_SANDBOX_AUTH_URL')
