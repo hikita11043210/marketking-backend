@@ -22,7 +22,7 @@ class EbayAuthURLView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        service = EbayAuthService()
+        service = EbayAuthService(request.user)
         return Response({
             'url': service.get_auth_url()
         })
@@ -39,7 +39,7 @@ class EbayAuthCallbackView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        service = EbayAuthService()
+        service = EbayAuthService(request.user)
         try:
             token = service.exchange_code_for_token(code, request.user.id)
             return Response({
