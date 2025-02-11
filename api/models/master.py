@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings  # settingsをインポート
 from .user import User  # Userモデルを直接インポート
 
 class Service(models.Model):
@@ -50,6 +51,7 @@ class ShippingSurcharge(models.Model):
         return f"{self.service.service_name} - {self.surcharge_type}" 
 
 class Setting(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='settings')
     yahoo_client_id = models.CharField(max_length=255, null=True, blank=True)
     yahoo_client_secret = models.CharField(max_length=255, null=True, blank=True)
     ebay_client_id = models.CharField(max_length=255, null=True, blank=True)
@@ -64,15 +66,10 @@ class Setting(models.Model):
         db_table = 'm_setting'
 
     def __str__(self):
-        return "Global Settings"
+        return f"Settings for {self.user.username}"
 
     @classmethod
-    def get_settings(cls):
-        """単一のグローバル設定を取得または作成する"""
-        settings, created = cls.objects.get_or_create(pk=1)
+    def get_settings(cls, user):
+        """ユーザーの設定を取得または作成する"""
+        settings, created = cls.objects.get_or_create(user=user)
         return settings
-
-    def save(self, *args, **kwargs):
-        """常にIDを1として保存し、単一レコードを維持する"""
-        self.pk = 1
-        super().save(*args, **kwargs)

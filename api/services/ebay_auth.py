@@ -10,8 +10,9 @@ logger = logging.getLogger(__name__)
 
 class EbayAuthService:
     """eBayの認証に関するサービスクラス"""
-    def __init__(self):
-        setting = Setting.get_settings()
+    def __init__(self, user):
+        self.user = user
+        setting = Setting.get_settings(user)
         self.client_id = setting.ebay_client_id
         self.client_secret = setting.ebay_client_secret
         self.dev_id = setting.ebay_dev_id

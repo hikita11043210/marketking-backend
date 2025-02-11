@@ -5,8 +5,9 @@ from ..models import Setting
 logger = logging.getLogger(__name__)
 
 class PriceCalculatorService:
-    def __init__(self):
-        self.settings = Setting.objects.first()
+    def __init__(self, user):
+        self.user = user
+        self.settings = Setting.get_settings(user)
         if not self.settings:
             raise ValueError("設定が見つかりません。")
 

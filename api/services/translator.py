@@ -7,8 +7,9 @@ from ..models.master import Setting
 logger = logging.getLogger(__name__)
 
 class TranslatorService:
-    def __init__(self):
-        self.auth_key = Setting.get_settings().deepl_api_key
+    def __init__(self, user):
+        self.user = user
+        self.auth_key = Setting.get_settings(user).deepl_api_key
         self.DEEPL_API_URL = settings.DEEPL_API_URL
 
     def translate_text(self, text: str, target_lang: str = 'EN') -> Dict:

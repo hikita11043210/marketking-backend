@@ -234,6 +234,8 @@ EBAY_PRODUCTION_AUTH_URL = os.getenv('EBAY_PRODUCTION_AUTH_URL')
 EBAY_API_SITE_ID = os.getenv('EBAY_API_SITE_ID', '0')
 DEEPL_API_URL = os.getenv('DEEPL_API_URL')
 
+# YahooAuction
+YAHOO_AUCTION_URL = os.getenv('YAHOO_AUCTION_URL')
 # JWT設定
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),

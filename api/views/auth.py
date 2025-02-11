@@ -9,7 +9,6 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 from django.contrib.auth import authenticate
 from django.conf import settings
 from django.middleware import csrf
-from datetime import datetime
 
 class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]

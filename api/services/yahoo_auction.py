@@ -5,10 +5,11 @@ import json
 from json.decoder import JSONDecodeError
 from datetime import datetime
 import re
+from django.conf import settings
 logger = logging.getLogger(__name__)
 
 class YahooAuctionService:
-    BASE_URL = "https://auctions.yahoo.co.jp/search/search"
+    BASE_URL = settings.YAHOO_AUCTION_URL
 
     def __init__(self):
         self.session = requests.Session()

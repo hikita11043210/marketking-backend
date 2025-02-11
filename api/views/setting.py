@@ -1,14 +1,17 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from ..models.master import Setting
 from ..serializers.setting import SettingSerializer
 
 class SettingAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         """設定を取得"""
         try:
-            setting = Setting.get_settings()
+            setting = Setting.get_settings(request.user)
             return Response({
                 'success': True,
                 'message': '設定の取得に成功しました',
@@ -33,7 +36,7 @@ class SettingAPIView(APIView):
     def put(self, request):
         """設定を更新"""
         try:
-            setting = Setting.get_settings()
+            setting = Setting.get_settings(request.user)
 
             # 更新するフィールドのみを処理
             for field in ['yahoo_client_id', 'yahoo_client_secret', 'ebay_client_id', 'ebay_client_secret', 'ebay_dev_id', 'rate', 'deepl_api_key']:

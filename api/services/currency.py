@@ -3,7 +3,6 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 import requests
 import logging
-from typing import Dict, Union, Optional
 
 logger = logging.getLogger(__name__)
 

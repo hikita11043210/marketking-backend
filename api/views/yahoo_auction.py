@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ..services.scraping.yahoo_auction import YahooAuctionService
+from ..services.yahoo_auction import YahooAuctionService
 from ..services.currency import CurrencyService
 import logging
 
