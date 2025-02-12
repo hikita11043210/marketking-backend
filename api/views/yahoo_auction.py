@@ -4,10 +4,13 @@ from rest_framework import status
 from ..services.yahoo_auction import YahooAuctionService
 from ..services.currency import CurrencyService
 import logging
+from api.utils.throttles import AuctionDetailThrottle
 
 logger = logging.getLogger(__name__)    
 
 class ItemSearchView(APIView):
+    throttle_classes = [AuctionDetailThrottle]
+
     """
     ヤフオクの商品検索API
     """

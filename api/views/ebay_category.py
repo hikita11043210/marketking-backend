@@ -3,10 +3,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from api.services.ebay_searvices import EbayService
+from api.utils.throttles import AuctionDetailThrottle
 
 class EbayCategoryView(APIView):
     """eBayのカテゴリ情報を取得するView"""
     permission_classes = [IsAuthenticated]
+    throttle_classes = [AuctionDetailThrottle]
 
     def get(self, request):
         # 検索クエリがある場合は検索を実行

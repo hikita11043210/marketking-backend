@@ -3,8 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from api.services.shipping_calculator import ShippingCalculator
 from api.models.master import Service, Countries
+from api.utils.throttles import AuctionDetailThrottle
 
 class ShippingCalculatorView(APIView):
+    throttle_classes = [AuctionDetailThrottle]
+
     def get(self, request):
         """利用可能なサービスと国のリストを取得"""
         try:

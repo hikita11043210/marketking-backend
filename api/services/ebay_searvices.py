@@ -87,7 +87,6 @@ class EbayService:
             params = {'q': query}
             
             response = requests.get(endpoint, headers=headers, params=params)
-            print(response)
             response.raise_for_status()
             
             # レスポンスデータを整形
