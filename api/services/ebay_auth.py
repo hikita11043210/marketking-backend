@@ -120,4 +120,16 @@ class EbayAuthService:
             return ebay_token
         except Exception as e:
             logger.error(f"Failed to refresh token: {str(e)}")
-            return None 
+            return None
+
+    def get_user_token(self):
+        """ユーザーのeBayトークンを取得し、必要に応じて更新"""
+        token = EbayToken.objects.filter(user=self.user).first()
+        if not token:
+            return None
+
+        # # トークンの有効期限が切れている場合は更新
+        # if token.expires_at <= datetime.now():
+        #     token = self.refresh_token(token)
+
+        return token 

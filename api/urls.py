@@ -5,12 +5,13 @@ from .views.shipping_calculator import ShippingCalculatorView
 from .views.price_calculator import PriceCalculatorView
 from .views.translator import TranslatorView
 from .views.auth import LoginView, RefreshTokenView, LogoutView
-from api.views.ebay_auth import (
+from .views.ebay_auth import (
     EbayAuthStatusView,
     EbayAuthURLView,
     EbayAuthCallbackView,
     EbayAuthDisconnectView
 )
+from .views.ebay_policies import EbayPoliciesView
 
 urlpatterns = [
     # 認証関連のエンドポイント
@@ -27,4 +28,5 @@ urlpatterns = [
     path('ebay/auth/url/', EbayAuthURLView.as_view()),
     path('ebay/auth/', EbayAuthCallbackView.as_view()),
     path('ebay/auth/disconnect/', EbayAuthDisconnectView.as_view()),
+    path('ebay/policies/', EbayPoliciesView.as_view()),
 ] 

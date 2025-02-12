@@ -5,6 +5,7 @@
         "dotenv",
         "Fernet",
         "levelname",
+        "searvices",
         "simplejwt",
         "zacn"
     ]
