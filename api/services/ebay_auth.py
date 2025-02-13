@@ -124,12 +124,16 @@ class EbayAuthService:
 
     def get_user_token(self):
         """ユーザーのeBayトークンを取得し、必要に応じて更新"""
+        from django.utils import timezone
         token = EbayToken.objects.filter(user=self.user).first()
         if not token:
             return None
 
-        # # トークンの有効期限が切れている場合は更新
-        # if token.expires_at <= datetime.now():
-        #     token = self.refresh_token(token)
+        try:
+            # トークンの有効期限が切れている場合は更新
+            if token.expires_at <= timezone.now():
+                token = self.refresh_token(token)
+        except Exception as e:
+            logger.error(f"Failed to get user token: {str(e)}")
 
         return token 

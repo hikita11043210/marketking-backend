@@ -31,7 +31,7 @@ class EbayService:
             endpoint = f"{self.api_url}/sell/account/v1/payment_policy"
             params = {'marketplace_id': self.marketplace_id}
             headers = self._get_headers()
-            
+
             response = requests.get(endpoint, headers=headers, params=params)
             response.raise_for_status()
             return response.json()
