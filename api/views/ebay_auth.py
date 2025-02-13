@@ -4,8 +4,6 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from api.services.ebay_auth import EbayAuthService
 from api.models import EbayToken
-from datetime import datetime
-
 class EbayAuthStatusView(APIView):
     """eBayとの連携状態を確認するAPI"""
     permission_classes = [IsAuthenticated]
