@@ -7,19 +7,19 @@ from ..services.translator import TranslatorService
 class TranslatorView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def get(self, request):
         """
         テキストを翻訳する
 
         Request Body:
             - text: str - 翻訳対象のテキスト
-            - target_lang: str - 翻訳先の言語コード（オプション、デフォルト: 'EN'）
+            - target_lang: str - 翻訳先の言語コード（オプション、デフォルト: 'EN-US'）
 
         Returns:
             ApiResponse形式のレスポンス
         """
-        text = request.data.get('text')
-        target_lang = request.data.get('target_lang', 'EN')
+        text = request.query_params.get('text')
+        target_lang = request.query_params.get('target_lang', 'EN-US')
 
         if not text:
             return Response({
@@ -27,13 +27,12 @@ class TranslatorView(APIView):
                 'message': '翻訳するテキストを指定してください。',
                 'data': {
                     'translated_text': text,
-                    'source_lang': None,
                     'target_lang': target_lang
                 }
             })
 
         try:
-            service = TranslatorService()
+            service = TranslatorService(request.user)
             result = service.translate_text(text, target_lang)
 
             return Response({
@@ -48,7 +47,6 @@ class TranslatorView(APIView):
                 'message': str(e),
                 'data': {
                     'translated_text': text,
-                    'source_lang': None,
                     'target_lang': target_lang
                 }
             })
@@ -59,7 +57,6 @@ class TranslatorView(APIView):
                 'message': str(e),
                 'data': {
                     'translated_text': text,
-                    'source_lang': None,
                     'target_lang': target_lang
                 }
             }) 

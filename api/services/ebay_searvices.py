@@ -171,13 +171,13 @@ class EbayService:
         """
         try:
             # 正しいエンドポイントURLに修正
-            endpoint = f"{self.api_url}/ws/api.dll"  # /Trading → /ws/api.dll
+            endpoint = f"{self.api_url}/ws/api.dll"
             
             headers = self._get_headers()
             headers.update({
                 'X-EBAY-API-COMPATIBILITY-LEVEL': '967',
                 'X-EBAY-API-CALL-NAME': 'GetItem',
-                'X-EBAY-API-SITEID': str(settings.EBAY_API_SITE_ID),  # 数値→文字列に変換
+                'X-EBAY-API-SITEID': str(settings.EBAY_API_SITE_ID), 
                 'Content-Type': 'text/xml'
             })
             

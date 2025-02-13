@@ -180,7 +180,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '5/minute',
         'user': '10/minute',
-        'admin': '60/minute'  # 特定API用のカスタム制限追加
+        'admin': '100/minute'  # 特定API用のカスタム制限追加
     }
 }
 

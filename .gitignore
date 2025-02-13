@@ -16,4 +16,4 @@ venv/
 media/
 static/
 db.sqlite3
-debug.log
+debug.log*
