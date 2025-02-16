@@ -208,14 +208,17 @@ class EbayService:
             category_id = root.findtext('.//PrimaryCategoryID', ns)
             return {
                 'success': True,
-                'item_specifics': item_specifics,
-                'category_id': category_id
+                'message': 'Item Specificsの取得に成功しました',
+                'data': {
+                    'item_specifics': item_specifics,
+                    'category_id': category_id
+                }
             }
 
         except Exception as e:
             logger.error(f"Trading API Error: {str(e)}")
             return {
                 'success': False,
-                'error': str(e)
+                'message': str(e)
             }
 

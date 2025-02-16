@@ -8,7 +8,10 @@ class EbayItemSpecificsView(APIView):
         ebay_item_id = request.query_params.get('ebayItemId')
         if not ebay_item_id:
             return Response(
-                {'error': 'ebayItemIdは必須パラメータです'},
+                {
+                    'success': False,
+                    'message': 'ebayItemIdは必須パラメータです'
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -17,15 +20,13 @@ class EbayItemSpecificsView(APIView):
             ebay_service = EbayService(user)
             result = ebay_service.get_item_specifics(ebay_item_id)
             
-            if result['success']:
-                return Response(result, status=status.HTTP_200_OK)
-            return Response(
-                {'error': result.get('error', '不明なエラーが発生しました')},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response(result, status=status.HTTP_200_OK if result['success'] else status.HTTP_500_INTERNAL_SERVER_ERROR)
             
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {
+                    'success': False,
+                    'message': str(e)
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

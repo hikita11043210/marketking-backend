@@ -24,9 +24,12 @@ class EbayPoliciesView(APIView):
                 # すべてのポリシーを取得
                 policies = {
                     'success': True,
-                    'payment': ebay_service.get_payment_policies(),
-                    'return': ebay_service.get_return_policies(),
-                    'fulfillment': ebay_service.get_fulfillment_policies()
+                    'message': 'すべてのポリシーを取得しました',
+                    'data': {
+                        'payment': ebay_service.get_payment_policies(),
+                        'return': ebay_service.get_return_policies(),
+                        'fulfillment': ebay_service.get_fulfillment_policies()
+                    }
                 }
             
             return Response(policies, status=status.HTTP_200_OK)
