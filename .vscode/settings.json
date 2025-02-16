@@ -5,6 +5,7 @@
         "dotenv",
         "Fernet",
         "levelname",
+        "Payoneer",
         "searvices",
         "simplejwt",
         "zacn"

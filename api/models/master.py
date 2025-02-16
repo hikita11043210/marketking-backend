@@ -50,8 +50,34 @@ class ShippingSurcharge(models.Model):
     def __str__(self):
         return f"{self.service.service_name} - {self.surcharge_type}" 
 
+class EbayStoreType(models.Model):
+    store_type = models.CharField(max_length=50, unique=True, null=False)
+    monthly_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    monthly_fee_annual = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    free_listings = models.IntegerField(null=False)
+    listing_fee_over_limit = models.DecimalField(max_digits=4, decimal_places=2, null=False)
+    final_value_fee = models.DecimalField(max_digits=4, decimal_places=1, null=False)
+    final_value_fee_category_discount = models.BooleanField(default=False)
+    international_fee = models.DecimalField(max_digits=4, decimal_places=2, null=False)
+
+    class Meta:
+        db_table = 'm_ebay_store_type'
+
+    def __str__(self):
+        return self.store_type
+
+class Tax(models.Model):
+    rate = models.DecimalField(max_digits=4, decimal_places=2, null=False)
+
+    class Meta:
+        db_table = 'm_tax'
+
+    def __str__(self):
+        return f"{self.rate}%"
+
 class Setting(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='settings')
+    ebay_store_type = models.ForeignKey(EbayStoreType, on_delete=models.CASCADE, related_name='settings')
     yahoo_client_id = models.CharField(max_length=255, null=True, blank=True)
     yahoo_client_secret = models.CharField(max_length=255, null=True, blank=True)
     ebay_client_id = models.CharField(max_length=255, null=True, blank=True)
