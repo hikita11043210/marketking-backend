@@ -2,7 +2,7 @@ from django.urls import path
 from .views.setting import SettingAPIView
 from .views.yahoo_auction import ItemSearchView, ItemDetailView
 from .views.shipping_calculator import ShippingCalculatorView
-from .views.price_calculator import PriceCalculatorView
+from .views.calculator_price import CalculatorPriceView
 from .views.translator import TranslatorView
 from .views.auth import LoginView, RefreshTokenView, LogoutView
 from .views.ebay_auth import (
@@ -23,7 +23,8 @@ urlpatterns = [
     path('yahoo-auction/items/', ItemSearchView.as_view(), name='yahoo-auction-item'),
     path('yahoo-auction/detail/', ItemDetailView.as_view(), name='yahoo-auction-detail'),
     path('shipping-calculator/', ShippingCalculatorView.as_view(), name='shipping-calculator'),
-    path('price-calculator/', PriceCalculatorView.as_view(), name='price-calculator'),
+    path('calculator-price-init/', CalculatorPriceView.as_view(), name='calculator-price-init'),
+    path('calculator-price/', CalculatorPriceView.as_view(), name='calculator-price'),
     path('translate/', TranslatorView.as_view(), name='translate'),
     path('ebay/auth/status/', EbayAuthStatusView.as_view()),
     path('ebay/auth/url/', EbayAuthURLView.as_view()),

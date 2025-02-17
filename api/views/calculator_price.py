@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ..services.price_calculator import PriceCalculatorService
+from ..services.calculator import CalculatorService
 from rest_framework.permissions import IsAuthenticated
 import logging
 
 logger = logging.getLogger(__name__)
 
-class PriceCalculatorView(APIView):
+class CalculatorPriceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -52,7 +52,7 @@ class PriceCalculatorView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            service = PriceCalculatorService(request.user)
+            service = CalculatorService(request.user)
             
             if currency.lower() == 'dollar':
                 result = service.calc_price_dollar(prices)
@@ -81,3 +81,7 @@ class PriceCalculatorView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+    def post(self, request):
+

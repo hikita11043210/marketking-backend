@@ -4,7 +4,7 @@ from ..models import Setting, Tax, EbayStoreType
 
 logger = logging.getLogger(__name__)
 
-class PriceCalculatorService:
+class CalculatorService:
     def __init__(self, user):
         self.settings = Setting.get_settings(user)
         if not self.settings:
