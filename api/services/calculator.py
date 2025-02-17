@@ -1,11 +1,13 @@
 import logging
 from decimal import Decimal
 from ..models import Setting, Tax, EbayStoreType
+from .currency import CurrencyService
 
 logger = logging.getLogger(__name__)
 
 class CalculatorService:
     def __init__(self, user):
+        self.user = user
         self.settings = Setting.get_settings(user)
         if not self.settings:
             raise ValueError("設定が見つかりません。")
@@ -17,6 +19,11 @@ class CalculatorService:
         self.shipping_cost = 3000
         # Payoneer手数料
         self.payoneer_fee = 2
+        # 為替レートの取得
+        self.exchange_rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))
+        if self.exchange_rate == 0:
+            # APIからの取得に失敗した場合はデフォルトレートを使用
+            self.exchange_rate = Decimal(str(CurrencyService.get_default_rate('USD', 'JPY')))
 
     def calc_price_yen(self, prices: list[int]) -> dict:
         """
@@ -109,9 +116,8 @@ class CalculatorService:
             yen_result = self.calc_price_yen(prices)
             
             # ドル換算
-            exchange_rate = 150
-            calculated_price_dollar = int(yen_result['calculated_price_yen'] / exchange_rate)
-            final_profit_dollar = int(yen_result['final_profit_yen'] / exchange_rate)
+            calculated_price_dollar = int(yen_result['calculated_price_yen'] / self.exchange_rate)
+            final_profit_dollar = int(yen_result['final_profit_yen'] / self.exchange_rate)
 
             return {
                 'original_price': yen_result['original_price'],
@@ -122,10 +128,74 @@ class CalculatorService:
                 'tax_rate': yen_result['tax_rate'],
                 'calculated_price_yen': yen_result['calculated_price_yen'],
                 'calculated_price_dollar': calculated_price_dollar,
-                'exchange_rate': float(exchange_rate),
+                'exchange_rate': float(self.exchange_rate),
                 'final_profit_yen': yen_result['final_profit_yen'],
                 'final_profit_dollar': final_profit_dollar
             }
         except Exception as e:
             logger.error(f"ドル換算エラー: {str(e)}")
+            raise
+
+    def calc_profit_from_dollar(self, prices: int) -> dict:
+        """
+        ドル価格から最終利益を計算する
+
+        Args:
+            prices (list[int]): 計算対象のドル価格リスト
+
+        Returns:
+            dict: 計算結果
+                - original_price: 元の価格の合計
+                - shipping_cost: 送料
+                - rate: 適用レート
+                - ebay_fee: eBay手数料率
+                - international_fee: 国際手数料率
+                - tax_rate: 消費税率
+                - calculated_price_yen: 円での計算価格
+                - calculated_price_dollar: ドルでの計算価格
+                - exchange_rate: 為替レート
+                - final_profit_yen: 円での最終利益
+                - final_profit_dollar: ドルでの最終利益
+        """
+        try:
+            # 各種レートの取得
+            ebay_fee = Decimal(str(self.ebay_store_type.final_value_fee)) / 100
+            international_fee = Decimal(str(self.ebay_store_type.international_fee)) / 100
+            tax_rate = Decimal(str(self.tax.rate)) / 100
+            payoneer_fee = Decimal(str(self.payoneer_fee)) / 100
+            profit_rate = Decimal(str(self.settings.rate)) / 100
+
+            # ドル価格の合計を計算
+            total_price_dollar = sum(prices)
+            
+            # 円に換算
+            total_price_yen = int(total_price_dollar * self.exchange_rate)
+            # 手数料と税金の計算
+            ebay_fee_amount = total_price_yen * ebay_fee
+            international_fee_amount = total_price_yen * international_fee
+            tax_amount = (ebay_fee_amount + international_fee_amount) * tax_rate
+            
+            # 最終利益の計算（円）
+            final_profit_yen = total_price_yen - ebay_fee_amount - international_fee_amount - tax_amount
+            final_profit_yen = final_profit_yen - (final_profit_yen * payoneer_fee)
+            
+            # ドルでの最終利益
+            final_profit_dollar = int(final_profit_yen / self.exchange_rate)
+
+            return {
+                'original_price': total_price_yen,
+                'shipping_cost': self.shipping_cost,
+                'rate': float(profit_rate),
+                'ebay_fee': float(ebay_fee),
+                'international_fee': float(international_fee),
+                'tax_rate': float(tax_rate),
+                'calculated_price_yen': total_price_yen,
+                'calculated_price_dollar': total_price_dollar,
+                'exchange_rate': float(self.exchange_rate),
+                'final_profit_yen': int(final_profit_yen),
+                'final_profit_dollar': final_profit_dollar
+            }
+
+        except Exception as e:
+            logger.error(f"ドル価格からの利益計算エラー: {str(e)}")
             raise 

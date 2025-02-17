@@ -14,6 +14,7 @@ from .views.ebay_auth import (
 from .views.ebay_policies import EbayPoliciesView
 from .views.ebay_category import EbayCategoryView
 from .views.ebay_itemSpecifics import EbayItemSpecificsView
+
 urlpatterns = [
     # 認証関連のエンドポイント
     path('auth/login/', LoginView.as_view(), name='auth-login'),
@@ -23,7 +24,6 @@ urlpatterns = [
     path('yahoo-auction/items/', ItemSearchView.as_view(), name='yahoo-auction-item'),
     path('yahoo-auction/detail/', ItemDetailView.as_view(), name='yahoo-auction-detail'),
     path('shipping-calculator/', ShippingCalculatorView.as_view(), name='shipping-calculator'),
-    path('calculator-price-init/', CalculatorPriceView.as_view(), name='calculator-price-init'),
     path('calculator-price/', CalculatorPriceView.as_view(), name='calculator-price'),
     path('translate/', TranslatorView.as_view(), name='translate'),
     path('ebay/auth/status/', EbayAuthStatusView.as_view()),

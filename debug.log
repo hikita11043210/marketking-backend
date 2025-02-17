@@ -1226,3 +1226,297 @@ Traceback (most recent call last):
 RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/calculator-price/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
 INFO 2025-02-17 12:05:42,949 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
 INFO 2025-02-17 12:05:43,534 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:10:09,142 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 12:10:09,775 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:10:29,155 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:10:29,766 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:12:43,750 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:12:44,433 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:12:53,301 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 12:12:53,867 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:12:56,583 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\currency.py changed, reloading.
+INFO 2025-02-17 12:12:57,275 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:14:17,150 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:14:17,771 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:14:51,565 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:14:52,142 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:15:16,791 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:15:17,449 autoreload Watching for file changes with StatReloader
+DEBUG 2025-02-17 12:15:27,723 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:15:27,885 connectionpool Starting new HTTPS connection (1): auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:15:28,343 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/payment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 330
+DEBUG 2025-02-17 12:15:28,351 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:15:28,569 connectionpool https://auctions.yahoo.co.jp:443 "GET /search/search?p=%E3%82%AB%E3%83%A1%E3%83%A9&price_type=currentprice&n=20 HTTP/1.1" 200 None
+DEBUG 2025-02-17 12:15:29,037 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/return_policy?marketplace_id=EBAY_US HTTP/1.1" 200 933
+DEBUG 2025-02-17 12:15:29,044 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:15:29,932 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/fulfillment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 None
+DEBUG 2025-02-17 12:15:31,084 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:15:31,359 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/w1173430705 HTTP/1.1" 200 45506
+DEBUG 2025-02-17 12:15:32,040 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 12:15:32,482 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 12:15:32,483 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 12:15:33,648 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:15:33,842 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/g1157488875 HTTP/1.1" 200 49283
+INFO 2025-02-17 12:15:34,036 currency Using cached exchange rate for USD/JPY
+ERROR 2025-02-17 12:15:45,468 log Internal Server Error: /api/v1/calculator-price
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/calculator-price/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-02-17 12:15:45,470 log Internal Server Error: /api/v1/calculator-price
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/calculator-price/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+INFO 2025-02-17 12:16:06,847 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:16:07,465 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:16:43,445 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:16:44,082 autoreload Watching for file changes with StatReloader
+DEBUG 2025-02-17 12:16:46,874 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:16:47,169 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/c1173723878 HTTP/1.1" 200 None
+DEBUG 2025-02-17 12:16:47,345 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 12:16:47,747 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 12:16:47,748 currency Retrieved new exchange rate for USD/JPY: 152.31
+INFO 2025-02-17 12:17:05,813 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:17:06,416 autoreload Watching for file changes with StatReloader
+DEBUG 2025-02-17 12:17:20,161 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:17:20,416 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/g1157488875 HTTP/1.1" 200 49226
+DEBUG 2025-02-17 12:17:20,588 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 12:17:21,015 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 12:17:21,016 currency Retrieved new exchange rate for USD/JPY: 152.31
+ERROR 2025-02-17 12:17:41,034 log Internal Server Error: /api/v1/calculator-price
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/calculator-price/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-02-17 12:17:41,137 log Internal Server Error: /api/v1/calculator-price
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/calculator-price/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-02-17 12:17:41,291 log Internal Server Error: /api/v1/calculator-price
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/calculator-price/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+INFO 2025-02-17 12:18:22,672 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\urls.py changed, reloading.
+INFO 2025-02-17 12:18:23,416 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:18:43,693 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\urls.py changed, reloading.
+INFO 2025-02-17 12:18:44,294 autoreload Watching for file changes with StatReloader
+ERROR 2025-02-17 12:19:07,258 log Internal Server Error: /api/v1/calculator-price
+Traceback (most recent call last):
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\hikita\dev\private\MarketKing\backend\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/calculator-price/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+DEBUG 2025-02-17 12:19:37,176 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 12:19:37,573 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 12:19:37,574 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 12:19:42,933 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:19:43,630 connectionpool Starting new HTTPS connection (1): auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:19:43,658 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/payment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 330
+DEBUG 2025-02-17 12:19:43,663 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:19:43,951 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/return_policy?marketplace_id=EBAY_US HTTP/1.1" 200 933
+DEBUG 2025-02-17 12:19:43,957 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:19:44,243 connectionpool https://auctions.yahoo.co.jp:443 "GET /search/search?p=%E3%82%AB%E3%83%A1%E3%83%A9&price_type=currentprice&n=20 HTTP/1.1" 200 None
+DEBUG 2025-02-17 12:19:44,586 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/fulfillment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 None
+DEBUG 2025-02-17 12:19:48,185 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:19:48,443 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/o1171280648 HTTP/1.1" 200 45915
+WARNING 2025-02-17 12:19:49,096 log Not Found: /api/v1/calculator-price-init
+DEBUG 2025-02-17 12:19:51,017 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:19:51,336 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/h1172195648 HTTP/1.1" 200 47311
+WARNING 2025-02-17 12:19:51,465 log Not Found: /api/v1/calculator-price-init
+DEBUG 2025-02-17 12:20:09,936 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:20:10,231 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/f1158314635 HTTP/1.1" 200 50388
+WARNING 2025-02-17 12:20:10,363 log Not Found: /api/v1/calculator-price-init/
+DEBUG 2025-02-17 12:20:23,011 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:20:23,549 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/payment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 330
+DEBUG 2025-02-17 12:20:23,555 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:20:23,781 connectionpool Starting new HTTPS connection (1): auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:20:24,195 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/return_policy?marketplace_id=EBAY_US HTTP/1.1" 200 933
+DEBUG 2025-02-17 12:20:24,201 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 12:20:24,382 connectionpool https://auctions.yahoo.co.jp:443 "GET /search/search?p=%E3%82%AB%E3%83%A1%E3%83%A9&price_type=currentprice&n=20 HTTP/1.1" 200 None
+DEBUG 2025-02-17 12:20:24,902 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/fulfillment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 None
+DEBUG 2025-02-17 12:20:26,874 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:20:27,125 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/s1173590452 HTTP/1.1" 200 45497
+INFO 2025-02-17 12:20:27,264 currency Using cached exchange rate for USD/JPY
+DEBUG 2025-02-17 12:20:30,406 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:20:30,682 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/h1172195648 HTTP/1.1" 200 47315
+INFO 2025-02-17 12:20:30,833 currency Using cached exchange rate for USD/JPY
+DEBUG 2025-02-17 12:23:08,396 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 12:23:08,652 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/g1172020766 HTTP/1.1" 200 46121
+INFO 2025-02-17 12:23:08,820 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 12:23:11,855 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 12:23:48,384 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 12:23:48,420 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 12:23:48,474 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 12:27:35,682 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:27:36,343 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:27:56,745 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:27:57,352 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 12:28:42,712 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:28:43,395 autoreload Watching for file changes with StatReloader
+DEBUG 2025-02-17 12:28:49,824 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 12:28:49,936 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 12:28:50,019 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 12:28:50,089 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 12:28:50,224 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 12:28:50,225 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 12:28:50,323 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 12:28:50,324 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 12:28:50,408 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 12:28:50,409 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 12:28:50,472 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 12:28:50,473 currency Retrieved new exchange rate for USD/JPY: 152.31
+INFO 2025-02-17 12:29:13,605 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 12:29:14,262 autoreload Watching for file changes with StatReloader
+WARNING 2025-02-17 13:20:44,439 log Unauthorized: /api/v1/calculator-price/
+WARNING 2025-02-17 13:20:44,634 log Unauthorized: /api/v1/calculator-price/
+WARNING 2025-02-17 13:20:48,682 log Unauthorized: /api/v1/calculator-price/
+WARNING 2025-02-17 13:20:51,508 log Unauthorized: /api/v1/calculator-price/
+DEBUG 2025-02-17 13:20:59,791 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 13:21:00,186 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/payment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 330
+DEBUG 2025-02-17 13:21:00,194 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 13:21:00,770 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/return_policy?marketplace_id=EBAY_US HTTP/1.1" 200 933
+DEBUG 2025-02-17 13:21:00,785 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 13:21:01,166 connectionpool Starting new HTTPS connection (1): auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 13:21:01,609 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/fulfillment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 None
+DEBUG 2025-02-17 13:21:01,751 connectionpool https://auctions.yahoo.co.jp:443 "GET /search/search?p=%E3%82%AB%E3%83%A1%E3%83%A9&price_type=currentprice&n=20 HTTP/1.1" 200 None
+DEBUG 2025-02-17 13:21:03,970 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 13:21:04,223 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/g1157488875 HTTP/1.1" 200 49239
+DEBUG 2025-02-17 13:21:05,323 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 13:21:05,730 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 13:21:05,734 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 13:21:07,524 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 13:21:07,817 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/w1173430705 HTTP/1.1" 200 45652
+INFO 2025-02-17 13:21:08,019 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:21:13,490 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:21:13,640 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:21:14,491 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:21:14,717 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:21:45,359 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 13:21:46,253 autoreload Watching for file changes with StatReloader
+DEBUG 2025-02-17 13:21:49,326 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 13:21:49,408 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 13:21:49,738 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 13:21:49,739 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 13:21:49,796 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 13:21:49,797 currency Retrieved new exchange rate for USD/JPY: 152.31
+INFO 2025-02-17 13:22:23,597 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 13:22:24,240 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 13:23:02,511 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 13:23:03,093 autoreload Watching for file changes with StatReloader
+DEBUG 2025-02-17 13:23:07,580 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 13:23:07,980 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 13:23:07,981 currency Retrieved new exchange rate for USD/JPY: 152.31
+INFO 2025-02-17 13:23:08,766 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:23:49,844 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 13:23:50,437 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 13:23:59,276 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 13:23:59,954 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 13:24:06,759 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 13:24:07,353 autoreload Watching for file changes with StatReloader
+WARNING 2025-02-17 13:24:09,950 log Bad Request: /api/v1/calculator-price/
+INFO 2025-02-17 13:24:18,499 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 13:24:19,157 autoreload Watching for file changes with StatReloader
+WARNING 2025-02-17 13:24:21,113 log Bad Request: /api/v1/calculator-price/
+INFO 2025-02-17 13:24:28,383 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 13:24:28,966 autoreload Watching for file changes with StatReloader
+INFO 2025-02-17 13:24:36,798 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 13:24:37,487 autoreload Watching for file changes with StatReloader
+WARNING 2025-02-17 13:24:39,439 log Bad Request: /api/v1/calculator-price/
+WARNING 2025-02-17 13:24:39,538 log Bad Request: /api/v1/calculator-price/
+DEBUG 2025-02-17 13:24:47,194 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 13:24:47,525 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/payment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 330
+DEBUG 2025-02-17 13:24:47,531 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 13:24:47,959 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/return_policy?marketplace_id=EBAY_US HTTP/1.1" 200 933
+DEBUG 2025-02-17 13:24:47,967 connectionpool Starting new HTTPS connection (1): api.ebay.com:443
+DEBUG 2025-02-17 13:24:48,361 connectionpool https://api.ebay.com:443 "GET /sell/account/v1/fulfillment_policy?marketplace_id=EBAY_US HTTP/1.1" 200 18388
+DEBUG 2025-02-17 13:24:49,921 connectionpool Starting new HTTPS connection (1): auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 13:24:50,579 connectionpool https://auctions.yahoo.co.jp:443 "GET /search/search?p=%E3%82%AB%E3%83%A1%E3%83%A9&price_type=currentprice&n=20 HTTP/1.1" 200 None
+DEBUG 2025-02-17 13:24:52,468 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 13:24:52,705 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/g1157488875 HTTP/1.1" 200 49247
+DEBUG 2025-02-17 13:24:52,872 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 13:24:53,272 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 13:24:53,273 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 13:24:55,702 connectionpool Starting new HTTPS connection (1): page.auctions.yahoo.co.jp:443
+DEBUG 2025-02-17 13:24:56,045 connectionpool https://page.auctions.yahoo.co.jp:443 "GET /jp/auction/c1173723878 HTTP/1.1" 200 None
+INFO 2025-02-17 13:24:56,201 currency Using cached exchange rate for USD/JPY
+WARNING 2025-02-17 13:25:02,181 log Bad Request: /api/v1/calculator-price/
+WARNING 2025-02-17 13:25:02,844 log Bad Request: /api/v1/calculator-price/
+WARNING 2025-02-17 13:25:02,959 log Bad Request: /api/v1/calculator-price/
+WARNING 2025-02-17 13:25:03,119 log Bad Request: /api/v1/calculator-price/
+INFO 2025-02-17 13:26:16,470 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\views\calculator_price.py changed, reloading.
+INFO 2025-02-17 13:26:17,060 autoreload Watching for file changes with StatReloader
+DEBUG 2025-02-17 13:26:20,065 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 13:26:20,071 connectionpool Starting new HTTPS connection (1): api.exchangerate-api.com:443
+DEBUG 2025-02-17 13:26:20,466 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 13:26:20,467 currency Retrieved new exchange rate for USD/JPY: 152.31
+DEBUG 2025-02-17 13:26:20,470 connectionpool https://api.exchangerate-api.com:443 "GET /v4/latest/USD?key=ac3ab836103ce611b716d2a5 HTTP/1.1" 200 None
+INFO 2025-02-17 13:26:20,471 currency Retrieved new exchange rate for USD/JPY: 152.31
+INFO 2025-02-17 13:26:24,781 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:24,951 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:27,724 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:28,137 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:31,953 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:32,643 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:33,164 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:33,338 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:34,918 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:35,095 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:26:35,273 currency Using cached exchange rate for USD/JPY
+INFO 2025-02-17 13:27:46,234 autoreload C:\Users\hikita\dev\private\MarketKing\backend\api\services\calculator.py changed, reloading.
+INFO 2025-02-17 13:27:46,900 autoreload Watching for file changes with StatReloader
