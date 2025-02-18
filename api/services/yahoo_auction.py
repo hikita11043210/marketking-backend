@@ -1,9 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import logging
-import json
-from json.decoder import JSONDecodeError
-from datetime import datetime
 import re
 from django.conf import settings
 logger = logging.getLogger(__name__)
@@ -104,6 +101,19 @@ class YahooAuctionService:
             # タイトル
             data['title'] = soup.find('meta', property='og:title')['content'].split(' - ')[0]
 
+            # 商品説明の取得
+            description_elem = soup.find('div', class_='ProductExplanation__commentBody')
+            if description_elem:
+                # 改行を保持するためstrip=Trueを削除し、<br>タグを改行に変換
+                for br in description_elem.find_all('br'):
+                    br.replace_with('\n')
+                # 連続する改行を単一の改行に変換
+                raw_text = description_elem.get_text(strip=False)
+                cleaned_text = re.sub(r'\n+', '\n', raw_text)
+                data['description'] = cleaned_text.strip()
+            else:
+                data['description'] = ''
+
             # 商品価格
             price_rows = soup.find_all('div', class_='Price__row')
             for row in price_rows:
@@ -180,7 +190,8 @@ class YahooAuctionService:
                 'auction_id',
                 'categories',
                 'condition',
-                'images'
+                'images',
+                'description'
             ]
 
             # 存在しないキーを確認
