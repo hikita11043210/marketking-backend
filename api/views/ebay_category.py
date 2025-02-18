@@ -18,7 +18,7 @@ class EbayCategoryView(APIView):
         try:
             if query:
                 # カテゴリ検索
-                result = ebay_service.search_categories(query)
+                result = ebay_service.get_categories(query)
             else:
                 # 全カテゴリ取得
                 result = ebay_service.get_all_categories()

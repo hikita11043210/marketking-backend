@@ -4,6 +4,7 @@ from rest_framework import status
 from ..services.calculator import CalculatorService
 from rest_framework.permissions import IsAuthenticated
 import logging
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -99,21 +100,24 @@ class CalculatorPriceView(APIView):
             }
         """
         try:
-            prices = request.data.get('money')
-            if isinstance(prices, str):
-                try:
-                    prices = [int(prices)]
-                except ValueError:
-                    return Response(
-                        {
-                            'success': False,
-                            'message': '価格は数値で指定してください'
-                        },
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+            price = request.data.get('price')
+            original_prices = request.data.get('money', [])
 
-            # 数値以外の要素をチェック
-            if not all(isinstance(price, (int, float)) for price in prices):
+            # 文字列を数値に変換
+            try:
+                original_prices = [int(price) for price in original_prices]
+            except ValueError:
+                return Response(
+                    {
+                        'success': False,
+                        'message': '仕入値は数値で指定してください'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                price = Decimal(price)
+            except ValueError:
                 return Response(
                     {
                         'success': False,
@@ -123,7 +127,7 @@ class CalculatorPriceView(APIView):
                 )
 
             service = CalculatorService(request.user)
-            result = service.calc_profit_from_dollar(prices)
+            result = service.calc_profit_from_dollar(price, original_prices)
 
             return Response({
                 'success': True,

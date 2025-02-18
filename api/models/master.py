@@ -16,7 +16,7 @@ class Countries(models.Model):
     country_name = models.CharField(max_length=100, null=False)
     country_name_jp = models.CharField(max_length=100, null=False)
     zone = models.CharField(max_length=1, null=False)
-    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, on_delete=models.PROTECT)
 
     class Meta:
         db_table = 'm_countries'
@@ -28,7 +28,7 @@ class Shipping(models.Model):
     zone = models.CharField(max_length=1, null=False)
     weight = models.IntegerField(null=False)
     basic_price = models.DecimalField(max_digits=10, decimal_places=2, null=False)
-    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, on_delete=models.PROTECT)
 
     class Meta:
         db_table = 'm_shipping'
@@ -37,7 +37,7 @@ class Shipping(models.Model):
         return f"Zone {self.zone} - {self.weight}kg"
 
 class ShippingSurcharge(models.Model):
-    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, on_delete=models.PROTECT)
     surcharge_type = models.CharField(max_length=50, null=False)  # 'FUEL', 'OVERSIZE', 'SATURDAY' など
     rate = models.DecimalField(max_digits=5, decimal_places=2, null=False)  # 割合（%）
     fixed_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)  # 固定金額（ある場合）
@@ -76,8 +76,8 @@ class Tax(models.Model):
         return f"{self.rate}%"
 
 class Setting(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='settings')
-    ebay_store_type = models.ForeignKey(EbayStoreType, on_delete=models.CASCADE, related_name='settings')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='settings')
+    ebay_store_type = models.ForeignKey(EbayStoreType, on_delete=models.PROTECT, related_name='settings')
     yahoo_client_id = models.CharField(max_length=255, null=True, blank=True)
     yahoo_client_secret = models.CharField(max_length=255, null=True, blank=True)
     ebay_client_id = models.CharField(max_length=255, null=True, blank=True)
@@ -99,3 +99,12 @@ class Setting(models.Model):
         """ユーザーの設定を取得または作成する"""
         settings, created = cls.objects.get_or_create(user=user)
         return settings
+
+class Status(models.Model):
+    status_name = models.CharField(max_length=100, null=False)
+
+    class Meta:
+        db_table = 'm_status'
+
+    def __str__(self):
+        return self.status_name

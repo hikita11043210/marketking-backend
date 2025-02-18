@@ -136,26 +136,16 @@ class CalculatorService:
             logger.error(f"ドル換算エラー: {str(e)}")
             raise
 
-    def calc_profit_from_dollar(self, prices: int) -> dict:
+    def calc_profit_from_dollar(self, price: Decimal, original_prices: list[int]) -> dict:
         """
         ドル価格から最終利益を計算する
 
         Args:
-            prices (list[int]): 計算対象のドル価格リスト
+            price (int): 計算対象のドル価格
+            original_prices (list[int]): 仕入れ価格リスト（円）
 
         Returns:
             dict: 計算結果
-                - original_price: 元の価格の合計
-                - shipping_cost: 送料
-                - rate: 適用レート
-                - ebay_fee: eBay手数料率
-                - international_fee: 国際手数料率
-                - tax_rate: 消費税率
-                - calculated_price_yen: 円での計算価格
-                - calculated_price_dollar: ドルでの計算価格
-                - exchange_rate: 為替レート
-                - final_profit_yen: 円での最終利益
-                - final_profit_dollar: ドルでの最終利益
         """
         try:
             # 各種レートの取得
@@ -165,25 +155,25 @@ class CalculatorService:
             payoneer_fee = Decimal(str(self.payoneer_fee)) / 100
             profit_rate = Decimal(str(self.settings.rate)) / 100
 
+            # 仕入れ価格の合計
+            total_original_price = sum(original_prices)
+
             # ドル価格の合計を計算
-            total_price_dollar = sum(prices)
-            
+            total_price_dollar = price
             # 円に換算
-            total_price_yen = int(total_price_dollar * self.exchange_rate)
+            total_price_yen = total_price_dollar * self.exchange_rate
             # 手数料と税金の計算
             ebay_fee_amount = total_price_yen * ebay_fee
             international_fee_amount = total_price_yen * international_fee
             tax_amount = (ebay_fee_amount + international_fee_amount) * tax_rate
-            
-            # 最終利益の計算（円）
-            final_profit_yen = total_price_yen - ebay_fee_amount - international_fee_amount - tax_amount
+            # 最終利益の計算（円）- 仕入れ価格を考慮
+            final_profit_yen = total_price_yen - ebay_fee_amount - international_fee_amount - tax_amount - total_original_price - self.shipping_cost
             final_profit_yen = final_profit_yen - (final_profit_yen * payoneer_fee)
-            
             # ドルでの最終利益
             final_profit_dollar = int(final_profit_yen / self.exchange_rate)
 
             return {
-                'original_price': total_price_yen,
+                'original_price': total_original_price,
                 'shipping_cost': self.shipping_cost,
                 'rate': float(profit_rate),
                 'ebay_fee': float(ebay_fee),

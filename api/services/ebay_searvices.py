@@ -74,7 +74,7 @@ class EbayService:
                 logger.error(f"Error response: {e.response.text}")
             raise Exception("配送ポリシーの取得に失敗しました")
 
-    def search_categories(self, query: str):
+    def get_categories(self, query: str):
         """
         カテゴリの検索を行う
         Args:
@@ -221,4 +221,86 @@ class EbayService:
                 'success': False,
                 'message': str(e)
             }
+
+    def create_inventory_item(self, sku: str, product_data: dict):
+        """
+        商品情報を登録する
+        Args:
+            sku (str): 商品のSKU
+            product_data (dict): 商品情報
+        Returns:
+            dict: レスポンス
+        """
+        try:
+            endpoint = f"{self.api_url}/sell/inventory/v1/inventory_item/{sku}"
+            headers = self._get_headers()
+            
+            response = requests.put(endpoint, headers=headers, json=product_data)
+            response.raise_for_status()
+            
+            return {
+                'success': True,
+                'message': '商品情報の登録に成功しました',
+                'data': response.json() if response.text else None
+            }
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to create inventory item: {str(e)}")
+            if hasattr(e.response, 'text'):
+                logger.error(f"Error response: {e.response.text}")
+            raise Exception("商品情報の登録に失敗しました")
+
+    def create_offer(self, offer_data: dict):
+        """
+        商品の出品情報を作成する
+        Args:
+            offer_data (dict): 出品情報
+        Returns:
+            dict: レスポンス（offerId含む）
+        """
+        try:
+            endpoint = f"{self.api_url}/sell/inventory/v1/offer"
+            headers = self._get_headers()
+            
+            response = requests.post(endpoint, headers=headers, json=offer_data)
+            response.raise_for_status()
+            
+            return {
+                'success': True,
+                'message': '出品情報の作成に成功しました',
+                'data': response.json()
+            }
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to create offer: {str(e)}")
+            if hasattr(e.response, 'text'):
+                logger.error(f"Error response: {e.response.text}")
+            raise Exception("出品情報の作成に失敗しました")
+
+    def publish_offer(self, offer_id: str):
+        """
+        出品をアクティブ化する
+        Args:
+            offer_id (str): オファーID
+        Returns:
+            dict: レスポンス（listingId含む）
+        """
+        try:
+            endpoint = f"{self.api_url}/sell/inventory/v1/offer/{offer_id}/publish"
+            headers = self._get_headers()
+            
+            response = requests.post(endpoint, headers=headers)
+            response.raise_for_status()
+            
+            return {
+                'success': True,
+                'message': '商品の出品に成功しました',
+                'data': response.json()
+            }
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to publish offer: {str(e)}")
+            if hasattr(e.response, 'text'):
+                logger.error(f"Error response: {e.response.text}")
+            raise Exception("商品の出品に失敗しました")
 
