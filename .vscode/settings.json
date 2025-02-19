@@ -4,11 +4,13 @@
         "DEEPL",
         "dotenv",
         "Fernet",
+        "Higashiakuragawa",
         "levelname",
         "Payoneer",
         "searvices",
         "simplejwt",
         "SITEID",
+        "Yokkaichishi",
         "zacn"
     ]
 }

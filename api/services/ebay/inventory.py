@@ -1,5 +1,6 @@
 from api.services.ebay.common import Common
 import requests
+from api.utils.generate import generate_merchant_location_key
 
 class Inventory(Common):
     def create_inventory_item(self, sku: str, product_data: dict):
@@ -108,7 +109,7 @@ class Inventory(Common):
             dict: レスポンス
         """
         try:
-            merchant_location_key = self.generate_merchant_location_key()
+            merchant_location_key = generate_merchant_location_key()
             endpoint = f"{self.api_url}/sell/inventory/v1/location/{merchant_location_key}"
             headers = self._get_headers()
             
