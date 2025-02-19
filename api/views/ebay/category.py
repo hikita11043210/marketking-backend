@@ -14,14 +14,14 @@ class EbayCategoryView(APIView):
         # 検索クエリがある場合は検索を実行
         query = request.query_params.get('q')
         ebay_service = EbayService(request.user)
-
+        category_tree_id = ebay_service.get_categories_tree_id()
         try:
             if query:
                 # カテゴリ検索
-                result = ebay_service.get_categories(query)
+                result = ebay_service.get_categories(category_tree_id, query)
             else:
                 # 全カテゴリ取得
-                result = ebay_service.get_all_categories()
+                result = ebay_service.get_all_categories(category_tree_id)
             
             return Response(result, status=status.HTTP_200_OK)
         except Exception as e:

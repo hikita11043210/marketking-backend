@@ -5,16 +5,17 @@ from .views.shipping_calculator import ShippingCalculatorView
 from .views.calculator_price import CalculatorPriceView
 from .views.translator import TranslatorView
 from .views.auth import LoginView, RefreshTokenView, LogoutView
-from .views.ebay_auth import (
+from .views.ebay.auth import (
     EbayAuthStatusView,
     EbayAuthURLView,
     EbayAuthCallbackView,
     EbayAuthDisconnectView
 )
-from .views.ebay_policies import EbayPoliciesView
-from .views.ebay_category import EbayCategoryView
-from .views.ebay_itemSpecifics import EbayItemSpecificsView
-from .views.ebay_register import EbayRegisterView
+from .views.ebay.policies import EbayPoliciesView
+from .views.ebay.category import EbayCategoryView
+from .views.ebay.itemSpecifics import EbayItemSpecificsView
+from .views.ebay.register import EbayRegisterView
+from .views.ebay.condition import EbayConditionView
 
 urlpatterns = [
     # 認証関連のエンドポイント
@@ -35,4 +36,5 @@ urlpatterns = [
     path('ebay/category/', EbayCategoryView.as_view()),
     path('ebay/itemSpecifics/', EbayItemSpecificsView.as_view()),
     path('ebay/register/', EbayRegisterView.as_view()),
+    path('ebay/condition/', EbayConditionView.as_view()),
 ] 

@@ -41,6 +41,7 @@ class EbayRegisterFromYahooAuction(models.Model):
     ebay_shipping_price = models.DecimalField(max_digits=10, decimal_places=2)
     final_profit = models.DecimalField(max_digits=10, decimal_places=2)
     yahoo_auction_id = models.CharField(max_length=255)
+    yahoo_auction_url = models.CharField(max_length=255, null=True, blank=True)
     yahoo_auction_item_name = models.CharField(max_length=255)
     yahoo_auction_item_price = models.DecimalField(max_digits=10, decimal_places=2)
     yahoo_auction_shipping = models.DecimalField(max_digits=10, decimal_places=2)

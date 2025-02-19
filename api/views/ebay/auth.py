@@ -2,8 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from api.services.ebay_auth import EbayAuthService
+from api.services.ebay.auth import EbayAuthService
 from api.models import EbayToken
+
 class EbayAuthStatusView(APIView):
     """eBayとの連携状態を確認するAPI"""
     permission_classes = [IsAuthenticated]

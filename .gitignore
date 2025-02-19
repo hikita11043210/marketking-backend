@@ -17,3 +17,5 @@ media/
 static/
 db.sqlite3
 debug.log*
+logs/debug_*.log
+logs

@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 from cryptography.fernet import Fernet
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -203,9 +203,9 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': f'logs/debug_{datetime.now().strftime("%Y%m%d")}.log',
             'formatter': 'verbose',
         },
         'console': {
@@ -267,3 +267,9 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
 
 # 暗号化キーの設定
 ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()  # バイト列に変換
+
+# ebay送料
+EBAY_SHIPPING_COST = os.getenv('EBAY_SHIPPING_COST')
+
+# Payoneer手数料
+PAYONEER_FEE = os.getenv('PAYONEER_FEE')

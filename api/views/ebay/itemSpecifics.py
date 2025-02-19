@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from api.services.ebay_searvices import EbayService
+from api.services.ebay.trading import Trading
+from api.services.ebay.category import Category
 
 class EbayItemSpecificsView(APIView):
     def get(self, request):
@@ -17,8 +18,10 @@ class EbayItemSpecificsView(APIView):
         
         try:
             user = request.user
-            ebay_service = EbayService(user)
-            result = ebay_service.get_item_specifics(ebay_item_id)
+            ebay_service_trading = Trading(user)
+            ebay_service_category = Category(user)
+            category_tree_id = ebay_service_category.get_categories_tree_id()
+            result = ebay_service_trading.get_item_specifics(ebay_item_id, category_tree_id)
             
             return Response(result, status=status.HTTP_200_OK if result['success'] else status.HTTP_500_INTERNAL_SERVER_ERROR)
             

@@ -2,6 +2,7 @@ import logging
 from decimal import Decimal
 from ..models import Setting, Tax, EbayStoreType
 from .currency import CurrencyService
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +17,9 @@ class CalculatorService:
         # 消費税の取得（id=1の税率を使用）
         self.tax = Tax.objects.get(id=1)
         # 固定送料
-        self.shipping_cost = 3000
+        self.shipping_cost = int(settings.EBAY_SHIPPING_COST)
         # Payoneer手数料
-        self.payoneer_fee = 2
+        self.payoneer_fee = int(settings.PAYONEER_FEE)
         # 為替レートの取得
         self.exchange_rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))
         if self.exchange_rate == 0:
@@ -62,7 +63,6 @@ class CalculatorService:
             denominator = 1 - (ebay_fee + international_fee + tax_rate + payoneer_fee)
             if denominator <= 0:
                 raise ValueError("手数料合計が100%を超えているため、計算できません。")
-            
             numerator = (total_price + self.shipping_cost) * (1 + profit_rate)
             calculated_price = int(numerator / denominator)
 
