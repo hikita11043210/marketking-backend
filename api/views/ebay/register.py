@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from api.services.ebay.inventory import Inventory
 from api.services.ebay.offer import Offer
 from api.models.ebay import EbayRegisterFromYahooAuction
-from api.models.master import Status
+from api.models.master import Status, Condition
 from api.utils.throttles import AuctionDetailThrottle
 from api.utils.response_helpers import create_success_response, create_error_response
 from decimal import Decimal
@@ -41,6 +41,8 @@ class EbayRegisterView(APIView):
                 .upper()        # 全大文字に変換（例: "like new" → "LIKE NEW"）
                 .replace(" ", "_")  # スペースをアンダースコアに置換（例: "LIKE NEW" → "LIKE_NEW"）
             )
+
+            condition_enum = Condition.objects.get(condition_id=product_data['condition']['conditionId']).condition_enum
 
             # 商品情報の構築
             register_data = {

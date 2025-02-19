@@ -14,11 +14,10 @@ class Marketplace(Common):
         try:
             endpoint = f"{self.api_url}/sell/metadata/v1/marketplace/{settings.EBAY_MARKETPLACE_ID}/get_item_condition_policies"
             headers = self._get_headers()
-                        
             response = requests.get(endpoint, headers=headers)
             response.raise_for_status()
             data = response.json()
-            print(data)
+
             conditions = [
                 policy["itemConditions"]
                 for policy in data["itemConditionPolicies"]

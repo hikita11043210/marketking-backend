@@ -108,3 +108,13 @@ class Status(models.Model):
 
     def __str__(self):
         return self.status_name
+
+class Condition(models.Model):
+    condition_id = models.IntegerField(null=False)
+    condition_enum = models.CharField(max_length=30, null=False)
+
+    class Meta:
+        db_table = 'm_condition'
+
+    def __str__(self):
+        return f"{self.condition_id} - {self.condition_enum}"
