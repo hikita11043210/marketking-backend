@@ -58,7 +58,7 @@ class CurrencyService:
                 'USD': 0.0067,  # 1 JPY = 0.0067 USD
             },
             'USD': {
-                'JPY': 149.25,  # 1 USD = 149.25 JPY
+                'JPY': 150,  # 1 USD = 150 JPY
             }
         }
         

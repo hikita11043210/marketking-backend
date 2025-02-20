@@ -1,8 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ..services.yahoo_auction import YahooAuctionService
-from ..services.currency import CurrencyService
+from api.services.yahoo_auction.scraping import ScrapingService
 import logging
 from api.utils.throttles import AuctionDetailThrottle
 
@@ -23,7 +22,7 @@ class ItemSearchView(APIView):
                     'success': False,
                     'message': f'未対応のプラットフォーム: {platform}'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            service = YahooAuctionService()
+            service = ScrapingService()
             result = service.get_items(request.query_params)
             return Response({
                 'success': True,
@@ -48,17 +47,9 @@ class ItemDetailView(APIView):
     """
     def get(self, request):
         try:
-            service = YahooAuctionService()
+            service = ScrapingService()
             # Yahooオークションの詳細情報取得
             result = service.get_item_detail(request.query_params)
-
-            # # 為替レートの取得
-            # currency_service = CurrencyService()
-            # result['data']['current_price_in_tax'] = currency_service.convert_currency(result['data']['current_price'], 'JPY', 'USD')
-            # result['data']['buy_now_price_in_tax'] = currency_service.convert_currency(result['data']['buy_now_price'], 'JPY', 'USD')
-
-            # # 利率をかけた価格を作成
-            # result['data']['current_price_in_tax'] = currency_service.convert_currency(result['data']['current_price'], 'JPY', 'USD')
 
             return Response({
                 'success': True,

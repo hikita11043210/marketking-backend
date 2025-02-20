@@ -16,6 +16,7 @@ from .views.ebay.category import EbayCategoryView
 from .views.ebay.itemSpecifics import EbayItemSpecificsView
 from .views.ebay.register import EbayRegisterView
 from .views.ebay.condition import EbayConditionView
+from .views.ebay.list import List
 
 urlpatterns = [
     # 認証関連のエンドポイント
@@ -37,4 +38,5 @@ urlpatterns = [
     path('ebay/itemSpecifics/', EbayItemSpecificsView.as_view()),
     path('ebay/register/', EbayRegisterView.as_view()),
     path('ebay/condition/', EbayConditionView.as_view()),
+    path('list/', List.as_view()),
 ] 

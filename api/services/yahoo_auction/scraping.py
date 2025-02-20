@@ -5,7 +5,7 @@ import re
 from django.conf import settings
 logger = logging.getLogger(__name__)
 
-class YahooAuctionService:
+class ScrapingService:
     BASE_URL = settings.YAHOO_AUCTION_URL
 
     def __init__(self):
@@ -95,9 +95,24 @@ class YahooAuctionService:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
+            # import os,datetime
+            # log_dir = "logs/soup_dumps/"
+            # os.makedirs(log_dir, exist_ok=True)
+            # filename = f"{log_dir}soup_dump_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+            # with open(filename, "w", encoding="utf-8") as f:
+            #     f.write(soup.prettify())
+            #     logger.info(f"Soup内容を {filename} に保存しました")
+
             # 商品基本情報
             data = {}
 
+            # 終了判定
+            closed_header = soup.find('div', class_='ClosedHeader')
+            if closed_header and 'このオークションは終了しています' in closed_header.get_text():
+                data['end_flag'] = True
+            else:
+                data['end_flag'] = False
+            
             # タイトル
             data['title'] = soup.find('meta', property='og:title')['content'].split(' - ')[0]
 

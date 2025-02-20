@@ -27,9 +27,10 @@ class Inventory(Common):
             }
             
         except requests.exceptions.RequestException as e:
-            if hasattr(e.response, 'text'):
-                raise Exception(f"商品情報の登録に失敗しました: {e.response.text}")
-            raise Exception("商品情報の登録に失敗しました")
+            return {
+                'success': False,
+                'message': f"商品情報の登録に失敗しました: {e.response.text}"
+            }
 
 
     def get_inventory_locations(self, limit: int = None, offset: int = None):
@@ -126,3 +127,49 @@ class Inventory(Common):
             if hasattr(e.response, 'text'):
                 raise Exception(f"インベントリロケーションの作成に失敗しました: {e.response.text}")
             raise Exception("インベントリロケーションの作成に失敗しました")
+        
+
+    def get_inventory_items(self, status_filter: str = None):
+        """
+        ステータス別にインベントリアイテムを取得
+        Args:
+            status_filter (str, optional): フィルタ条件（ACTIVE/INACTIVEなど）
+        Returns:
+            list: 商品リスト
+        """
+        try:
+            endpoint = f"{self.api_url}/sell/inventory/v1/inventory_item"
+            headers = self._get_headers()
+            params = {'marketplace_id': self.marketplace_id}
+            
+            if status_filter:
+                params['status'] = status_filter
+            
+            response = requests.get(endpoint, headers=headers, params=params)
+            response.raise_for_status()
+            
+            return response.json().get('inventoryItems', [])
+            
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"get_inventory_items:商品情報の取得に失敗しました: {str(e)}")
+
+
+    def get_inventory_item_for_sku(self, sku: str):
+        """
+        ステータス別にインベントリアイテムを取得
+        Args:
+            sku (str): 商品のSKU
+        Returns:
+            list: 商品
+        """
+        try:
+            endpoint = f"{self.api_url}/sell/inventory/v1/inventory_item/{sku}"
+            headers = self._get_headers()
+            response = requests.get(endpoint, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        
+        except requests.exceptions.RequestException as e:
+            # 商品が見つからない場合はNoneを返す
+            return None
+

@@ -36,6 +36,7 @@ class EbayRegisterFromYahooAuction(models.Model):
     """ヤフオクからeBayへの出品情報を管理するモデル"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sku = models.CharField(max_length=255, unique=True)
+    offer_id = models.CharField(max_length=255, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.PROTECT)
     ebay_price = models.DecimalField(max_digits=10, decimal_places=2)
     ebay_shipping_price = models.DecimalField(max_digits=10, decimal_places=2)

@@ -1,0 +1,14 @@
+# テスト用データベース用意
+-- ユーザー作成と権限付与を分離
+CREATE USER 'test_user'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON test_market_king.* TO 'test_user'@'localhost';
+FLUSH PRIVILEGES;
+CREATE DATABASE test_market_king CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# setting.pyを継承したtest_settings.pyを使用してテストを実行
+
+# テスト設定を使用してマイグレーションを実行
+python manage.py migrate --settings=api.test.test_settings
+
+# テスト設定を使用してテストを実行
+python manage.py test api.test.login --settings=api.test.test_settings
