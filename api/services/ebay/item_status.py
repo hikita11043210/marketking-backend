@@ -23,13 +23,13 @@ class ItemStatusService(Common):
             # 在庫情報の取得
             inventory = self.inventory_service.get_inventory_item_for_sku(sku)
             if inventory is None:
-                return "NOT_FOUND"
+                return None
             quantity = inventory.get('availability', {}).get('shipToLocationAvailability', {}).get('quantity', 0)
             
             # オファー状態の取得
             offer_status = self.offer_service.get_offer_status(sku)
             
-            if offer_status.get('status') == "PUBLISHED":
+            if offer_status == "PUBLISHED":
                 if quantity > 0:
                     return "ACTIVE"  # 出品中で在庫あり
                 else:

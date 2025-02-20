@@ -24,17 +24,9 @@ class Offer(Common):
             offers = response.json().get('offers', [])
 
             if not offers:
-                return {
-                    'status': "UNPUBLISHED",
-                    'offerId': None
-                }
-                
-            result = {
-                'status': offers[0].get('status'),
-                'offerId': offers[0].get('offerId')
-            }
+                return None
 
-            return result
+            return offers[0].get('status')
             
         except requests.exceptions.RequestException as e:
             raise Exception(f"オファー情報の取得に失敗しました: {str(e)}")
@@ -69,6 +61,8 @@ class Offer(Common):
             offer_id (str): 削除するオファーのID
         Returns:
             dict: レスポンス
+        注意：
+            - オファーデータが削除されてしまうため、利用すると"publish_offer"による再登録は不可能なので基本的に利用しない
         """
         try:
             endpoint = f"{self.api_url}/sell/inventory/v1/offer/{offer_id}"
@@ -94,6 +88,8 @@ class Offer(Common):
             offer_id (str): オファーID
         Returns:
             dict: レスポンス（listingId含む）
+        注意：
+            - 再出品時もこの関数を使用する
         """
         try:
             endpoint = f"{self.api_url}/sell/inventory/v1/offer/{offer_id}/publish"
@@ -109,3 +105,27 @@ class Offer(Common):
             raise Exception(f"商品の出品に失敗しました: {error_detail}")
         except Exception as e:
             raise Exception(f"予期せぬエラーが発生しました: {str(e)}")
+
+
+    def withdraw_offer(self, offer_id: str):
+        """
+        出品を取り下げる（アンパブリッシュする）
+        Args:
+            offer_id (str): 取り下げる出品のオファーID
+        Returns:
+            dict: レスポンス
+        注意：
+            - 画面での取下げ操作と同じ。商品が削除されることはない。（出品状態を解除するときは基本的にはこの操作でOK）
+        """
+        try:
+            endpoint = f"{self.api_url}/sell/inventory/v1/offer/{offer_id}/withdraw"
+            headers = self._get_headers()
+            
+            response = requests.post(endpoint, headers=headers)
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.exceptions.RequestException as e:
+            if hasattr(e.response, 'text'):
+                raise Exception(f"出品の取り下げに失敗しました: {e.response.text}")
+            raise Exception("出品の取り下げに失敗しました")

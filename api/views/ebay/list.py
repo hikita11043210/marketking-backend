@@ -1,33 +1,40 @@
-from api.services.yahoo_auction.update_list import UpdateList
 from rest_framework.views import APIView
-from api.services.ebay.inventory import Inventory
 from api.utils.response_helpers import create_success_response, create_error_response
 from api.models.ebay import EbayRegisterFromYahooAuction
-from api.services.ebay.offer import Offer
-from api.utils.generate_log_file import generate_log_file
 from api.services.currency import CurrencyService
 from decimal import Decimal
-from datetime import datetime
+from api.services.ebay.offer import Offer
+from api.utils.generate_log_file import generate_log_file
+from api.services.ebay.inventory import Inventory
 
 class List(APIView):
     def get(self, request):
         try:
-            # ebay_service_inventory = Inventory(request.user)
-            # ebay_service_offer = Offer(request.user)
-            # inventory_items = ebay_service_inventory.get_inventory_items()
-
-            # generate_log_file(inventory_items, "inventory_items", time=False)
-
+            # 商品情報を取得
             ebay_register_items = EbayRegisterFromYahooAuction.objects.all()
             
-            # for item in ebay_register_items:
-            #     offer = ebay_service_offer.get_offer_status(item.sku)
-            #     ebay_service_offer.publish_offer(offer.get('offerId'))
+            # # 出品情報を削除するためのインスタンスを生成
+            # ebay_service_offer = Offer(request.user)
+            # ebay_service_inventory = Inventory(request.user)
+            # data = ebay_service_inventory.get_inventory_items()
 
-            # offer = ebay_service_offer.get_offer_status('YA_q1173962949_20250220234441')
-            # ebay_service_offer.publish_offer(offer.get('offerId'))
-            # generate_log_file(offer, "offer", time=False)
+            # generate_log_file(data, "data", time=False)
+
+            # # 出品情報を取得
+            # for item in ebay_register_items:
+            #     generate_log_file(item.offer_id, "offer_id", time=True)
+
+            # 出品情報を削除
+            # for item in ebay_register_items:
+            #     ebay_service_offer.publish_offer(item.offer_id) # 出品公開
+                # ebay_service_offer.withdraw_offer(item.offer_id) # 出品取り下げ
+                # ebay_service_offer.delete_offer(item.offer_id) # オファー削除
+                # ebay_service_inventory.delete_inventory_item(item.sku) # ebayから削除
+
+            # 一覧出力時の変換レートを取得
             rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))
+
+            # 一覧出力時のデータを作成
             response_data = [
                 {
                     'id': item.id,

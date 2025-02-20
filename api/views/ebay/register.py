@@ -21,36 +21,40 @@ class EbayRegisterView(APIView):
 
     def post(self, request):
         """
-        eBayに商品を出品するエンドポイント
+        eBayに商品を出品する処理
         """
         try:
+            # フロントから送信されたデータを取得
             product_data = request.data['product_data']
             yahoo_auction_data = request.data['yahoo_auction_data']
             other_data = request.data['other_data']
 
-            # 重複チェック
+            # インスタンスを生成
+            ebay_service_inventory = Inventory(request.user)
+            ebay_service_offer = Offer(request.user)
+
+            # 二重登録防止の重複チェック
             if EbayRegisterFromYahooAuction.objects.filter(yahoo_auction_id=yahoo_auction_data['yahoo_auction_id'], status__id=1).exists():
                 return create_error_response("すでに出品済みの商品です")
 
             # SKUの生成（yahoo_auction_idを使用）
             sku = f"YA_{yahoo_auction_data['yahoo_auction_id']}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
-            # itemSpecificsを変換
+            # itemSpecificsを登録データ用に変換
             aspects = {}
             for item in product_data['itemSpecifics']['nameValueList']:
                 aspects[item['name']] = item['value']
 
-            # ConditionEnumを取得するAPIが無いので、文字列を変換して条件を設定
+            # ConditionEnum（商品状態）を取得するAPIが無いので、文字列を変換して条件を設定
             # https://developer.ebay.com/api-docs/sell/inventory/types/slr:ConditionEnum
             condition_enum = (
                 product_data['condition']['conditionDescription']
-                .upper()        # 全大文字に変換（例: "like new" → "LIKE NEW"）
+                .upper()            # 全大文字に変換（例: "like new" → "LIKE NEW"）
                 .replace(" ", "_")  # スペースをアンダースコアに置換（例: "LIKE NEW" → "LIKE_NEW"）
             )
-
             condition_enum = Condition.objects.get(condition_id=product_data['condition']['conditionId']).condition_enum
 
-            # 商品情報の構築
+            # 登録商品情報の構築
             register_data = {
                 "availability": {
                     "shipToLocationAvailability": {
@@ -66,13 +70,11 @@ class EbayRegisterView(APIView):
                 }
             }
 
-            # Inventoryのインスタンス化
-            ebay_service_inventory = Inventory(request.user)
-
-            # 商品情報の登録
+            # 商品情報の登録処理
             ebay_service_inventory.create_inventory_item(sku, register_data)
 
             # ロケーション情報を取得
+            # 初回は存在しなかったので新規登録を行った（発送元の住所）
             inventory_locations = ebay_service_inventory.get_inventory_locations()
 
             # 出品情報の作成（価格などの情報を自動設定）
@@ -97,11 +99,10 @@ class EbayRegisterView(APIView):
                 "merchantLocationKey": inventory_locations['locations'][0]['merchantLocationKey']
             }
 
-            # 出品情報の作成
-            ebay_service_offer = Offer(request.user)
+            # 出品情報の作成（この時点ではebayに掲載されない】
             offer_result = ebay_service_offer.create_offer(offer_data)
             
-            # 出品のアクティブ化
+            # 出品のアクティブ化（ebayに掲載される）
             ebay_service_offer.publish_offer(offer_result['offerId'])
 
             # データの保存
@@ -112,7 +113,7 @@ class EbayRegisterView(APIView):
                 offer_id=offer_result['offerId'],
                 status=status_obj,
                 ebay_price=Decimal(str(product_data['price'])),
-                ebay_shipping_price=Decimal(str(other_data['ebay_shipping_price'] if other_data['ebay_shipping_price'] else settings.EBAY_SHIPPING_COST)),
+                ebay_shipping_price=Decimal(str(other_data['ebay_shipping_price'] if other_data['ebay_shipping_price'] else settings.EBAY_SHIPPING_COST)), # 後ほど送料もフロントから送ってくるつもりだが、今は固定値なので環境変数を必ず参照するようにしている
                 final_profit=Decimal(str(other_data['final_profit'])),
                 yahoo_auction_id=yahoo_auction_data['yahoo_auction_id'],
                 yahoo_auction_url=yahoo_auction_data['yahoo_auction_url'],
@@ -128,21 +129,8 @@ class EbayRegisterView(APIView):
             )
 
         except Exception as e:
-            status_obj = Status.objects.get(id=6)
-            EbayRegisterFromYahooAuction.objects.create(
-                user=request.user,
-                sku=sku,
-                offer_id=offer_result['offerId'] if offer_result['offerId'] else None,
-                status=status_obj,
-                ebay_price=Decimal(str(product_data['price'])),
-                ebay_shipping_price=Decimal(str(other_data['ebay_shipping_price'] if other_data['ebay_shipping_price'] else settings.EBAY_SHIPPING_COST)),
-                final_profit=Decimal(str(other_data['final_profit'])),
-                yahoo_auction_id=yahoo_auction_data['yahoo_auction_id'],
-                yahoo_auction_url=yahoo_auction_data['yahoo_auction_url'],
-                yahoo_auction_item_name=yahoo_auction_data['yahoo_auction_item_name'],
-                yahoo_auction_item_price=Decimal(str(yahoo_auction_data['yahoo_auction_item_price'])),
-                yahoo_auction_shipping=Decimal(str(yahoo_auction_data['yahoo_auction_shipping'])),
-                yahoo_auction_end_time=yahoo_auction_data['yahoo_auction_end_time']
-            )
+            # ebay側にゴミデータが残らないように削除する
+            ebay_service_inventory.delete_inventory_item(sku)
+            # エラー時の内容をログ出力
             generate_log_file(str(e), "yahoo_auction_register", time=True)
             return create_error_response("商品登録に失敗しました。\n詳細はエラーログを確認してください。")

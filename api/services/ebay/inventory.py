@@ -20,17 +20,10 @@ class Inventory(Common):
             response = requests.put(endpoint, headers=headers, json=product_data, params=params)
             response.raise_for_status()
 
-            return {
-                'success': True,
-                'message': '商品情報の登録に成功しました',
-                'data': response.json() if response.text else None
-            }
+            return response.json() if response.text else None
             
         except requests.exceptions.RequestException as e:
-            return {
-                'success': False,
-                'message': f"商品情報の登録に失敗しました: {e.response.text}"
-            }
+            return Exception(f"商品情報の登録に失敗しました: {e.response.text}")
 
 
     def get_inventory_locations(self, limit: int = None, offset: int = None):
@@ -58,9 +51,7 @@ class Inventory(Common):
             return response.json()
             
         except requests.exceptions.RequestException as e:
-            if hasattr(e.response, 'text'):
-                raise Exception(f"インベントリロケーション情報の取得に失敗しました: {e.response.text}")
-            raise Exception("インベントリロケーション情報の取得に失敗しました")
+            raise Exception(f"インベントリロケーション情報の取得に失敗しました: {str(e)}")
 
 
     def create_inventory_location(self, merchant_location_key: str, location_data: dict):
@@ -173,3 +164,31 @@ class Inventory(Common):
             # 商品が見つからない場合はNoneを返す
             return None
 
+    def delete_inventory_item(self, sku: str):
+        """
+        SKUを指定して商品情報を削除する
+        Args:
+            sku (str): 削除する商品のSKU
+        Returns:
+            dict: 処理結果
+        注意：
+            - 関連する未公開のオファーも削除される
+            - 関連するeBayの出品も削除される
+            - バリエーション商品の場合、そのSKUのみ削除される
+        """
+        try:
+            endpoint = f"{self.api_url}/sell/inventory/v1/inventory_item/{sku}"
+            headers = self._get_headers()
+            
+            response = requests.delete(endpoint, headers=headers)
+            response.raise_for_status()
+            
+            return {
+                'success': True,
+                'message': f'SKU: {sku} の商品情報を削除しました'
+            }
+            
+        except requests.exceptions.RequestException as e:
+            if hasattr(e.response, 'text'):
+                return f"商品情報の削除に失敗しました: {e.response.text}"
+            return f"商品情報の削除に失敗しました: {str(e)}"
