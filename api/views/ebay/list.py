@@ -17,7 +17,6 @@ class List(APIView):
             # ebay_service_offer = Offer(request.user)
             # ebay_service_inventory = Inventory(request.user)
             # data = ebay_service_inventory.get_inventory_items()
-
             # generate_log_file(data, "data", time=False)
 
             # # 出品情報を取得
@@ -40,8 +39,9 @@ class List(APIView):
                     'id': item.id,
                     'status': item.status.status_name,
                     'sku': item.sku,
+                    'offer_id': item.offer_id,
                     'ebay_price': int(item.ebay_price * rate),
-                    'ebay_shipping_price': int(item.ebay_shipping_price * rate),
+                    'ebay_shipping_price': int(item.ebay_shipping_price),
                     'final_profit': int(item.final_profit * rate),
                     'yahoo_auction_id': item.yahoo_auction_id,
                     'yahoo_auction_url': item.yahoo_auction_url,
