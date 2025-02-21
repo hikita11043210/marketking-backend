@@ -28,7 +28,10 @@ class ItemStatusService(Common):
             
             # オファー状態の取得
             offer_status = self.offer_service.get_offer_status(sku)
-            
+            print("★★★★★★★★")
+            print(offer_status)
+            print(quantity)
+            print("★★★★★★★★")
             if offer_status == "PUBLISHED":
                 if quantity > 0:
                     return "ACTIVE"  # 出品中で在庫あり

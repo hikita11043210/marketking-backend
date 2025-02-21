@@ -19,6 +19,7 @@ from .views.ebay.condition import EbayConditionView
 from .views.ebay.list import List
 from .views.ebay.offer import OfferView
 from .views.ebay.categoryItemSpecifics import EbayCategoryItemSpecificsView
+from .views.synchronize.status import SynchronizeStatusView
 
 urlpatterns = [
     # 認証関連のエンドポイント
@@ -43,5 +44,5 @@ urlpatterns = [
     path('ebay/condition/', EbayConditionView.as_view()),
     path('list/', List.as_view()),
     path('ebay/offer/', OfferView.as_view()),
-
+    path('synchronize/status/', SynchronizeStatusView.as_view()),
 ] 
