@@ -4,7 +4,7 @@ from api.services.ebay.item_status import ItemStatusService
 from api.services.ebay.common import Common
 from api.models.master import Status
 
-class UpdateList(Common):
+class UpdateList():
     def __init__(self, user):
         self.user = user
 

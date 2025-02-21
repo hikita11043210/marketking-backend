@@ -133,4 +133,4 @@ class EbayRegisterView(APIView):
             ebay_service_inventory.delete_inventory_item(sku)
             # エラー時の内容をログ出力
             generate_log_file(str(e), "yahoo_auction_register", time=True)
-            return create_error_response("商品登録に失敗しました。\n詳細はエラーログを確認してください。")
+            return create_error_response("商品登録に失敗しました。詳細はエラーログを確認してください。")

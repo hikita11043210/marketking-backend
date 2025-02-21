@@ -1,4 +1,3 @@
-
 import requests
 import xml.etree.ElementTree as ET
 from api.services.ebay.common import Common
@@ -54,4 +53,41 @@ class Trading(Common):
 
         except Exception as e:
             raise Exception("Item Specificsの取得に失敗しました")
+
+    def get_category_aspects(self, category_id: str, category_tree_id: str):
+        """
+        Taxonomy APIを使用してカテゴリーのアスペクト情報を取得
+        
+        Args:
+            category_id (str): カテゴリーID
+            category_tree_id (str): カテゴリーツリーID
+            
+        Returns:
+            dict: 必須アスペクト名のリストを含む辞書
+        """
+        try:
+            endpoint = f"{self.api_url}/commerce/taxonomy/v1/category_tree/{category_tree_id}/get_item_aspects_for_category"
+            headers = self._get_headers()
+            headers.update({
+                'Accept': 'application/json',
+                'Accept-Encoding': 'application/gzip'
+            })
+            
+            # クエリパラメータをURLに直接追加
+            endpoint = f"{endpoint}?category_id={category_id}"
+            response = requests.get(endpoint, headers=headers)
+            response.raise_for_status()
+            response_data = response.json()
+            
+            # 必須項目（aspectRequired: true）のlocalizedAspectNameのみを抽出
+            required_aspects = [
+                aspect['localizedAspectName']
+                for aspect in response_data.get('aspects', [])
+                if aspect.get('aspectConstraint', {}).get('aspectRequired', False)
+            ]
+            
+            return required_aspects
+            
+        except Exception as e:
+            raise Exception(f"カテゴリーアスペクトの取得に失敗しました: {str(e)}")
 
