@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from api.services.ebay.inventory import Inventory
 from api.services.ebay.offer import Offer
 from api.models.ebay import EbayRegisterFromYahooAuction
-from api.models.master import Status, Condition
+from api.models.master import Status, Condition, Setting
 from api.utils.throttles import AuctionDetailThrottle
 from api.utils.response_helpers import create_success_response, create_error_response
 from api.utils.generate_log_file import generate_log_file
@@ -45,14 +45,25 @@ class EbayRegisterView(APIView):
             for item in product_data['itemSpecifics']['nameValueList']:
                 aspects[item['name']] = item['value']
 
-            # ConditionEnum（商品状態）を取得するAPIが無いので、文字列を変換して条件を設定
-            # https://developer.ebay.com/api-docs/sell/inventory/types/slr:ConditionEnum
-            condition_enum = (
-                product_data['condition']['conditionDescription']
-                .upper()            # 全大文字に変換（例: "like new" → "LIKE NEW"）
-                .replace(" ", "_")  # スペースをアンダースコアに置換（例: "LIKE NEW" → "LIKE_NEW"）
-            )
+            # condition_enumを取得
+            # condition_enumを取得するAPIが存在しないため、下記の情報をテーブル化し、カテゴリから取得したcondition_idをもとに取得する
+            # https://developer.ebay.com/api-docs/sell/static/metadata/condition-id-values.html
             condition_enum = Condition.objects.get(condition_id=product_data['condition']['conditionId']).condition_enum
+
+            # Settingからdescriptionを取得
+            description_template_1 = Setting.objects.get(user=request.user).description_template_1
+            description_template_2 = Setting.objects.get(user=request.user).description_template_2
+            description_template_3 = Setting.objects.get(user=request.user).description_template_3
+
+            # descriptionを作成
+            if product_data['description'] == "":
+                description = description_template_1 + description_template_2 + description_template_3
+            else:
+                description = description_template_1 + product_data['description'] + description_template_3
+
+            # 説明が4000文字以内であることを確認
+            if len(description) > 4000:
+                return create_error_response("説明が4000文字を超えています")
 
             # 登録商品情報の構築
             register_data = {
@@ -64,7 +75,7 @@ class EbayRegisterView(APIView):
                 "condition": condition_enum,
                 "product": {
                     "title": product_data['title'],
-                    "description": product_data['description'],
+                    "description": description,
                     "aspects": aspects,
                     "imageUrls": product_data['images']
                 }
@@ -83,7 +94,7 @@ class EbayRegisterView(APIView):
                 "marketplaceId": settings.EBAY_MARKETPLACE_ID,
                 "format": "FIXED_PRICE",
                 "categoryId": product_data['categoryId'],
-                "listingDescription": product_data['description'],
+                "listingDescription": description,
                 "listingPolicies": {
                     "fulfillmentPolicyId": product_data['shippingPolicyId'],
                     "paymentPolicyId": product_data['paymentPolicyId'],

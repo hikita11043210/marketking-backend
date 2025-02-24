@@ -7,7 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class Status():
+class YahooAuction():
     def __init__(self, user):
         self.user = user
 
@@ -20,7 +20,7 @@ class Status():
             total_items = 0
             
             with transaction.atomic():
-                ebay_register_items = EbayRegisterFromYahooAuction.objects.select_for_update().filter(status_id=1)
+                ebay_register_items = EbayRegisterFromYahooAuction.objects.select_for_update().filter(status_id__in=[1,3])
                 total_items = ebay_register_items.count()
                 
                 for item in ebay_register_items:
@@ -36,7 +36,7 @@ class Status():
                         elif status == "ENDED":
                             new_status = StatusModel.objects.get(id=2)
                         elif status == "NOT_FOUND":
-                            new_status = StatusModel.objects.get(id=5)
+                            new_status = StatusModel.objects.get(id=6)
                         
                         if new_status and item.status.id != new_status.id:
                             old_status_id = item.status.id

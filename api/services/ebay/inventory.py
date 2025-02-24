@@ -175,6 +175,7 @@ class Inventory(Common):
             - 関連する未公開のオファーも削除される
             - 関連するeBayの出品も削除される
             - バリエーション商品の場合、そのSKUのみ削除される
+            - ebayから完全に削除
         """
         try:
             endpoint = f"{self.api_url}/sell/inventory/v1/inventory_item/{sku}"

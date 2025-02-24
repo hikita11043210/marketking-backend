@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from api.utils.encryption import encrypt_value, decrypt_value
-from api.models.master import Status
+from api.models.master import Status, YahooAuctionStatus
 
 class EbayToken(models.Model):
     """eBayのアクセストークンを管理するモデル"""
@@ -47,6 +47,7 @@ class EbayRegisterFromYahooAuction(models.Model):
     yahoo_auction_item_price = models.DecimalField(max_digits=10, decimal_places=2)
     yahoo_auction_shipping = models.DecimalField(max_digits=10, decimal_places=2)
     yahoo_auction_end_time = models.DateTimeField()
+    yahoo_auction_status = models.ForeignKey(YahooAuctionStatus, on_delete=models.PROTECT)
     update_datetime = models.DateTimeField(auto_now=True)
     insert_datetime = models.DateTimeField(auto_now_add=True)
 
@@ -55,4 +56,5 @@ class EbayRegisterFromYahooAuction(models.Model):
         indexes = [
             models.Index(fields=['sku']),
             models.Index(fields=['status']),
+            models.Index(fields=['yahoo_auction_status']),
         ]

@@ -85,6 +85,9 @@ class Setting(models.Model):
     ebay_client_secret = models.CharField(max_length=255, null=True, blank=True)
     rate = models.IntegerField(null=True, blank=True)
     deepl_api_key = models.CharField(max_length=255, null=True, blank=True)
+    description_template_1 = models.TextField(null=True, blank=True)
+    description_template_2 = models.TextField(null=True, blank=True)
+    description_template_3 = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -118,3 +121,12 @@ class Condition(models.Model):
 
     def __str__(self):
         return f"{self.condition_id} - {self.condition_enum}"
+
+class YahooAuctionStatus(models.Model):
+    status_name = models.CharField(max_length=100, null=False)
+
+    class Meta:
+        db_table = 'm_yahoo_auction_status'
+
+    def __str__(self):
+        return self.status_name

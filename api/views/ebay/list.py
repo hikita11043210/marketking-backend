@@ -18,17 +18,10 @@ class List(APIView):
             # ebay_service_inventory = Inventory(request.user)
             # data = ebay_service_inventory.get_inventory_items()
             # generate_log_file(data, "data", time=False)
-
-            # # 出品情報を取得
+            # ebay_service_inventory.delete_inventory_item('YA_e1163351978_20250222024545')
+            # # 出品情報を削除
             # for item in ebay_register_items:
-            #     generate_log_file(item.offer_id, "offer_id", time=True)
-
-            # 出品情報を削除
-            # for item in ebay_register_items:
-            #     ebay_service_offer.publish_offer(item.offer_id) # 出品公開
-                # ebay_service_offer.withdraw_offer(item.offer_id) # 出品取り下げ
-                # ebay_service_offer.delete_offer(item.offer_id) # オファー削除
-                # ebay_service_inventory.delete_inventory_item(item.sku) # ebayから削除
+            #     ebay_service_inventory.delete_inventory_item(item.sku) # ebayから削除
 
             # 一覧出力時の変換レートを取得
             rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))

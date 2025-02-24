@@ -95,13 +95,13 @@ class ScrapingService:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            # import os,datetime
-            # log_dir = "logs/soup_dumps/"
-            # os.makedirs(log_dir, exist_ok=True)
-            # filename = f"{log_dir}soup_dump_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
-            # with open(filename, "w", encoding="utf-8") as f:
-            #     f.write(soup.prettify())
-            #     logger.info(f"Soup内容を {filename} に保存しました")
+            import os,datetime
+            log_dir = "logs/soup_dumps/"
+            os.makedirs(log_dir, exist_ok=True)
+            filename = f"{log_dir}soup_dump_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(soup.prettify())
+                logger.info(f"Soup内容を {filename} に保存しました")
 
             # 商品基本情報
             data = {}
@@ -114,7 +114,7 @@ class ScrapingService:
                 data['end_flag'] = False
             
             # タイトル
-            data['title'] = soup.find('meta', property='og:title')['content'].split(' - ')[0]
+            data['title'] = soup.find('h1', class_='ProductTitle__text').get_text(strip=True)
 
             # 商品説明の取得
             description_elem = soup.find('div', class_='ProductExplanation__commentBody')
