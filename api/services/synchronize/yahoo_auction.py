@@ -1,7 +1,8 @@
-from api.utils.response_helpers import create_success_response, create_error_response
+from api.services.ebay.offer import Offer
 from api.models.ebay import EbayRegisterFromYahooAuction
-from api.services.ebay.item_status import ItemStatusService
-from api.models.master import Status as StatusModel
+from api.services.yahoo_auction.scraping import ScrapingService
+from api.models.master import Status as StatusModel, YahooAuctionStatus
+from api.utils.convert_date import convert_yahoo_date
 from django.db import transaction
 import logging
 
@@ -20,50 +21,54 @@ class YahooAuction():
             total_items = 0
             
             with transaction.atomic():
-                ebay_register_items = EbayRegisterFromYahooAuction.objects.select_for_update().filter(status_id__in=[1,3])
+                ebay_register_items = EbayRegisterFromYahooAuction.objects.select_for_update().filter(yahoo_auction_status_id=1)
                 total_items = ebay_register_items.count()
                 
                 for item in ebay_register_items:
                     try:
-                        status = ItemStatusService(self.user).get_item_status(item.sku)
-                        logger.info(f"SKU: {item.sku}, 現在のステータス: {item.status.id}, 新しいステータス: {status}")
+                        scraping_result = ScrapingService().get_item_detail({'url': item.yahoo_auction_url})
                         
-                        new_status = None
-                        if status == "ACTIVE":
-                            new_status = StatusModel.objects.get(id=1)
-                        elif status == "SOLD_OUT":
-                            new_status = StatusModel.objects.get(id=3)
-                        elif status == "ENDED":
-                            new_status = StatusModel.objects.get(id=2)
-                        elif status == "NOT_FOUND":
-                            new_status = StatusModel.objects.get(id=6)
+                        if not scraping_result or 'data' not in scraping_result:
+                            logger.error(f"スクレイピング結果が不正です - SKU: {item.sku}")
+                            continue
+
+                        data = scraping_result['data']
                         
-                        if new_status and item.status.id != new_status.id:
-                            old_status_id = item.status.id
-                            item.status = new_status
-                            item.save()
-                            logger.info(f"ステータスを更新しました - SKU: {item.sku}, 新しいステータス: {new_status.id}")
-                            
-                            # 更新情報を記録
-                            updated_items.append({
-                                'sku': item.sku,
-                                'old_status': old_status_id,
-                                'new_status': new_status.id
-                            })
+                        # オークション終了判定
+                        if data.get('end_flag', False):
+                            item.yahoo_auction_status = YahooAuctionStatus.objects.get(id=3)  # 終了済み
+
+                            # まだ出品中の場合は出品を取り消す
+                            if item.status.id == 1:
+                                offer_service = Offer(self.user)
+                                offer_service.withdraw_offer(item.offer_id)
+                                item.status = StatusModel.objects.get(id=2)
+                        else:
+                            # 終了日時の更新
+                            end_time = convert_yahoo_date(data.get('end_time'))
+                            if end_time:
+                                item.yahoo_auction_end_time = end_time
+                        
+                        item.save()
+                        
+                        # 更新情報を記録
+                        updated_items.append({
+                            'sku': item.sku,
+                            'old_status': item.yahoo_auction_status_id,
+                            'new_status': item.yahoo_auction_status_id,
+                            'end_time': end_time if not data.get('end_flag', False) else None
+                        })
                     
                     except Exception as item_error:
-                        logger.error(f"商品の同期中にエラーが発生しました - SKU: {item.sku}, エラー: {str(item_error)}")
+                        logger.error(f"Yahooオークションの同期中にエラーが発生しました - SKU: {item.sku}, エラー: {str(item_error)}")
                         continue
 
-            return create_success_response(
-                message="ステータスの同期が完了しました",
-                data={
+            return {
                     'total_items': total_items,
                     'updated_count': len(updated_items),
                     'updated_items': updated_items
                 }
-            )
             
         except Exception as e:
-            logger.error(f"ステータス同期処理でエラーが発生しました: {str(e)}")
-            return create_error_response("ステータスの同期に失敗しました")
+            logger.error(f"Yahooオークションの同期処理でエラーが発生しました: {str(e)}")
+            return str(e)

@@ -21,6 +21,7 @@ from .views.ebay.offer import OfferView
 from .views.ebay.categoryItemSpecifics import EbayCategoryItemSpecificsView
 from .views.synchronize.status import SynchronizeStatusView
 from .views.synchronize.yahoo_auction import SynchronizeYahooAuctionView
+from .views.synchronize.script import SynchronizeScriptView
 
 urlpatterns = [
     # 認証関連のエンドポイント
@@ -47,4 +48,5 @@ urlpatterns = [
     path('ebay/offer/', OfferView.as_view()),
     path('synchronize/status/', SynchronizeStatusView.as_view()),
     path('synchronize/yahoo-auction/', SynchronizeYahooAuctionView.as_view()),
+    path('synchronize/script/', SynchronizeScriptView.as_view()),
 ] 

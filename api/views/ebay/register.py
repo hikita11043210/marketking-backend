@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from api.services.ebay.inventory import Inventory
 from api.services.ebay.offer import Offer
 from api.models.ebay import EbayRegisterFromYahooAuction
-from api.models.master import Status, Condition, Setting
+from api.models.master import Status, Condition, Setting, YahooAuctionStatus
 from api.utils.throttles import AuctionDetailThrottle
 from api.utils.response_helpers import create_success_response, create_error_response
 from api.utils.generate_log_file import generate_log_file
@@ -131,7 +131,8 @@ class EbayRegisterView(APIView):
                 yahoo_auction_item_name=yahoo_auction_data['yahoo_auction_item_name'],
                 yahoo_auction_item_price=Decimal(str(yahoo_auction_data['yahoo_auction_item_price'])),
                 yahoo_auction_shipping=Decimal(str(yahoo_auction_data['yahoo_auction_shipping'])),
-                yahoo_auction_end_time=yahoo_auction_data['yahoo_auction_end_time']
+                yahoo_auction_end_time=yahoo_auction_data['yahoo_auction_end_time'],
+                yahoo_auction_status=YahooAuctionStatus.objects.get(id=1)
             )
 
             return create_success_response(
@@ -143,5 +144,5 @@ class EbayRegisterView(APIView):
             # ebay側にゴミデータが残らないように削除する
             ebay_service_inventory.delete_inventory_item(sku)
             # エラー時の内容をログ出力
-            generate_log_file(str(e), "yahoo_auction_register", time=True)
+            generate_log_file(str(e), "yahoo_auction_register", date=True)
             return create_error_response("商品登録に失敗しました。詳細はエラーログを確認してください。")

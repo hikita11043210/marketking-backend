@@ -55,15 +55,12 @@ class Status():
                         logger.error(f"商品の同期中にエラーが発生しました - SKU: {item.sku}, エラー: {str(item_error)}")
                         continue
 
-            return create_success_response(
-                message="ステータスの同期が完了しました",
-                data={
-                    'total_items': total_items,
-                    'updated_count': len(updated_items),
-                    'updated_items': updated_items
-                }
-            )
+            return {
+                'total_items': total_items,
+                'updated_count': len(updated_items),
+                'updated_items': updated_items
+            }
             
         except Exception as e:
-            logger.error(f"ステータス同期処理でエラーが発生しました: {str(e)}")
-            return create_error_response("ステータスの同期に失敗しました")
+            logger.error(f"ステータスの同期処理でエラーが発生しました: {str(e)}")
+            return str(e)

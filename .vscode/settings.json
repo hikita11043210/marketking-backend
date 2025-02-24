@@ -3,6 +3,7 @@
         "corsheaders",
         "DEEPL",
         "dotenv",
+        "errorlevel",
         "Fernet",
         "Higashiakuragawa",
         "levelname",

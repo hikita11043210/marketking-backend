@@ -17,7 +17,7 @@ class List(APIView):
             # ebay_service_offer = Offer(request.user)
             # ebay_service_inventory = Inventory(request.user)
             # data = ebay_service_inventory.get_inventory_items()
-            # generate_log_file(data, "data", time=False)
+            # generate_log_file(data, "data", date=False)
             # ebay_service_inventory.delete_inventory_item('YA_e1163351978_20250222024545')
             # # 出品情報を削除
             # for item in ebay_register_items:
@@ -43,6 +43,7 @@ class List(APIView):
                     'yahoo_auction_shipping': str(item.yahoo_auction_shipping),
                     'purchase_price': int(item.yahoo_auction_item_price + item.yahoo_auction_shipping),
                     'yahoo_auction_end_time': item.yahoo_auction_end_time.isoformat(),
+                    'yahoo_auction_status': item.yahoo_auction_status.status_name
                 }
                 for item in ebay_register_items
             ]

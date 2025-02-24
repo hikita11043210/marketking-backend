@@ -6,6 +6,6 @@ class SynchronizeYahooAuctionView(APIView):
     def get(self, request):
         try:
             response = YahooAuction(request.user).synchronize()
-            return create_success_response(message="ステータスの同期が完了しました")
+            return create_success_response(data=response,message="Yahooオークションの同期が完了しました")
         except Exception as e:
             return create_error_response(str(e))
