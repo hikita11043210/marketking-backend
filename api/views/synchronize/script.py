@@ -1,15 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from api.services.synchronize.yahoo_auction import YahooAuction
-from api.services.synchronize.status import Status
+from api.services.synchronize.yahoo_auction import SynchronizeYahooAuction
+from api.services.synchronize.ebay import Status
 from api.utils.generate_log_file import generate_log_file
 
 class SynchronizeScriptView(APIView):
     def get(self, request):
         try:
             status_response = Status(request.user).synchronize()
-            yahoo_auction_response = YahooAuction(request.user).synchronize()
+            yahoo_auction_response = SynchronizeYahooAuction(request.user).synchronize()
             generate_log_file(yahoo_auction_response, "script/yahoo_auction/response", date=True)
             generate_log_file(status_response, "script/status/response", date=True)
             

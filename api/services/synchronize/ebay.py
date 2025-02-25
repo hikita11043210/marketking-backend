@@ -1,5 +1,5 @@
 from api.utils.response_helpers import create_success_response, create_error_response
-from api.models.ebay import EbayRegisterFromYahooAuction
+from api.models.ebay import Ebay
 from api.services.ebay.item_status import ItemStatusService
 from api.models.master import Status as StatusModel
 from django.db import transaction
@@ -20,7 +20,7 @@ class Status():
             total_items = 0
             
             with transaction.atomic():
-                ebay_register_items = EbayRegisterFromYahooAuction.objects.select_for_update().filter(status_id=1)
+                ebay_register_items = Ebay.objects.select_for_update().filter(status_id=1)
                 total_items = ebay_register_items.count()
                 
                 for item in ebay_register_items:

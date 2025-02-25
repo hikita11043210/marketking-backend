@@ -5,7 +5,7 @@ from api.services.shipping_calculator import ShippingCalculator
 from api.models.master import Service, Countries
 from api.utils.throttles import AuctionDetailThrottle
 
-class ShippingCalculatorView(APIView):
+class CalculatorShippingView(APIView):
     throttle_classes = [AuctionDetailThrottle]
 
     def get(self, request):

@@ -1,9 +1,13 @@
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from api.services.yahoo_auction.scraping import ScrapingService
 from rest_framework.permissions import IsAuthenticated
 from api.services.ebay.inventory import Inventory
 from api.services.ebay.offer import Offer
-from api.models.ebay import EbayRegisterFromYahooAuction
+from api.models.ebay import Ebay
 from api.models.master import Status, Condition, Setting, YahooAuctionStatus
+from api.models.yahoo import YahooAuction
 from api.utils.throttles import AuctionDetailThrottle
 from api.utils.response_helpers import create_success_response, create_error_response
 from api.utils.generate_log_file import generate_log_file
@@ -11,10 +15,35 @@ from decimal import Decimal
 import logging
 from django.conf import settings
 from datetime import datetime
+from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
-class EbayRegisterView(APIView):
+class ItemDetailView(APIView):
+    """
+    ヤフオクの商品詳細API
+    """
+    def get(self, request):
+        try:
+            service = ScrapingService()
+            # Yahooオークションの詳細情報取得
+            result = service.get_item_detail(request.query_params)
+
+            return Response({
+                'success': True,
+                'message': '商品詳細が取得されました',
+                'data': result
+            })
+
+        except ValueError as e:
+            return Response({
+                'success': False,
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class RegisterView(APIView):
     """eBayに商品を出品するView"""
     permission_classes = [IsAuthenticated]
     throttle_classes = [AuctionDetailThrottle]
@@ -34,7 +63,7 @@ class EbayRegisterView(APIView):
             ebay_service_offer = Offer(request.user)
 
             # 二重登録防止の重複チェック
-            if EbayRegisterFromYahooAuction.objects.filter(yahoo_auction_id=yahoo_auction_data['yahoo_auction_id'], status__id=1).exists():
+            if YahooAuction.objects.filter(unique_id=yahoo_auction_data['yahoo_auction_id'], status__id=1).exists():
                 return create_error_response("すでに出品済みの商品です")
 
             # SKUの生成（yahoo_auction_idを使用）
@@ -116,24 +145,30 @@ class EbayRegisterView(APIView):
             # 出品のアクティブ化（ebayに掲載される）
             ebay_service_offer.publish_offer(offer_result['offerId'])
 
-            # データの保存
-            status_obj = Status.objects.get(id=1)
-            EbayRegisterFromYahooAuction.objects.create(
-                user=request.user,
-                sku=sku,
-                offer_id=offer_result['offerId'],
-                status=status_obj,
-                ebay_price=Decimal(str(product_data['price'])),
-                ebay_shipping_price=Decimal(str(other_data['ebay_shipping_price'] if other_data['ebay_shipping_price'] else settings.EBAY_SHIPPING_COST)), # 後ほど送料もフロントから送ってくるつもりだが、今は固定値なので環境変数を必ず参照するようにしている
-                final_profit=Decimal(str(other_data['final_profit'])),
-                yahoo_auction_id=yahoo_auction_data['yahoo_auction_id'],
-                yahoo_auction_url=yahoo_auction_data['yahoo_auction_url'],
-                yahoo_auction_item_name=yahoo_auction_data['yahoo_auction_item_name'],
-                yahoo_auction_item_price=Decimal(str(yahoo_auction_data['yahoo_auction_item_price'])),
-                yahoo_auction_shipping=Decimal(str(yahoo_auction_data['yahoo_auction_shipping'])),
-                yahoo_auction_end_time=yahoo_auction_data['yahoo_auction_end_time'],
-                yahoo_auction_status=YahooAuctionStatus.objects.get(id=1)
-            )
+            with transaction.atomic():
+                # Yahooオークションのデータを保存
+                yahoo_auction = YahooAuction.objects.create(
+                    user=request.user,
+                    status=YahooAuctionStatus.objects.get(id=1),
+                    unique_id=yahoo_auction_data['yahoo_auction_id'],
+                    url=yahoo_auction_data['yahoo_auction_url'],
+                    item_name=yahoo_auction_data['yahoo_auction_item_name'],
+                    item_price=Decimal(str(yahoo_auction_data['yahoo_auction_item_price'])),
+                    shipping=Decimal(str(yahoo_auction_data['yahoo_auction_shipping'])),
+                    end_time=yahoo_auction_data['yahoo_auction_end_time']
+                )
+
+                # ebayのデータを保存
+                Ebay.objects.create(
+                    user=request.user,
+                    sku=sku,
+                    offer_id=offer_result['offerId'],
+                    status=Status.objects.get(id=1),
+                    price=Decimal(str(product_data['price'])),
+                    shipping_price=Decimal(str(other_data['ebay_shipping_price'] if other_data['ebay_shipping_price'] else settings.EBAY_SHIPPING_COST)), # 後ほど送料もフロントから送ってくるつもりだが、今は固定値なので環境変数を必ず参照するようにしている
+                    final_profit=Decimal(str(other_data['final_profit'])),
+                    yahoo_auction_id=yahoo_auction
+                )
 
             return create_success_response(
                 data=None,

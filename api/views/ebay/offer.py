@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.services.ebay.offer import Offer
-from api.models.ebay import EbayRegisterFromYahooAuction
+from api.models.ebay import Ebay
 from api.models.master import Status
 
 class OfferView(APIView):
@@ -14,7 +14,7 @@ class OfferView(APIView):
 
             # サービスを初期化
             offer_service = Offer(request.user)
-            ebay_register_item = EbayRegisterFromYahooAuction.objects.get(sku=sku)
+            ebay_register_item = Ebay.objects.get(sku=sku)
             
             # アクションに応じて処理を分岐
             if action == "publish":

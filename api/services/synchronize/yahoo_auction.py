@@ -1,5 +1,5 @@
 from api.services.ebay.offer import Offer
-from api.models.ebay import EbayRegisterFromYahooAuction
+from api.models.yahoo import YahooAuction
 from api.services.yahoo_auction.scraping import ScrapingService
 from api.models.master import Status as StatusModel, YahooAuctionStatus
 from api.utils.convert_date import convert_yahoo_date
@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class YahooAuction():
+class SynchronizeYahooAuction():
     def __init__(self, user):
         self.user = user
 
@@ -21,10 +21,10 @@ class YahooAuction():
             total_items = 0
             
             with transaction.atomic():
-                ebay_register_items = EbayRegisterFromYahooAuction.objects.select_for_update().filter(yahoo_auction_status_id=1)
-                total_items = ebay_register_items.count()
+                yahoo_auction_items = YahooAuction.objects.select_for_update().filter(status_id=1)
+                total_items = yahoo_auction_items.count()
                 
-                for item in ebay_register_items:
+                for item in yahoo_auction_items:
                     try:
                         scraping_result = ScrapingService().get_item_detail({'url': item.yahoo_auction_url})
                         
