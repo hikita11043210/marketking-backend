@@ -35,6 +35,10 @@ class ScrapingService:
                 - b: 開始番号
                 - n: 取得件数
 
+        memo:
+            残り時間が長い順：&s1=end&o1=d
+            残り時間が短い順：&s1=end&o1=a
+
         Returns:
             dict: 検索結果と総件数を含む辞書
         """
@@ -46,6 +50,9 @@ class ScrapingService:
             # None値を除外しながらパラメータをマージ
             search_params = {k: v for k, v in params.items() if v is not None}
             search_params.update(default_params)
+
+            search_params['s1'] = 'end'
+            search_params['o1'] = 'd'
 
             # 最初のページを取得して総件数を確認
             first_page = self.session.get(self.BASE_URL, params=search_params)
