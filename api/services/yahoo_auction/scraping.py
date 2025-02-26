@@ -6,7 +6,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 class ScrapingService:
-    BASE_URL = settings.YAHOO_AUCTION_URL
+    BASE_SEARCH_URL = settings.YAHOO_AUCTION_URL
 
     def __init__(self):
         self.session = requests.Session()
@@ -55,7 +55,7 @@ class ScrapingService:
             search_params['o1'] = 'd'
 
             # 最初のページを取得して総件数を確認
-            first_page = self.session.get(self.BASE_URL, params=search_params)
+            first_page = self.session.get(self.BASE_SEARCH_URL, params=search_params)
             first_page.raise_for_status()
             soup = BeautifulSoup(first_page.text, 'html.parser')
 
@@ -76,7 +76,7 @@ class ScrapingService:
             max_pages = min(5, (total_count + 99) // 100)
             for page in range(2, max_pages + 1):
                 search_params['b'] = str((page - 1) * 100 + 1)
-                response = self.session.get(self.BASE_URL, params=search_params)
+                response = self.session.get(self.BASE_SEARCH_URL, params=search_params)
                 response.raise_for_status()
                 soup = BeautifulSoup(response.text, 'html.parser')
                 items.extend(self._parse_search_results(soup))

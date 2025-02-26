@@ -16,12 +16,14 @@ from .views.ebay.policies import EbayPoliciesView
 from .views.ebay.category import EbayCategoryView
 from .views.ebay.itemSpecifics import EbayItemSpecificsView
 from .views.ebay.condition import EbayConditionView
-from .views.yahoo_auction.list import ListView, SynchronizeEbayView, SynchronizeYahooAuctionView
+from .views.yahoo_auction.list import ListView, SynchronizeYahooAuctionView
 from .views.ebay.offer import OfferView
 from .views.ebay.categoryItemSpecifics import EbayCategoryItemSpecificsView
 from .views.synchronize.script import SynchronizeScriptView
 from .views.yahoo_free_market.search import YahooFreeMarketSearchView
 from .views.yahoo_free_market.register import YahooFreeMarketItemDetailView, YahooFreeMarketRegisterView
+from .views.yahoo_free_market.list import YahooFreeMarketListView, SynchronizeYahooFreeMarketView
+from .views.ebay.list import SynchronizeEbayView
 urlpatterns = [
     # 認証関連のエンドポイント
     path('auth/login/', LoginView.as_view(), name='auth-login'),
@@ -45,10 +47,12 @@ urlpatterns = [
     path('ebay/condition/', EbayConditionView.as_view()),
     path('list/', ListView.as_view()),
     path('ebay/offer/', OfferView.as_view()),
-    path('synchronize/status/', SynchronizeEbayView.as_view()),
+    path('synchronize/ebay/', SynchronizeEbayView.as_view()),
     path('synchronize/yahoo-auction/', SynchronizeYahooAuctionView.as_view()),
+    path('synchronize/yahoo-free-market/', SynchronizeYahooFreeMarketView.as_view()),
     path('synchronize/script/', SynchronizeScriptView.as_view()),
     path('yahoo-free-market/search/', YahooFreeMarketSearchView.as_view(), name='yahoo-free-market-search'),
     path('yahoo-free-market/detail/', YahooFreeMarketItemDetailView.as_view(), name='yahoo-free-market-detail'),
     path('yahoo-free-market/register/', YahooFreeMarketRegisterView.as_view(), name='yahoo-free-market-register'),
+    path('yahoo-free-market/list/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-list'),
 ] 

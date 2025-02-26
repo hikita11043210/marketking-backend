@@ -7,17 +7,22 @@ from api.services.ebay.offer import Offer
 from api.utils.generate_log_file import generate_log_file
 from api.services.ebay.inventory import Inventory
 from api.services.synchronize.ebay import Status
-from api.services.synchronize.yahoo_auction import SynchronizeYahooAuction
+from api.services.synchronize.yahoo_free_market import SynchronizeYahooFreeMarket
 
-class ListView(APIView):
+class YahooFreeMarketListView(APIView):
     def get(self, request):
         try:
+            # パラメータを取得
+            search = request.query_params.get('search')
+            limit = request.query_params.get('limit')
+            page = request.query_params.get('page')
+
             # 商品情報を取得（YahooAuctionとの関連を含める）
-            ebay_register_items = Ebay.objects.select_related(
-                'yahoo_auction_id',
-                'yahoo_auction_id__status',
+            list_items = Ebay.objects.select_related(
+                'yahoo_free_market_id',
+                'yahoo_free_market_id__status',
                 'status'
-            ).filter(yahoo_auction_id__isnull=False)
+            ).filter(yahoo_free_market_id__isnull=False)
             
             # # 出品情報を削除するためのインスタンスを生成
             # ebay_service_offer = Offer(request.user)
@@ -43,25 +48,25 @@ class ListView(APIView):
                     'ebay_price': int(item.price * rate),  # priceに変更
                     'ebay_shipping_price': int(item.shipping_price),  # shipping_priceに変更
                     'final_profit': int(item.final_profit * rate),
-                    'yahoo_auction_id': item.yahoo_auction_id.unique_id,  # unique_idを参照
-                    'yahoo_auction_url': item.yahoo_auction_id.url,
-                    'yahoo_auction_item_name': item.yahoo_auction_id.item_name,
-                    'yahoo_auction_item_price': str(item.yahoo_auction_id.item_price),
-                    'yahoo_auction_shipping': str(item.yahoo_auction_id.shipping),
-                    'purchase_price': int(item.yahoo_auction_id.item_price + item.yahoo_auction_id.shipping),
-                    'yahoo_auction_end_time': item.yahoo_auction_id.end_time.isoformat(),
-                    'yahoo_auction_status': item.yahoo_auction_id.status.status_name
+                    'yahoo_free_market_id': item.yahoo_free_market_id.unique_id,  # unique_idを参照
+                    'yahoo_free_market_url': item.yahoo_free_market_id.url,
+                    'yahoo_free_market_item_name': item.yahoo_free_market_id.item_name,
+                    'yahoo_free_market_item_price': str(item.yahoo_free_market_id.item_price),
+                    'yahoo_free_market_shipping': str(item.yahoo_free_market_id.shipping),
+                    'purchase_price': int(item.yahoo_free_market_id.item_price + item.yahoo_free_market_id.shipping),
+                    'yahoo_free_market_status': item.yahoo_free_market_id.status.status_name
                 }
-                for item in ebay_register_items
+                for item in list_items
             ]
             return create_success_response(response_data)
         except Exception as e:
             return create_error_response(str(e))
 
-class SynchronizeYahooAuctionView(APIView):
+
+class SynchronizeYahooFreeMarketView(APIView):
     def get(self, request):
         try:
-            response = SynchronizeYahooAuction(request.user).synchronize()
-            return create_success_response(data=response,message="Yahooオークションの同期が完了しました")
+            response = SynchronizeYahooFreeMarket(request.user).synchronize()
+            return create_success_response(data=response,message="Yahooフリーマーケットの同期が完了しました")
         except Exception as e:
             return create_error_response(str(e))

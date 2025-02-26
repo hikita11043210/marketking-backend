@@ -8,7 +8,8 @@ import json
 logger = logging.getLogger(__name__)
 
 class ScrapingService:
-    BASE_URL = settings.YAHOO_FREE_MARKET_URL
+    BASE_SEARCH_URL = settings.YAHOO_FREE_MARKET_URL
+    BASE_ITEM_URL = settings.YAHOO_FREE_MARKET_URL
 
     def __init__(self):
         self.session = requests.Session()
@@ -18,7 +19,7 @@ class ScrapingService:
 
     def get_items(self, params):
         """
-        Yahoo!オークションの検索を実行し、結果を取得する
+        Yahoo!フリーマーケットの検索を実行し、結果を取得する
 
         Args:
             params (dict): 検索パラメータ
@@ -38,13 +39,13 @@ class ScrapingService:
                 raise ValueError("検索テキストは必須です")
 
             # 検索URLの構築
-            search_url = f"{self.BASE_URL.rstrip('/')}/{search_text}"
+            search_url = f"{self.BASE_SEARCH_URL}{search_text}"
             
             # クエリパラメータの設定
             query_params = {
-                'open': '1',  # 販売中の商品のみに固定
+                # 'open': '1',  # 販売中の商品のみに固定
                 'page': params.get('page', '1'),  # ページ番号
-                # 'sold': '1'   # 売切れの商品
+                'sold': '1'   # 売切れの商品
             }
 
             # 商品状態の設定
@@ -114,7 +115,7 @@ class ScrapingService:
                 raise ValueError("商品データが見つかりません")
 
             # 売り切れフラグの判定
-            sold_out_flag = bool(soup.find('div', class_='sc-7fc76147-7 bpVTgE'))
+            sold_out_flag = bool(soup.find('img', class_='sc-7fc76147-7 bpVTgE'))
 
             json_data = json.loads(next_data_script.string)
             
@@ -130,6 +131,7 @@ class ScrapingService:
                 'images': [img.get('url', '') for img in item_data.get('images', [])],
                 'price': item_data.get('price', 0),
                 'item_id': item_data.get('id', ''),
+                'url': self.BASE_ITEM_URL + item_id,
                 'condition': item_data.get('condition', {}).get('text', ''),
                 'category': [category.get('name', '') for category in item_data.get('categories', [])],
                 'delivery_schedule': item_data.get('deliverySchedule', {}).get('text', ''),
