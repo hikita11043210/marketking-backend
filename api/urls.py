@@ -55,4 +55,5 @@ urlpatterns = [
     path('yahoo-free-market/detail/', YahooFreeMarketItemDetailView.as_view(), name='yahoo-free-market-detail'),
     path('yahoo-free-market/register/', YahooFreeMarketRegisterView.as_view(), name='yahoo-free-market-register'),
     path('yahoo-free-market/list/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-list'),
+    path('yahoo-free-market/delete/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-delete'),
 ] 
