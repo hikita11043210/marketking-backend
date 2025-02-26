@@ -130,3 +130,12 @@ class YahooAuctionStatus(models.Model):
 
     def __str__(self):
         return self.status_name
+
+class YahooFreeMarketStatus(models.Model):
+    status_name = models.CharField(max_length=100, null=False)
+
+    class Meta:
+        db_table = 'm_yahoo_free_market_status'
+
+    def __str__(self):
+        return self.status_name
