@@ -63,7 +63,7 @@ class ScrapingService:
                 query_params['minPrice'] = str(min_price)
             if max_price is not None:
                 query_params['maxPrice'] = str(max_price)
-            print(query_params)
+
             # 最初のページを取得して総件数を確認
             first_page = self.session.get(search_url, params=query_params)
             first_page.raise_for_status()

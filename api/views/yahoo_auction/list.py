@@ -27,7 +27,6 @@ class ListView(APIView):
             # ebay_service_inventory.delete_inventory_item('YA_e1163351978_20250222024545')
             # # 出品情報を削除
             # for item in data:
-            #     print(item['sku'])
             #     ebay_service_inventory.delete_inventory_item(item['sku']) # ebayから削除
 
             # 一覧出力時の変換レートを取得
