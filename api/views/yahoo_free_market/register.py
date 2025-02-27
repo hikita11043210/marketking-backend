@@ -86,7 +86,9 @@ class YahooFreeMarketRegisterView(APIView):
             if product_data['description'] == "":
                 description = description_template_1 + description_template_2 + description_template_3
             else:
-                description = description_template_1 + product_data['description'] + description_template_3
+                # descriptionの各行を<p>タグで囲む
+                formatted_description = '\n'.join([f'<p>{line}</p>' for line in product_data['description'].split('\n') if line.strip()])
+                description = description_template_1 + formatted_description + description_template_3
 
             # 説明が4000文字以内であることを確認
             if len(description) > 4000:

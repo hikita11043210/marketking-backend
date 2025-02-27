@@ -43,13 +43,13 @@ class ScrapingService:
             
             # クエリパラメータの設定
             query_params = {
-                # 'open': '1',  # 販売中の商品のみに固定
+                'open': '1',  # 販売中の商品のみに固定
                 'page': params.get('page', '1'),  # ページ番号
-                'sold': '1'   # 売切れの商品
+                # 'sold': '1'   # 売切れの商品
             }
 
             # 商品状態の設定
-            conditions = params.get('condition', [])
+            conditions = params.get('conditions', [])
             if conditions:
                 if isinstance(conditions, str):
                     conditions = [conditions]
@@ -63,7 +63,7 @@ class ScrapingService:
                 query_params['minPrice'] = str(min_price)
             if max_price is not None:
                 query_params['maxPrice'] = str(max_price)
-
+            print(query_params)
             # 最初のページを取得して総件数を確認
             first_page = self.session.get(search_url, params=query_params)
             first_page.raise_for_status()
