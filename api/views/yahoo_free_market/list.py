@@ -23,7 +23,7 @@ class YahooFreeMarketListView(APIView):
             sku = request.query_params.get('sku', '')
             status = request.query_params.get('status', '')
             yahoo_status = request.query_params.get('yahoo_status', '')
-            limit = int(request.query_params.get('limit', 10))
+            limit = int(request.query_params.get('limit', 100))
             page = int(request.query_params.get('page', 1))
 
             # 商品情報を取得（YahooAuctionとの関連を含める）

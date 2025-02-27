@@ -20,20 +20,20 @@ class ScrapingService:
 
         Args:
             params (dict): 検索パラメータ
-                - p: 検索キーワード
-                - auccat: カテゴリ指定
-                - va: キーワードフィルター
-                - price_type: 現在価格/即決価格
-                - min: 価格下限
-                - max: 価格上限
-                - istatus: オークション状態
-                - new: 新着商品フィルター
-                - is_postage_mode: 送料設定フィルター
-                - dest_pref_code: 配送先都道府県コード
-                - fixed: 出品形式
-                - exflg: エクスプレスオークション
-                - b: 開始番号
-                - n: 取得件数
+                min     	    最低価格
+                max             最高価格
+                price_type	    即決価格 or 入札価格でフィルタ（bidorbuyprice or currentprice）
+                p               検索キーワード
+                auccat	        カテゴリーID
+                va	            キーワードの強調検索（pと同じ値）
+                fixed	        即決価格ありの出品のみ
+                istatus	        商品の状態（3:未使用, 1:中古, 4:目立った傷や汚れなし）
+                is_postage_mode 送料無料のみ（0 or 1 デフォルトは0）
+                dest_pref_code  配送先の都道府県
+                exflg	        詳細検索オプションを有効化（0 or 1 デフォルトは1）
+                n	            1ページの表示件数（50件）
+                mode	        検索モード（通常検索 = 1）
+                brand_id	    ブランド指定
 
         memo:
             残り時間が長い順：&s1=end&o1=d
@@ -45,14 +45,90 @@ class ScrapingService:
         try:
             # デフォルトパラメータの設定
             default_params = {
+                'n': '20',  # デフォルトの表示件数
+                'mode': '1',  # 通常検索モード
+                'exflg': '1',  # 詳細検索オプションを有効化
+                'rc_ng': '1',  # 不適切な商品を除外
+                'dest_pref_code': '13',  # デフォルトの配送先（東京）
             }
 
             # None値を除外しながらパラメータをマージ
-            search_params = {k: v for k, v in params.items() if v is not None}
-            search_params.update(default_params)
+            search_params = {k: v for k, v in params.items() if v is not None and k not in ['page', 'limit']}
 
-            search_params['s1'] = 'end'
-            search_params['o1'] = 'd'
+            # 価格タイプに応じたパラメータ設定
+            if 'max' in search_params:
+                max_value = search_params.pop('max')
+                if search_params.get('price_type') == 'bidorbuyprice':
+                    search_params['aucmax_bidorbuy_price'] = max_value
+                else:
+                    search_params['aucmax_price'] = max_value
+
+            # ブランドIDの処理
+            if 'brands' in search_params:
+                brand_mapping = {
+                    'canon': '100614',
+                    'nikon': '101345',
+                    'sony': '100614',
+                    'fujifilm': '102365',
+                    'olympus': '100537',
+                    'panasonic': '101460',
+                    'pentax': '101475',
+                }
+                brands = search_params.pop('brands').split(',')
+                brand_ids = [brand_mapping[brand.lower()] for brand in brands if brand.lower() in brand_mapping]
+                if brand_ids:
+                    search_params['brand_id'] = ','.join(sorted(brand_ids))  # IDを昇順でソート
+            # brand_idが直接指定された場合はそのまま使用
+            elif 'brand_id' in params:
+                search_params['brand_id'] = params['brand_id']
+
+            # カテゴリーの処理
+            if 'auccat' in search_params and isinstance(search_params['auccat'], str):
+                search_params['auccat'] = search_params['auccat'].replace(' ', '')
+
+            # デフォルトパラメータを後から適用（ユーザー指定値を優先）
+            for key, value in default_params.items():
+                if key not in search_params:
+                    search_params[key] = value
+
+            # 並び順の設定
+            if 'sort_order' in search_params:
+                sort_order = search_params.pop('sort_order')
+                if sort_order == 'end_time_desc':
+                    search_params['s1'] = 'end'
+                    search_params['o1'] = 'd'
+                elif sort_order == 'end_time_asc':
+                    search_params['s1'] = 'end'
+                    search_params['o1'] = 'a'
+            # s1とo1が直接指定された場合はそのまま使用
+            elif 's1' in params and 'o1' in params:
+                search_params['s1'] = params['s1']
+                search_params['o1'] = params['o1']
+
+            # 商品状態の処理
+            if 'item_conditions' in search_params:
+                conditions = search_params.pop('item_conditions').split(',')
+                if conditions:
+                    search_params['istatus'] = ','.join(conditions)
+
+            # 送料無料フラグの処理
+            if 'is_free_shipping' in search_params:
+                is_free_shipping = search_params.pop('is_free_shipping')
+                if is_free_shipping == '1':
+                    search_params['is_postage_mode'] = '1'
+
+            # 出品形式の処理
+            if 'fixed' in search_params:
+                fixed = search_params.pop('fixed')
+                search_params['fixed'] = fixed
+
+            # キーワードの強調検索
+            if 'p' in search_params:
+                search_params['va'] = search_params['p']
+
+            # リクエストURLをログ出力
+            request_url = f"{self.BASE_SEARCH_URL}?{requests.compat.urlencode(search_params)}"
+            logger.info(f"リクエストURL: {request_url}")
 
             # 最初のページを取得して総件数を確認
             first_page = self.session.get(self.BASE_SEARCH_URL, params=search_params)
