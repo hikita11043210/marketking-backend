@@ -104,7 +104,7 @@ class ScrapingService:
             # import os,datetime
             # log_dir = "logs/soup_dumps/"
             # os.makedirs(log_dir, exist_ok=True)
-            # filename = f"{log_dir}soup_yahoo_free_market_item_detail_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+            # filename = f"{log_dir}soup_yahoo_free_market_item_detail_{item_id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
             #     logger.info(f"Soup内容を {filename} に保存しました")
@@ -113,9 +113,6 @@ class ScrapingService:
             next_data_script = soup.find('script', {'id': '__NEXT_DATA__'})
             if not next_data_script:
                 raise ValueError("商品データが見つかりません")
-
-            # 売り切れフラグの判定
-            sold_out_flag = bool(soup.find('img', class_='sc-7fc76147-7 bpVTgE'))
 
             json_data = json.loads(next_data_script.string)
             
@@ -141,7 +138,6 @@ class ScrapingService:
                 'status': item_data.get('status', ''),
                 'pv_count': item_data.get('pvCount', 0),
                 'like_count': item_data.get('likeCount', 0),
-                'sold_out': sold_out_flag  # 売り切れフラグを追加
             }
 
             # 必須キーの定義
@@ -236,3 +232,53 @@ class ScrapingService:
                 continue
 
         return items 
+    
+
+    def check_item_exist(self, params):
+        """
+        商品が存在するかどうかを確認する
+
+        params:
+            item_id: 商品ID
+
+        returns:
+            bool: 商品が存在するかどうか
+        """
+        try:
+            item_id = params.get('item_id')
+            response = self.session.get(f'https://paypayfleamarket.yahoo.co.jp/item/{item_id}')
+
+            # 結果が存在しない場合（出品取消しをされた場合かもしれない）
+            if response.status_code == 404:
+                logger.warning(f"商品ID {item_id} は存在しません")
+                return True
+
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # import os,datetime
+            # log_dir = "logs/soup_dumps/"
+            # os.makedirs(log_dir, exist_ok=True)
+            # filename = f"{log_dir}soup_yahoo_free_market_item_detail_{item_id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+            # with open(filename, "w", encoding="utf-8") as f:
+            #     f.write(soup.prettify())
+            #     logger.info(f"Soup内容を {filename} に保存しました")
+
+            # __NEXT_DATA__スクリプトを取得
+            next_data_script = soup.find('script', {'id': '__NEXT_DATA__'})
+            if not next_data_script:
+                return True
+
+            # 売り切れフラグの判定
+            if bool(soup.find('img', class_='sc-7fc76147-7 bpVTgE')):
+                return True
+
+            return False
+
+        except requests.RequestException as e:
+            logger.error(f"check_item_exist_リクエストエラー: {str(e)}")
+            return {'success': False, 'error': str(e)}
+
+        except Exception as e:
+            logger.error(f"check_item_exist_スクレイピングエラー: {str(e)}")
+            return {'success': False, 'error': 'データ解析に失敗しました'}

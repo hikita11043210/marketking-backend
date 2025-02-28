@@ -40,15 +40,10 @@ class SynchronizeYahooFreeMarket():
 
                 for item in yahoo_free_market_items:
                     try:
-                        scraping_result = ScrapingService().get_item_detail({'item_id': item.unique_id})
-                        if not scraping_result or 'data' not in scraping_result:
-                            logger.error(f"スクレイピング結果が不正です - SKU: {item.unique_id}")
-                            continue
-
-                        data = scraping_result['data']
+                        result = ScrapingService().check_item_exist({'item_id': item.unique_id})
 
                         # オークション終了判定
-                        if data.get('sold_out', False):
+                        if result:
                             old_status = item.status.id
                             item.status = yahoo_end_status
 
@@ -70,7 +65,7 @@ class SynchronizeYahooFreeMarket():
                             })
                     
                     except Exception as item_error:
-                        logger.error(f"Yahooフリーマーケットの同期中にエラーが発生しました - SKU: {item.unique_id}, エラー: {str(item_error)}")
+                        logger.error(f"Yahooフリーマーケットの同期中にエラーが発生しました - アイテムID: {item.unique_id}, エラー: {str(item_error)}")
                         continue
 
             return {
