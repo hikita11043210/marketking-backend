@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from api.services.ebay.category import Category
 from api.utils.throttles import AuctionDetailThrottle
+from api.utils.response_helpers import create_success_response, create_error_response
 
 class EbayCategoryView(APIView):
     """eBayのカテゴリ情報を取得するView"""
@@ -22,10 +23,9 @@ class EbayCategoryView(APIView):
             else:
                 # 全カテゴリ取得
                 result = ebay_service_category.get_all_categories(category_tree_id)
-            
-            return Response(result, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            return create_success_response(
+                data=result,
+                message='カテゴリ情報を取得しました'
             )
+        except Exception as e:
+            return create_error_response(e)

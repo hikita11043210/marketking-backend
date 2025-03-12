@@ -36,5 +36,3 @@ def generate_log_file(data, path, date=False):
     # JSONファイルの書き込み
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(existing_data, f, ensure_ascii=False, indent=2)
-    
-    print(f'[{timestamp}] ログを書き込みました: {filepath}')

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from api.services.ebay.offer import Offer
 from api.models.ebay import Ebay
 from api.models.master import Status
+from api.utils.response_helpers import create_success_response, create_error_response
 
 class OfferView(APIView):
     def post(self, request):
@@ -29,12 +30,6 @@ class OfferView(APIView):
             ebay_register_item.save()
 
         except Exception as e:
-            return Response({
-                "Success": False,
-                "message": str(e)
-            })
+            return create_error_response(str(e))
 
-        return Response({
-            "Success": True,
-            "message": None
-        })
+        return create_success_response(None)

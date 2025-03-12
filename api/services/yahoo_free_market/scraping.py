@@ -68,10 +68,11 @@ class ScrapingService:
             first_page = self.session.get(search_url, params=query_params)
             first_page.raise_for_status()
             soup = BeautifulSoup(first_page.text, 'html.parser')
+
             # import os,datetime
-            # log_dir = "logs/soup_dumps/"
+            # log_dir = "logs/scraping/yahoo_free_market/"
             # os.makedirs(log_dir, exist_ok=True)
-            # filename = f"{log_dir}soup_yahoo_free_market_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+            # filename = f"{log_dir}list_{datetime.datetime.now()}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
             #     logger.info(f"Soup内容を {filename} に保存しました")
@@ -102,9 +103,9 @@ class ScrapingService:
             soup = BeautifulSoup(response.text, 'html.parser')
 
             # import os,datetime
-            # log_dir = "logs/soup_dumps/"
+            # log_dir = "logs/scraping/yahoo_free_market/"
             # os.makedirs(log_dir, exist_ok=True)
-            # filename = f"{log_dir}soup_yahoo_free_market_item_detail_{item_id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+            # filename = f"{log_dir}detail_{datetime.datetime.now()}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
             #     logger.info(f"Soup内容を {filename} に保存しました")
@@ -130,7 +131,7 @@ class ScrapingService:
                 'item_id': item_data.get('id', ''),
                 'url': self.BASE_ITEM_URL + item_id,
                 'condition': item_data.get('condition', {}).get('text', ''),
-                'category': [category.get('name', '') for category in item_data.get('categories', [])],
+                'category': [category.get('name', '') for category in item_data.get('categoryList', [])],
                 'delivery_schedule': item_data.get('deliverySchedule', {}).get('text', ''),
                 'delivery_method': item_data.get('deliveryMethod', {}).get('text', ''),
                 'create_date': item_data.get('createDate', ''),
@@ -158,10 +159,7 @@ class ScrapingService:
                 if key not in data or data[key] == '' or data[key] == [] or data[key] == {}:
                     missing_keys.append(key)
 
-            return {
-                'data': data,
-                'missing_keys': missing_keys
-            }
+            return data
 
         except requests.RequestException as e:
             logger.error(f"リクエストエラー: {str(e)}")
@@ -184,14 +182,12 @@ class ScrapingService:
         """
         items = []
         # 商品一覧のコンテナを取得
-        product_container = soup.find('div', class_='sc-69fa63d4-5 kSjPzb')
+        product_container = soup.find('div', id='itm')
         if not product_container:
-            logger.warning("商品一覧のコンテナが見つかりません")
+            logger.error("商品一覧のコンテナが見つかりません")
             return items
-
         # 各商品のリンク要素を取得
-        product_links = product_container.find_all('a', class_='sc-85dc79b4-0 lgmhpO')
-        
+        product_links = product_container.find_all('a', href=lambda x: x and '/item/' in x)
         for link in product_links:
             try:
                 # アイテムID（URLから抽出）
@@ -202,7 +198,7 @@ class ScrapingService:
                         item_id = url_match.group(1)
 
                 # サムネイル画像
-                thumbnail_elem = link.find('img', class_='sc-85dc79b4-1 ixtqmE')
+                thumbnail_elem = link.find('img')
                 thumbnail_url = None
                 if thumbnail_elem and thumbnail_elem.get('src'):
                     # .jpg以降のクエリパラメータを削除
@@ -212,7 +208,7 @@ class ScrapingService:
                         thumbnail_url = src[:jpg_index + 4]  # .jpgまでを含める
 
                 # 商品価格
-                price_elem = link.find('p', class_='sc-85dc79b4-3 eDfJYQ')
+                price_elem = link.find('p')
                 price = None
                 if price_elem:
                     price_text = price_elem.text.strip()
@@ -228,7 +224,7 @@ class ScrapingService:
                     })
 
             except Exception as e:
-                logger.warning(f"商品情報の抽出に失敗: {str(e)}")
+                logger.error(f"商品情報の抽出に失敗: {str(e)}")
                 continue
 
         return items 
@@ -257,9 +253,9 @@ class ScrapingService:
             soup = BeautifulSoup(response.text, 'html.parser')
 
             # import os,datetime
-            # log_dir = "logs/soup_dumps/"
+            # log_dir = "logs/scraping/yahoo_free_market/"
             # os.makedirs(log_dir, exist_ok=True)
-            # filename = f"{log_dir}soup_yahoo_free_market_item_detail_{item_id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+            # filename = f"{log_dir}check_{item_id}_{datetime.datetime.now()}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
             #     logger.info(f"Soup内容を {filename} に保存しました")

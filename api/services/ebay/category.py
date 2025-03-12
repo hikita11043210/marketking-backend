@@ -42,10 +42,7 @@ class Category(Common):
                     'path': ' > '.join(path)
                 })
             
-            return {
-                'success': True,
-                'categories': categories
-            }
+            return categories
             
         except requests.exceptions.RequestException as e:
             logger.error(f"Failed to search categories: {str(e)}")

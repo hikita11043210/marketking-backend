@@ -178,13 +178,13 @@ class ScrapingService:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            import os,datetime
-            log_dir = "logs/soup_dumps/"
-            os.makedirs(log_dir, exist_ok=True)
-            filename = f"{log_dir}soup_dump_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.html"
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(soup.prettify())
-                logger.info(f"Soup内容を {filename} に保存しました")
+            # import os,datetime
+            # log_dir = "logs/scraping/yahoo_auction/"
+            # os.makedirs(log_dir, exist_ok=True)
+            # filename = f"{log_dir}detail_{datetime.datetime.now()}.html"
+            # with open(filename, "w", encoding="utf-8") as f:
+            #     f.write(soup.prettify())
+            #     logger.info(f"Soup内容を {filename} に保存しました")
 
             # 商品基本情報
             data = {}
@@ -213,27 +213,71 @@ class ScrapingService:
                 data['description'] = ''
 
             # 商品価格
+            data['current_price'] = ''
+            data['current_price_in_tax'] = ''
+            data['buy_now_price'] = ''
+            data['buy_now_price_in_tax'] = ''
             price_rows = soup.find_all('div', class_='Price__row')
             for row in price_rows:
                 title = row.find('dt', class_='Price__title')
                 if not title:
                     continue
-                title_text = title.get_text(strip=True)
                 value = row.find('dd', class_='Price__value')
-                # 現在価格
-                if title_text == '現在':
-                    if value:
-                        data['current_price'] = value.text.split('円')[0].strip()
-                        tax_span = value.find('span', class_='Price__tax')
-                        tax = tax_span.text.replace('（税込', '').replace('（税', '').replace('円）', '').strip() if tax_span else '0'
-                        data['current_price_in_tax'] = tax
-                # 即決価格
-                elif title_text == '即決':
-                    if value:
-                        data['buy_now_price'] = value.text.split('円')[0].strip()
-                        tax_span = value.find('span', class_='Price__tax')
-                        tax = tax_span.text.replace('（税込', '').replace('（税', '').replace('円）', '').strip() if tax_span else '0'
-                        data['buy_now_price_in_tax'] = tax
+                if not value:
+                    continue
+                    
+                # 価格タイトル（現在/即決/定額など）
+                title_text = title.text.strip() if title else ''
+                
+                # 価格テキストの処理（カンマ、円記号、空白を削除）
+                price_text = value.get_text(strip=True)
+                price = ''
+                price_in_tax = '0'
+                
+                # 基本価格の抽出
+                if '円' in price_text:
+                    price = price_text.split('円')[0].replace(',', '').strip()
+                
+                # 税込み価格の抽出（複数のパターンに対応）
+                tax_span = value.find('span', class_='Price__tax')
+                if tax_span:
+                    tax_text = tax_span.get_text(strip=True)
+                    
+                    # パターン1: （税込 X 円）
+                    if '税込' in tax_text and '円' in tax_text:
+                        try:
+                            # 「税込」と「円」の間の数値を抽出
+                            tax_parts = tax_text.split('税込')[1].split('円')[0]
+                            price_in_tax = tax_parts.replace(',', '').strip()
+                        except (IndexError, ValueError):
+                            price_in_tax = '0'
+                    
+                    # パターン2: （税 X 円）
+                    elif '税' in tax_text and '円' in tax_text:
+                        try:
+                            # 「税」と「円」の間の数値を抽出
+                            tax_parts = tax_text.split('税')[1].split('円')[0]
+                            # 税額だけの場合は、本体価格に加算して税込み価格を計算
+                            tax_amount = tax_parts.replace(',', '').strip()
+                            try:
+                                price_in_tax = str(int(price) + int(tax_amount))
+                            except (ValueError, TypeError):
+                                price_in_tax = price  # 変換エラー時は本体価格をそのまま使用
+                        except (IndexError, ValueError):
+                            price_in_tax = price  # エラー時は本体価格をそのまま使用
+                
+                # 価格情報がない場合はスキップ
+                if not price:
+                    continue
+                    
+                # 現在価格（オークション形式の場合）
+                if '現在' in title_text:
+                    data['current_price'] = int(price)
+                    data['current_price_in_tax'] = int(price_in_tax)
+                # 即決価格または定額価格（固定価格形式の場合）
+                elif '即決' in title_text or '価格' in title_text or title_text == '':
+                    data['buy_now_price'] = int(price)
+                    data['buy_now_price_in_tax'] = int(price_in_tax)
 
             # 商品詳細テーブルの解析
             price_rows = soup.find_all('tr', class_='Section__tableRow')
@@ -302,11 +346,7 @@ class ScrapingService:
             # if missing_keys:
             #     with open(f"debug_{datetime.now().strftime('%Y%m%d%H%M%S')}.html", "w", encoding="utf-8") as f:
             #         f.write(soup.prettify())
-
-            return {
-                'data': data,
-                'missing_keys': missing_keys
-            }
+            return data
 
         except requests.RequestException as e:
             logger.error(f"リクエストエラー: {str(e)}")

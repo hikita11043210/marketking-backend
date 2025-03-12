@@ -23,6 +23,13 @@ class Marketplace(Common):
                 for policy in data["itemConditionPolicies"]
                 if category_id in policy["categoryId"]
             ]
+            
+            # 一番外側の配列を削除（最初の要素を取得）
+            if conditions and len(conditions) > 0:
+                conditions = conditions[0]
+            else:
+                conditions = []
+
             return conditions
 
         except requests.exceptions.RequestException as e:

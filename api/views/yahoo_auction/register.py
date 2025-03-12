@@ -16,6 +16,15 @@ import logging
 from django.conf import settings
 from datetime import datetime
 from django.db import transaction
+from api.services.ai.ai import Ai
+from api.services.ebay.inventory import Inventory
+from api.services.ebay.offer import Offer
+from api.services.ebay.trading import Trading
+from api.services.ebay.category import Category
+from api.services.ai.ai import Ai
+from api.services.calculator import CalculatorService
+from api.services.translator import TranslatorService
+from api.services.ebay.marketplace import Marketplace
 
 logger = logging.getLogger(__name__)
 
@@ -24,22 +33,89 @@ class ItemDetailView(APIView):
     ヤフオクの商品詳細API
     """
     def get(self, request):
+        # try:
+        #     service = ScrapingService()
+        #     # Yahooオークションの詳細情報取得
+        #     result = service.get_item_detail(request.query_params)
+
+        #     return Response({
+        #         'success': True,
+        #         'message': '商品詳細が取得されました',
+        #         'data': result
+        #     })
+
+        # except ValueError as e:
+        #     return Response({
+        #         'success': False,
+        #         'message': str(e)
+        #     }, status=status.HTTP_400_BAD_REQUEST)
         try:
+            # インスタンスを生成
             service = ScrapingService()
-            # Yahooオークションの詳細情報取得
+            ai = Ai()
+            trading_api = Trading(request.user)
+            ebay_service_category = Category(request.user)
+            translator_service = TranslatorService(request.user)
+            calculator_service = CalculatorService(request.user)
+            ebay_service_marketplace = Marketplace(request.user)
+
+            # Yahooフリーマーケットの詳細情報取得
             result = service.get_item_detail(request.query_params)
 
-            return Response({
-                'success': True,
-                'message': '商品詳細が取得されました',
-                'data': result
-            })
+            # 商品詳細の値セット
+            title = result['title']
+            description = result['description']
+            condition = result['condition']
+            price = result['buy_now_price']
 
-        except ValueError as e:
-            return Response({
-                'success': False,
-                'message': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            # カテゴリツリーIDの取得
+            category_tree_id = ebay_service_category.get_categories_tree_id()
+
+            # カテゴリを取得
+            category = ebay_service_category.get_categories(category_tree_id, title)
+
+            # カテゴリIDを取得
+            category_id = ai.get_category_id(category, title)
+
+            # カテゴリ固有の仕様を取得
+            category_aspects = trading_api.get_category_aspects(
+                category_id=category_id,
+                category_tree_id=category_tree_id
+            )
+
+            # 商品詳細の取得
+            item_specifics = ai.extract_cameras_specifics(title, category_aspects, description)
+
+            # 商品の状態の説明の取得
+            condition_description_en = translator_service.translate_text(condition, 'EN-US')
+
+            # カテゴリのコンディション情報を取得
+            conditions = ebay_service_marketplace.get_category_conditions(category_id)
+            selected_condition = 3000
+
+            # 価格計算
+            price = calculator_service.calc_price_dollar([price,0])
+
+            data = {
+                'item_details': result,
+                'item_specifics': item_specifics,
+                'category': category,
+                'category_id': category_id,
+                'condition_description_en': condition_description_en,
+                'price': price,
+                'conditions': conditions,
+                'selected_condition': selected_condition
+            }
+            return create_success_response(
+                data=data,
+                message='商品詳細を取得しました'
+            )
+
+        except Exception as e:
+            return create_error_response(
+                e,
+                message="商品の詳細を取得できませんでした"
+            )
 
 
 
