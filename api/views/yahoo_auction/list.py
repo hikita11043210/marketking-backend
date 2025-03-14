@@ -49,7 +49,8 @@ class ListView(APIView):
                     'yahoo_auction_shipping': str(item.yahoo_auction_id.shipping),
                     'purchase_price': int(item.yahoo_auction_id.item_price + item.yahoo_auction_id.shipping),
                     'yahoo_auction_end_time': item.yahoo_auction_id.end_time.isoformat(),
-                    'yahoo_auction_status': item.yahoo_auction_id.status.status_name
+                    'yahoo_auction_status': item.yahoo_auction_id.status.status_name,
+                    'update_datetime': item.update_datetime
                 }
                 for item in ebay_register_items
             ]

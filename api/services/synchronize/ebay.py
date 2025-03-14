@@ -26,7 +26,6 @@ class Status():
                 for item in ebay_register_items:
                     try:
                         status = ItemStatusService(self.user).get_item_status(item.sku)
-                        logger.info(f"SKU: {item.sku}, 現在のステータス: {item.status.id}, 新しいステータス: {status}")
                         
                         new_status = None
                         if status == "ACTIVE":
@@ -42,7 +41,6 @@ class Status():
                             old_status_id = item.status.id
                             item.status = new_status
                             item.save()
-                            logger.info(f"ステータスを更新しました - SKU: {item.sku}, 新しいステータス: {new_status.id}")
                             
                             # 更新情報を記録
                             updated_items.append({

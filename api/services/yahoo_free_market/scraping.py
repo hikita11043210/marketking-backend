@@ -75,7 +75,6 @@ class ScrapingService:
             # filename = f"{log_dir}list_{datetime.datetime.now()}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
-            #     logger.info(f"Soup内容を {filename} に保存しました")
 
             # 最初のページの結果を解析
             items = self._parse_search_results(soup)
@@ -108,7 +107,6 @@ class ScrapingService:
             # filename = f"{log_dir}detail_{datetime.datetime.now()}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
-            #     logger.info(f"Soup内容を {filename} に保存しました")
 
             # __NEXT_DATA__スクリプトを取得
             next_data_script = soup.find('script', {'id': '__NEXT_DATA__'})
@@ -258,7 +256,6 @@ class ScrapingService:
             # filename = f"{log_dir}check_{item_id}_{datetime.datetime.now()}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
-            #     logger.info(f"Soup内容を {filename} に保存しました")
 
             # __NEXT_DATA__スクリプトを取得
             next_data_script = soup.find('script', {'id': '__NEXT_DATA__'})

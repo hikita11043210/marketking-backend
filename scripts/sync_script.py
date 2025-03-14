@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 # 設定
-API_BASE_URL = 'http://localhost:8000/api/v1'  # DjangoのAPIのベースURL
+API_BASE_URL = os.getenv('BACKEND_URL') + "/api/v1"  # DjangoのAPIのベースURL
 USERNAME = 'toshiki'  # ユーザー名
 PASSWORD = 'popo3gou'  # パスワード
 

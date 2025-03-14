@@ -128,12 +128,18 @@ class ScrapingService:
 
             # リクエストURLをログ出力
             request_url = f"{self.BASE_SEARCH_URL}?{requests.compat.urlencode(search_params)}"
-            logger.info(f"リクエストURL: {request_url}")
 
             # 最初のページを取得して総件数を確認
             first_page = self.session.get(self.BASE_SEARCH_URL, params=search_params)
             first_page.raise_for_status()
             soup = BeautifulSoup(first_page.text, 'html.parser')
+
+            # import os,datetime
+            # log_dir = "logs/scraping/yahoo_auction/"
+            # os.makedirs(log_dir, exist_ok=True)
+            # filename = f"{log_dir}list_{datetime.datetime.now()}.html"
+            # with open(filename, "w", encoding="utf-8") as f:
+            #     f.write(soup.prettify())
 
             # 総件数を取得
             total_count_elem = soup.select_one('.SearchMode__result')
@@ -184,7 +190,6 @@ class ScrapingService:
             # filename = f"{log_dir}detail_{datetime.datetime.now()}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
-            #     logger.info(f"Soup内容を {filename} に保存しました")
 
             # 商品基本情報
             data = {}
