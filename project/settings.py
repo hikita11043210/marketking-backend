@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import logging
+from datetime import timedelta, datetime
+from cryptography.fernet import Fernet
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,9 +34,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,9 +45,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'api',
+    'rest_framework_simplejwt.token_blacklist',
+    'social_django',  # Google認証用
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,7 +58,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -71,6 +73,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',  # Google認証用
+                'social_django.context_processors.login_redirect',  # Google認証用
             ],
         },
     },
@@ -80,16 +84,14 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'market_king',
-        'USER': 'user',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -136,9 +138,10 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-   "http://localhost:3000",
-   "https://1e32-60-149-69-123.ngrok-free.app",
+    "http://localhost:3000",
+    os.getenv('FRONTEND_URL'),
 ]
+
 
 AUTH_USER_MODEL = 'api.User'
 
@@ -163,28 +166,33 @@ CORS_ALLOW_HEADERS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '5/minute',
+        'user': '100/minute',
+        'admin': '1000/minute'  # 特定API用のカスタム制限追加
+    }
 }
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
+    'social_core.backends.google.GoogleOAuth2',  # Google認証用
 )
-
-# Cache settings
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/0'),
-    }
-}
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {message}',
@@ -193,13 +201,13 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': f'logs/debug_{datetime.now().strftime("%Y%m%d")}.log',
             'formatter': 'verbose',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
@@ -207,19 +215,64 @@ LOGGING = {
     'loggers': {
         '': {
             'handlers': ['console', 'file'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': True,
         },
     },
 } 
 
-# Google OAuth2の設定
-# eBay OAuth Scopes
-EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', 'https://api.ebay.com/oauth/api_scope https://api.ebay.com/oauth/api_scope/sell.marketing.readonly https://api.ebay.com/oauth/api_scope/sell.marketing https://api.ebay.com/oauth/api_scope/sell.inventory.readonly https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account.readonly https://api.ebay.com/oauth/api_scope/sell.account https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly https://api.ebay.com/oauth/api_scope/sell.fulfillment').split()
+# env
+EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', '').split(',')
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
-EBAY_RUNAME = os.getenv('EBAY_RUNAME')
 EBAY_REDIRECT_URI = os.getenv('EBAY_REDIRECT_URI')
-EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX', 'True').lower() == 'true'
-EBAY_SANDBOX_URL = os.getenv('EBAY_SANDBOX_URL', 'https://api.sandbox.ebay.com')
-EBAY_PRODUCTION_URL = os.getenv('EBAY_PRODUCTION_URL', 'https://api.ebay.com')
+EBAY_IS_SANDBOX = os.getenv('EBAY_IS_SANDBOX', 'False').lower() == 'true'
+EBAY_SANDBOX_URL = os.getenv('EBAY_SANDBOX_URL')
+EBAY_SANDBOX_AUTH_URL = os.getenv('EBAY_SANDBOX_AUTH_URL')
+EBAY_PRODUCTION_URL = os.getenv('EBAY_PRODUCTION_URL')
+EBAY_PRODUCTION_AUTH_URL = os.getenv('EBAY_PRODUCTION_AUTH_URL')
 EBAY_API_SITE_ID = os.getenv('EBAY_API_SITE_ID', '0')
+DEEPL_API_URL = os.getenv('DEEPL_API_URL')
+EBAY_MARKETPLACE_ID = os.getenv('EBAY_MARKETPLACE_ID')
+
+# YahooAuction
+YAHOO_AUCTION_URL = os.getenv('YAHOO_AUCTION_URL')
+# JWT設定
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY', SECRET_KEY),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+}
+
+# Cookie設定
+JWT_COOKIE_NAME = 'access_token'
+JWT_REFRESH_COOKIE_NAME = 'refresh_token'
+JWT_COOKIE_SECURE = False  # 開発環境ではFalse
+JWT_COOKIE_SAMESITE = 'Lax'  # 開発環境ではLax
+
+# Google OAuth2 settings (将来の実装用)
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_SECRET', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
+
+# 暗号化キーの設定
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()  # バイト列に変換
+
+# ebay送料
+EBAY_SHIPPING_COST = os.getenv('EBAY_SHIPPING_COST')
+
+# Payoneer手数料
+PAYONEER_FEE = os.getenv('PAYONEER_FEE')
+
+# Yahooフリーマーケット
+YAHOO_FREE_MARKET_URL = os.getenv('YAHOO_FREE_MARKET_URL')
+YAHOO_FREE_MARKET_ITEM_URL = os.getenv('YAHOO_FREE_MARKET_ITEM_URL')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')

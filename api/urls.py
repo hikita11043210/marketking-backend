@@ -1,28 +1,59 @@
-from django.urls import path, include
-from rest_framework.authtoken import views as token_views
-from .views.user import UserListCreateAPIView, UserDetailAPIView
-from .views.setting import SettingAPIView
-from .views.scraping import YahooAuctionItemSearchView, YahooAuctionCategorySearchView
-from .views.shipping_calculator import ShippingCalculatorView
-from .views.ebay import (
-    EbayAuthView,
-    EbayRegisterView,
-    EbayCategoriesView,
-    EbayPoliciesView
+from django.urls import path
+from .views.master.setting import SettingAPIView
+from .views.yahoo_auction.search import SearchView as YahooAuctionSearchView
+from .views.yahoo_auction.register import ItemDetailView, RegisterView
+from .views.utils.calculator_shipping import CalculatorShippingView
+from .views.utils.calculator_price import CalculatorPriceView
+from .views.utils.translator import TranslatorView
+from .views.login import LoginView, RefreshTokenView, LogoutView
+from .views.ebay.auth import (
+    EbayAuthStatusView,
+    EbayAuthURLView,
+    EbayAuthCallbackView,
+    EbayAuthDisconnectView
 )
-from .views.test_data import TestDataView
-
+from .views.ebay.policies import EbayPoliciesView
+from .views.ebay.category import EbayCategoryView
+from .views.ebay.itemSpecifics import EbayItemSpecificsView
+from .views.ebay.condition import EbayConditionView
+from .views.yahoo_auction.list import ListView, SynchronizeYahooAuctionView
+from .views.ebay.offer import OfferView
+from .views.ebay.categoryItemSpecifics import EbayCategoryItemSpecificsView
+from .views.synchronize.script import SynchronizeScriptView
+from .views.yahoo_free_market.search import YahooFreeMarketSearchView
+from .views.yahoo_free_market.register import YahooFreeMarketItemDetailView, YahooFreeMarketRegisterView
+from .views.yahoo_free_market.list import YahooFreeMarketListView, SynchronizeYahooFreeMarketView
+from .views.ebay.list import SynchronizeEbayView
 urlpatterns = [
-    path('token/', token_views.obtain_auth_token),  # ログイン用エンドポイント
-    path('users/', UserListCreateAPIView.as_view(), name='user-list-create'),
-    path('users/<int:pk>/', UserDetailAPIView.as_view(), name='user-detail'),
+    # 認証関連のエンドポイント
+    path('auth/login/', LoginView.as_view(), name='auth-login'),
+    path('auth/refresh/', RefreshTokenView.as_view(), name='auth-refresh'),
+    path('auth/logout/', LogoutView.as_view(), name='auth-logout'),
     path('settings/', SettingAPIView.as_view(), name='settings'),
-    path('search/yahoo-auction/items/', YahooAuctionItemSearchView.as_view(), name='yahoo-auction-item-search'),
-    path('search/yahoo-auction/categories/', YahooAuctionCategorySearchView.as_view(), name='yahoo-auction-category-search'),
-    path('shipping-calculator/', ShippingCalculatorView.as_view(), name='shipping-calculator'),
-    path('ebay/auth/', EbayAuthView.as_view(), name='ebay-auth'),
-    path('ebay/register/', EbayRegisterView.as_view(), name='ebay-register'),
-    path('ebay/categories/', EbayCategoriesView.as_view(), name='ebay-categories'),
-    path('ebay/policies/', EbayPoliciesView.as_view(), name='ebay-policies'),
-    path('testdata/', TestDataView.as_view(), name='testdata'),
+    path('yahoo-auction/items/', YahooAuctionSearchView.as_view(), name='yahoo-auction-item'),
+    path('yahoo-auction/detail/', ItemDetailView.as_view(), name='yahoo-auction-detail'),
+    path('shipping-calculator/', CalculatorShippingView.as_view(), name='shipping-calculator'),
+    path('calculator-price/', CalculatorPriceView.as_view(), name='calculator-price'),
+    path('translate/', TranslatorView.as_view(), name='translate'),
+    path('ebay/auth/status/', EbayAuthStatusView.as_view()),
+    path('ebay/auth/url/', EbayAuthURLView.as_view()),
+    path('ebay/auth/', EbayAuthCallbackView.as_view()),
+    path('ebay/auth/disconnect/', EbayAuthDisconnectView.as_view()),
+    path('ebay/categoryItemSpecifics/', EbayCategoryItemSpecificsView.as_view()),
+    path('ebay/policies/', EbayPoliciesView.as_view()),
+    path('ebay/category/', EbayCategoryView.as_view()),
+    path('ebay/itemSpecifics/', EbayItemSpecificsView.as_view()),
+    path('ebay/register/', RegisterView.as_view()),
+    path('ebay/condition/', EbayConditionView.as_view()),
+    path('list/', ListView.as_view()),
+    path('ebay/offer/', OfferView.as_view()),
+    path('synchronize/ebay/', SynchronizeEbayView.as_view()),
+    path('synchronize/yahoo-auction/', SynchronizeYahooAuctionView.as_view()),
+    path('synchronize/yahoo-free-market/', SynchronizeYahooFreeMarketView.as_view()),
+    path('synchronize/script/', SynchronizeScriptView.as_view()),
+    path('yahoo-free-market/search/', YahooFreeMarketSearchView.as_view(), name='yahoo-free-market-search'),
+    path('yahoo-free-market/detail/', YahooFreeMarketItemDetailView.as_view(), name='yahoo-free-market-detail'),
+    path('yahoo-free-market/register/', YahooFreeMarketRegisterView.as_view(), name='yahoo-free-market-register'),
+    path('yahoo-free-market/list/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-list'),
+    path('yahoo-free-market/delete/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-delete'),
 ] 
