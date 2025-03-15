@@ -31,7 +31,7 @@ class YahooFreeMarketListView(APIView):
                 'yahoo_free_market_id',
                 'yahoo_free_market_id__status',
                 'status'
-            ).filter(yahoo_free_market_id__isnull=False)
+            ).filter(yahoo_free_market_id__isnull=False).order_by('status', '-update_datetime')
 
             # 検索フィルタを適用
             if search:
