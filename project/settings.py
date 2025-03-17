@@ -19,22 +19,28 @@ from cryptography.fernet import Fernet
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-# BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Load environment variables from .env file
-load_dotenv(BASE_DIR / '.env')
+# 環境設定の読み込み
+ENVIRONMENT = os.getenv('DJANGO_ENV', 'development')
+if ENVIRONMENT == 'production':
+    env_file = BASE_DIR / '.env.prod'
+else:
+    env_file = BASE_DIR / '.env.dev'
+
+load_dotenv(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ds8wb3sx7zm2d_p0d@yb_(3=o99%*%vih9=9f3cid1nd+@zacn'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-ds8wb3sx7zm2d_p0d@yb_(3=o99%*%vih9=9f3cid1nd+@zacn')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
 
 # Application definition
 INSTALLED_APPS = [
@@ -135,13 +141,22 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
+
+# Simplified static file serving
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = [
+# CORS設定
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = ENVIRONMENT != 'production'  # 開発環境のみTrue
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else [
     "http://localhost:3000",
     os.getenv('FRONTEND_URL'),
 ]
@@ -256,8 +271,8 @@ SIMPLE_JWT = {
 # Cookie設定
 JWT_COOKIE_NAME = 'access_token'
 JWT_REFRESH_COOKIE_NAME = 'refresh_token'
-JWT_COOKIE_SECURE = False  # 開発環境ではFalse
-JWT_COOKIE_SAMESITE = 'Lax'  # 開発環境ではLax
+JWT_COOKIE_SECURE = ENVIRONMENT == 'production'  # 本番環境ではTrue
+JWT_COOKIE_SAMESITE = 'Strict' if ENVIRONMENT == 'production' else 'Lax'
 
 # Google OAuth2 settings (将来の実装用)
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('GOOGLE_OAUTH2_KEY', '')
