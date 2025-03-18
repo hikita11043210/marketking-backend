@@ -196,10 +196,13 @@ logger = logging.getLogger(__name__)
 # }
 
 LOGGING = {
+    'version': 1,  # 必須パラメータ
+    'disable_existing_loggers': False,
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
         },
+        # その他のハンドラ...
     },
     'root': {
         'handlers': ['console'],
