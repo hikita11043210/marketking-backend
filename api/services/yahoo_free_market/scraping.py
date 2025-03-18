@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import logging
 import re
 from django.conf import settings
-from api.utils.generate_log_file import generate_log_file
 import json
 logger = logging.getLogger(__name__)
 

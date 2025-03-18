@@ -177,7 +177,7 @@ LOGGING = {
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': f'logs/debug_{datetime.now().strftime("%Y%m%d")}.log',
+            # 'filename': f'logs/debug_{datetime.now().strftime("%Y%m%d")}.log',
             'formatter': 'verbose',
         },
         'console': {

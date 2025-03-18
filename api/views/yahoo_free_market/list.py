@@ -4,7 +4,6 @@ from api.models.ebay import Ebay
 from api.services.currency import CurrencyService
 from decimal import Decimal
 from api.services.ebay.offer import Offer
-from api.utils.generate_log_file import generate_log_file
 from api.services.ebay.inventory import Inventory
 from api.services.synchronize.ebay import Status
 from api.services.synchronize.yahoo_free_market import SynchronizeYahooFreeMarket
