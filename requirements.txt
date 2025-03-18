@@ -11,8 +11,10 @@ cryptography==44.0.0
 deepl==1.21.0
 defusedxml==0.8.0rc2
 distro==1.9.0
+dj-database-url==2.3.0
 Django==5.0.1
 django-cors-headers==4.3.1
+django-dbbackup==4.2.1
 djangorestframework==3.14.0
 djangorestframework_simplejwt==5.4.0
 ebaysdk==2.2.0
@@ -26,6 +28,7 @@ lxml==5.3.0
 mysqlclient==2.2.1
 oauthlib==3.2.2
 openai==1.64.0
+psycopg2-binary==2.9.10
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pycparser==2.22
@@ -48,3 +51,4 @@ tqdm==4.67.1
 typing_extensions==4.12.2
 tzdata==2025.1
 urllib3==2.3.0
+whitenoise==6.9.0
