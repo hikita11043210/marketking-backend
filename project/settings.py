@@ -20,22 +20,11 @@ import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# 環境設定の読み込み
-ENVIRONMENT = os.getenv('DJANGO_ENV', 'development')
-if ENVIRONMENT == 'production':
-    env_file = BASE_DIR / '.env.prod'
-else:
-    env_file = BASE_DIR / '.env.dev'
-
-load_dotenv(env_file)
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-ds8wb3sx7zm2d_p0d@yb_(3=o99%*%vih9=9f3cid1nd+@zacn')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
@@ -44,12 +33,10 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_
 
 # Application definition
 INSTALLED_APPS = [
-    # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # 'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
     'api',
@@ -66,7 +53,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'whitenoise.middleware.WhiteNoiseMiddleware',  # 追加
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -94,19 +80,8 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 # Database
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-    # 'default': {
-    #         'ENGINE': 'django.db.backends.postgresql',
-    #         'NAME': os.getenv('DB_NAME'),
-    #         'USER': os.getenv('DB_USER'),
-    #         'PASSWORD': os.getenv('DB_PASSWORD'),
-    #         'HOST': os.getenv('DB_HOST'),
-    #         'PORT': "25432",
-    #     }
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
-
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -135,30 +110,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-
-# STATIC_URL = '/static/'
-# STATIC_ROOT = BASE_DIR / 'staticfiles'
-# STATICFILES_DIRS = []  # 空のリストに変更
-
-# # Simplified static file serving
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# CORS設定
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = ENVIRONMENT != 'production'  # 開発環境のみTrue
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else [
-    "http://localhost:3000",
-    os.getenv('FRONTEND_URL'),
-]
-
 
 AUTH_USER_MODEL = 'api.User'
 
@@ -179,6 +131,10 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
     "x-ebay-token",
+]
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else [
+    "http://localhost:3000",
+    os.getenv('FRONTEND_URL'),
 ]
 
 REST_FRAMEWORK = {
@@ -238,7 +194,7 @@ LOGGING = {
     },
 } 
 
-# env
+# 環境変数
 EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', '').split(',')
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
 EBAY_REDIRECT_URI = os.getenv('EBAY_REDIRECT_URI')
@@ -269,8 +225,8 @@ SIMPLE_JWT = {
 # Cookie設定
 JWT_COOKIE_NAME = 'access_token'
 JWT_REFRESH_COOKIE_NAME = 'refresh_token'
-JWT_COOKIE_SECURE = ENVIRONMENT == 'production'  # 本番環境ではTrue
-JWT_COOKIE_SAMESITE = 'Strict' if ENVIRONMENT == 'production' else 'Lax'
+JWT_COOKIE_SECURE = True  # 本番環境ではTrue
+JWT_COOKIE_SAMESITE = 'Strict'
 
 # Google OAuth2 settings (将来の実装用)
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('GOOGLE_OAUTH2_KEY', '')
