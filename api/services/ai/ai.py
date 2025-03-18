@@ -104,7 +104,7 @@ class Ai:
                 }
             }
 
-            generate_log_file(log_data, "extract_specifics", date=True)
+            # generate_log_file(log_data, "extract_specifics", date=True)
 
             result_text = response.choices[0].message.content
             
@@ -225,7 +225,7 @@ class Ai:
                 }
             }
             
-            generate_log_file(log_data, "get_category_id", date=True)
+            # generate_log_file(log_data, "get_category_id", date=True)
             
             # 応答からカテゴリIDを抽出
             category_id = response.choices[0].message.content.strip()
@@ -251,5 +251,4 @@ class Ai:
             
         except Exception as e:
             # エラーが発生した場合はログに記録し、最初のカテゴリを返す
-            generate_log_file(f"カテゴリID選択中にエラーが発生しました: {str(e)}", "get_category_id_error", date=True)
             return categories[0].get("categoryId", "")

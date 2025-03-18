@@ -10,7 +10,6 @@ from api.models.master import Status, Condition, Setting, YahooAuctionStatus
 from api.models.yahoo import YahooAuction
 from api.utils.throttles import AuctionDetailThrottle
 from api.utils.response_helpers import create_success_response, create_error_response
-from api.utils.generate_log_file import generate_log_file
 from decimal import Decimal
 import logging
 from django.conf import settings
@@ -257,5 +256,4 @@ class RegisterView(APIView):
             # ebay側にゴミデータが残らないように削除する
             ebay_service_inventory.delete_inventory_item(sku)
             # エラー時の内容をログ出力
-            generate_log_file(str(e), "yahoo_auction_register", date=True)
             return create_error_response("商品登録に失敗しました。詳細はエラーログを確認してください。")
