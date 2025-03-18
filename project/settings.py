@@ -21,7 +21,10 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv()
+# 開発環境の場合は.env.devを読み込む
+if 'HEROKU' not in os.environ:
+    env_path = BASE_DIR / '.env.dev'
+    load_dotenv(env_path)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
@@ -33,6 +36,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_
 
 # Application definition
 INSTALLED_APPS = [
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -113,9 +117,6 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'api.User'
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS設定
 CORS_ALLOW_CREDENTIALS = True
@@ -237,7 +238,7 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
 ]
 
 # 暗号化キーの設定
-ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY').encode()  # バイト列に変換
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
 
 # ebay送料
 EBAY_SHIPPING_COST = os.getenv('EBAY_SHIPPING_COST')
