@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from api.services.mail.mail import EmailService
 # 設定
-API_BASE_URL = "http://localhost:8000/api/v1"  # DjangoのAPIのベースURL
+API_BASE_URL = "https://market-king-backend-app-a8a6479c97ad.herokuapp.com/api/v1"  # DjangoのAPIのベースURL
 USERNAME = 'anakin0512'
 PASSWORD = 'Popo3gou!'
 RECIPIENT_EMAILS = ['th.osigoto0719@gmail.com']
@@ -172,7 +172,7 @@ def should_run():
 
 def main():
     if not should_run():
-        print("実行時間ではありません")
+        print("同期実行時間ではありません")
         return  # 即終了
 
     print('同期処理を開始します...')
