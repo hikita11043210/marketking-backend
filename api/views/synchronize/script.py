@@ -9,7 +9,7 @@ class SynchronizeScriptView(APIView):
     def get(self, request):
         try:
             status_response = Status(request.user).synchronize()
-            # yahoo_auction_response = SynchronizeYahooAuction(request.user).synchronize()
+            yahoo_auction_response = SynchronizeYahooAuction(request.user).synchronize()
             yahoo_free_market_response = SynchronizeYahooFreeMarket(request.user).synchronize()
             
             return Response({
@@ -17,7 +17,7 @@ class SynchronizeScriptView(APIView):
                 'message': '同期処理が完了しました',
                 'data': {
                     'status_response': status_response,
-                    # 'yahoo_auction_response': yahoo_auction_response,
+                    'yahoo_auction_response': yahoo_auction_response,
                     'yahoo_free_market_response': yahoo_free_market_response
                 }
             }, status=status.HTTP_200_OK)

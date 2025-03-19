@@ -4,8 +4,8 @@ from datetime import datetime
 from api.services.mail.mail import EmailService
 # 設定
 API_BASE_URL = "http://localhost:8000/api/v1"  # DjangoのAPIのベースURL
-USERNAME = 'toshiki'
-PASSWORD = 'popo3gou'
+USERNAME = 'anakin0512'
+PASSWORD = 'Popo3gou!'
 RECIPIENT_EMAILS = ['th.osigoto0719@gmail.com']
 
 def get_jwt_token():
@@ -107,6 +107,32 @@ def create_email_body(response_data):
             except KeyError as e:
                 body += f"データの取得に失敗しました: {str(e)}\n\n"
 
+    # Yahooオークションの同期結果
+    if "yahoo_auction_response" in data:
+        yahoo_auction_data = data["yahoo_auction_response"]
+        body += "【Yahoo!オークション商品同期】\n"
+        
+        # yahoo_auction_dataが文字列の場合（エラー発生時）
+        if isinstance(yahoo_auction_data, str):
+            body += f"エラーが発生しました: {yahoo_auction_data}\n\n"
+        else:
+            try:
+                body += f"処理開始時刻: {yahoo_auction_data['synchronize_start_time']}\n"
+                body += f"処理終了時刻: {yahoo_auction_data['synchronize_end_time']}\n"
+                body += f"対象商品数: {yahoo_auction_data['synchronize_target_item']}\n"
+                body += f"アクティブ商品数: {yahoo_auction_data['count_active_item']}\n"
+                body += f"売切れ商品数: {yahoo_auction_data['count_sold_out_item']}\n"
+                body += f"ステータス変更商品数: {yahoo_auction_data['count_change_status_item']}\n\n"
+
+                if yahoo_auction_data.get('updated_items'):
+                    body += "ステータス変更された商品:\n"
+                    for item in yahoo_auction_data['updated_items']:
+                        body += f"- 商品ID: {item['unique_id']}\n"
+                        body += f"  旧ステータス: {item['old_status']} → 新ステータス: {item['new_status']}\n"
+                    body += "\n"
+            except KeyError as e:
+                body += f"データの取得に失敗しました: {str(e)}\n\n"
+
     # Yahooフリマの同期結果
     if "yahoo_free_market_response" in data:
         yahoo_data = data["yahoo_free_market_response"]
@@ -138,7 +164,16 @@ def create_email_body(response_data):
     
     return body
 
+def should_run():
+    current_hour = datetime.now().hour
+    target_hours = [0, 6, 12, 18]  # 実行したい時間
+    return current_hour in target_hours
+
 def main():
+    if not should_run():
+        print("実行時間ではありません")
+        return  # 即終了
+
     print('同期処理を開始します...')
     
     # JWTトークンを取得
