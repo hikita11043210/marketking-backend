@@ -93,7 +93,7 @@ def create_email_body(response_data):
                 body += f"処理終了時刻: {status_data['synchronize_end_time']}\n"
                 body += f"対象商品数: {status_data['synchronize_target_item']}\n"
                 body += f"アクティブ商品数: {status_data['count_active_item']}\n"
-                body += f"売切れ商品数: {status_data['count_sold_out_item']}\n"
+                body += f"売れた商品数: {status_data['count_sold_out_item']}\n"
                 body += f"ステータス変更商品数: {status_data['count_change_status_item']}\n\n"
 
                 if status_data.get('updated_items'):
@@ -120,8 +120,8 @@ def create_email_body(response_data):
                 body += f"処理開始時刻: {yahoo_auction_data['synchronize_start_time']}\n"
                 body += f"処理終了時刻: {yahoo_auction_data['synchronize_end_time']}\n"
                 body += f"対象商品数: {yahoo_auction_data['synchronize_target_item']}\n"
-                body += f"アクティブ商品数: {yahoo_auction_data['count_active_item']}\n"
-                body += f"売切れ商品数: {yahoo_auction_data['count_sold_out_item']}\n"
+                # body += f"アクティブ商品数: {yahoo_auction_data['count_active_item']}\n"
+                # body += f"売切れ商品数: {yahoo_auction_data['count_sold_out_item']}\n"
                 body += f"ステータス変更商品数: {yahoo_auction_data['count_change_status_item']}\n\n"
 
                 if yahoo_auction_data.get('updated_items'):
@@ -146,8 +146,8 @@ def create_email_body(response_data):
                 body += f"処理開始時刻: {yahoo_data['synchronize_start_time']}\n"
                 body += f"処理終了時刻: {yahoo_data['synchronize_end_time']}\n"
                 body += f"対象商品数: {yahoo_data['synchronize_target_item']}\n"
-                body += f"アクティブ商品数: {yahoo_data['count_active_item']}\n"
-                body += f"売切れ商品数: {yahoo_data['count_sold_out_item']}\n"
+                # body += f"アクティブ商品数: {yahoo_data['count_active_item']}\n"
+                # body += f"売切れ商品数: {yahoo_data['count_sold_out_item']}\n"
                 body += f"ステータス変更商品数: {yahoo_data['count_change_status_item']}\n\n"
 
                 if yahoo_data.get('updated_items'):
@@ -166,8 +166,7 @@ def create_email_body(response_data):
 
 def should_run():
     current_hour = datetime.now().hour
-    print(current_hour)
-    target_hours = [0, 6, 9, 12, 18]  # 実行したい時間
+    target_hours = [0, 6, 9, 12, 15]  # 実行したい時間
     return current_hour in target_hours
 
 def main():
