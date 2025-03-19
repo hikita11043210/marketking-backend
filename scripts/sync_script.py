@@ -166,7 +166,8 @@ def create_email_body(response_data):
 
 def should_run():
     current_hour = datetime.now().hour
-    target_hours = [0, 6, 12, 18]  # 実行したい時間
+    print(current_hour)
+    target_hours = [0, 6, 9, 12, 18]  # 実行したい時間
     return current_hour in target_hours
 
 def main():
