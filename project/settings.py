@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 開発環境の場合は.env.devを読み込む
 if 'HEROKU' not in os.environ:
     env_path = BASE_DIR / '.env.dev'
-    load_dotenv(env_path)
+    load_dotenv(env_path, override=True)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
