@@ -6,7 +6,7 @@ import logging
 from api.utils.throttles import AuctionDetailThrottle
 from api.utils.response_helpers import create_success_response, create_error_response
 logger = logging.getLogger(__name__)    
-
+from api.models import YahooFreeMarket
 class YahooFreeMarketSearchView(APIView):
     throttle_classes = [AuctionDetailThrottle]
 
@@ -15,8 +15,15 @@ class YahooFreeMarketSearchView(APIView):
     """
     def get(self, request):
         try:
+            uniques = YahooFreeMarket.objects.all().values('unique_id')
             service = ScrapingService()
             result = service.get_items(request.query_params)
+            
+            # 既存のitem_idを除外
+            if 'items' in result:
+                unique_ids = {item['unique_id'] for item in uniques}  # セットに変換
+                result['items'] = [item for item in result['items'] if item['item_id'] not in unique_ids]
+
             return create_success_response(
                 data=result,
                 message='検索が完了しました'

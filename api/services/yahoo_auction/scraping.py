@@ -137,7 +137,8 @@ class ScrapingService:
             # import os,datetime
             # log_dir = "logs/scraping/yahoo_auction/"
             # os.makedirs(log_dir, exist_ok=True)
-            # filename = f"{log_dir}list_{datetime.datetime.now()}.html"
+            # timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            # filename = f"{log_dir}list_{timestamp}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
 
@@ -402,7 +403,8 @@ class ScrapingService:
                 title_elem = product.select_one('.Product__title')
                 url_elem = product.select_one('.Product__titleLink')
                 image_elem = product.select_one('.Product__imageData')
-                
+                a_elem = product.select_one('.Product__imageLink')
+
                 # 価格情報の取得（現在価格と即決価格を区別）
                 price_containers = product.select('.Product__price')
                 current_price = None
@@ -444,7 +446,8 @@ class ScrapingService:
                     'location': location_elem.text.strip() if location_elem else None,
                     'category': category_elem.text.strip() if category_elem else None,
                     'description': description_elem.text.strip() if description_elem else None,
-                    'payment_methods': payment_elem.text.strip() if payment_elem else None
+                    'payment_methods': payment_elem.text.strip() if payment_elem else None,
+                    'auction_id': a_elem.get('data-auction-id') if a_elem else None,
                 }
                 items.append(item)
             except Exception as e:
