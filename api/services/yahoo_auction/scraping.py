@@ -47,7 +47,7 @@ class ScrapingService:
                 'mode': '1',  # 通常検索モード
                 'exflg': '1',  # 詳細検索オプションを有効化
                 'rc_ng': '1',  # 不適切な商品を除外
-                'dest_pref_code': '13',  # デフォルトの配送先（東京）
+                'dest_pref_code': '24',  # デフォルトの配送先（東京）
                 's1': 'end',  # デフォルトのソート項目（終了時間）
                 'o1': 'd',  # デフォルトのソート順（降順）
             }
@@ -66,14 +66,12 @@ class ScrapingService:
                     search_params['aucmin_price'] = search_params.pop('min')
                 if 'max' in search_params:
                     search_params['aucmax_price'] = search_params.pop('max')
-            else:
-                # 通常の価格タイプに応じたパラメータ設定
-                if 'max' in search_params:
-                    max_value = search_params.pop('max')
-                    if search_params.get('price_type') == 'bidorbuyprice':
-                        search_params['aucmax_bidorbuy_price'] = max_value
-                    else:
-                        search_params['aucmax_price'] = max_value
+            # else:
+            #     # 通常の価格タイプに応じたパラメータ設定
+            #     if 'max' in search_params:
+            #         max_value = search_params.pop('max')
+            #         if search_params.get('price_type') == 'bidorbuyprice':
+            #             search_params['aucmax_bidorbuy_price'] = max_value
 
             # ブランドIDの処理
             if 'brands' in search_params:
@@ -125,16 +123,18 @@ class ScrapingService:
 
             # 検索結果を取得
             response = self.session.get(self.BASE_SEARCH_URL, params=search_params)
+            # request_url = 'https://auctions.yahoo.co.jp/search/search?p=%E3%83%87%E3%82%B8%E3%82%AB%E3%83%A1&va=%E3%83%87%E3%82%B8%E3%82%AB%E3%83%A1&fixed=1&is_postage_mode=1&dest_pref_code=24&b=1&n=20&mode=1'
+            response = self.session.get(request_url)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            import os,datetime
-            log_dir = "logs/scraping/yahoo_auction/"
-            os.makedirs(log_dir, exist_ok=True)
-            date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"{log_dir}list_{date}.html"
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(soup.prettify())
+            # import os,datetime
+            # log_dir = "logs/scraping/yahoo_auction/"
+            # os.makedirs(log_dir, exist_ok=True)
+            # date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            # filename = f"{log_dir}list_{date}.html"
+            # with open(filename, "w", encoding="utf-8") as f:
+            #     f.write(soup.prettify())
 
             # 検索結果を解析
             items = self._parse_search_results(soup)
@@ -380,6 +380,7 @@ class ScrapingService:
 
                 # 価格情報の取得（現在価格と即決価格を区別）
                 price_containers = product.select('.Product__price')
+                price_info_containers = product.select('.Product__priceInfo')
                 current_price = None
                 buy_now_price = None
                 
@@ -393,6 +394,12 @@ class ScrapingService:
                             buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
                         else:
                             buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
+
+                for container in price_info_containers:
+                    price_value = container.select_one('.Product__priceValue')
+                    if price_value:
+                        current_price = price_value.text.strip().replace('円', '').replace(',', '')
+                        buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
 
                 seller_elem = product.select_one('.Product__seller')
                 end_time_elem = product.select_one('.Product__time')
