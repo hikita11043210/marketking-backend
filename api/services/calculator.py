@@ -161,6 +161,7 @@ class CalculatorService:
         """
         try:
             # 各種レートの取得
+            profit_rate = Decimal(str(self.settings.rate)) / 100  # calc_price_yenと同じ利益率を使用
             ebay_fee = Decimal(str(self.ebay_store_type.final_value_fee)) / 100
             international_fee = Decimal(str(self.ebay_store_type.international_fee)) / 100
             tax_rate = Decimal(str(self.tax.rate)) / 100
@@ -170,27 +171,23 @@ class CalculatorService:
             total_original_price = sum(original_prices)
 
             # ドル価格を円に換算
-            price_yen = price * self.exchange_rate
+            calculated_price = int(price * self.exchange_rate)
 
-            # 手数料の計算
-            ebay_fee_amount = price_yen * ebay_fee
-            international_fee_amount = price_yen * international_fee
+            # 最終利益の計算
+            # 1. 販売価格から手数料を引く
+            ebay_fee_amount = calculated_price * ebay_fee
+            international_fee_amount = calculated_price * international_fee
             total_fee = ebay_fee_amount + international_fee_amount
             
-            # 手数料に対する消費税を計算
+            # 2. 手数料に対する消費税を計算（手数料にのみ適用）
             tax_on_fee = total_fee * tax_rate
             
-            # 総費用の計算
-            total_cost = total_original_price + self.shipping_cost + total_fee + tax_on_fee
+            # 3. 最終利益の計算
+            # 販売価格 - 仕入れ価格 - 送料 - 手数料 - 手数料の消費税
+            gross_profit = calculated_price - total_original_price - self.shipping_cost - total_fee - tax_on_fee
             
-            # 粗利益の計算（円）
-            gross_profit = price_yen - total_cost
-            
-            # Payoneer手数料を引いて最終利益を計算
+            # 4. Payoneer手数料を引く
             final_profit_yen = gross_profit - (gross_profit * payoneer_fee)
-            
-            # 利益率の計算（%）
-            profit_rate = (final_profit_yen / total_original_price) * 100 if total_original_price > 0 else 0
             
             # ドルでの最終利益（小数点以下切り捨て）
             final_profit_dollar = int(final_profit_yen / self.exchange_rate)
@@ -198,11 +195,11 @@ class CalculatorService:
             return {
                 'original_price': total_original_price,
                 'shipping_cost': self.shipping_cost,
-                'rate': float(profit_rate),
+                'rate': float(profit_rate),  # calc_price_yenと同じ形式で返す
                 'ebay_fee': float(ebay_fee),
                 'international_fee': float(international_fee),
                 'tax_rate': float(tax_rate),
-                'calculated_price_yen': price_yen,
+                'calculated_price_yen': calculated_price,
                 'calculated_price_dollar': price,
                 'exchange_rate': float(self.exchange_rate),
                 'final_profit_yen': int(final_profit_yen),
