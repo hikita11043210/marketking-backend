@@ -20,48 +20,60 @@ class ScrapingService:
 
         Args:
             params (dict): 検索パラメータ
-                min     	    最低価格
+                min             最低価格
                 max             最高価格
-                price_type	    即決価格 or 入札価格でフィルタ（bidorbuyprice or currentprice）
+                price_type      即決価格 or 入札価格でフィルタ（bidorbuyprice or currentprice）
                 p               検索キーワード
-                auccat	        カテゴリーID
-                va	            キーワードの強調検索（pと同じ値）
-                fixed	        即決価格ありの出品のみ
-                istatus	        商品の状態（3:未使用, 1:中古, 4:目立った傷や汚れなし）
+                auccat          カテゴリーID
+                va              キーワードの強調検索（pと同じ値）
+                fixed           即決価格ありの出品のみ（1:即決価格のみ, 2:サムネイル表示, 3:オークション形式と即決価格）
+                istatus         商品の状態（3:未使用, 1:中古, 4:目立った傷や汚れなし）
                 is_postage_mode 送料無料のみ（0 or 1 デフォルトは0）
                 dest_pref_code  配送先の都道府県
-                exflg	        詳細検索オプションを有効化（0 or 1 デフォルトは1）
-                n	            1ページの表示件数（50件）
-                mode	        検索モード（通常検索 = 1）
-                brand_id	    ブランド指定
-
-        memo:
-            残り時間が長い順：&s1=end&o1=d
-            残り時間が短い順：&s1=end&o1=a
+                exflg           詳細検索オプションを有効化（0 or 1 デフォルトは1）
+                n               1ページの表示件数（50件）
+                mode            検索モード（通常検索 = 1）
+                brand_id        ブランド指定
+                s1              ソート項目（end:終了時間, price:価格, bids:入札数）
+                o1              ソート順（a:昇順, d:降順）
 
         Returns:
-            dict: 検索結果と総件数を含む辞書
+            list: 検索結果の商品リスト
         """
         try:
             # デフォルトパラメータの設定
             default_params = {
-                'n': '20',  # デフォルトの表示件数
+                'n': '50',  # デフォルトの表示件数
                 'mode': '1',  # 通常検索モード
                 'exflg': '1',  # 詳細検索オプションを有効化
                 'rc_ng': '1',  # 不適切な商品を除外
                 'dest_pref_code': '13',  # デフォルトの配送先（東京）
+                's1': 'end',  # デフォルトのソート項目（終了時間）
+                'o1': 'd',  # デフォルトのソート順（降順）
             }
 
             # None値を除外しながらパラメータをマージ
-            search_params = {k: v for k, v in params.items() if v is not None and k not in ['page', 'limit']}
+            search_params = {k: v for k, v in params.items() if v is not None}
 
-            # 価格タイプに応じたパラメータ設定
-            if 'max' in search_params:
-                max_value = search_params.pop('max')
-                if search_params.get('price_type') == 'bidorbuyprice':
-                    search_params['aucmax_bidorbuy_price'] = max_value
-                else:
-                    search_params['aucmax_price'] = max_value
+            # fixed=1の場合の特別な処理
+            if search_params.get('fixed') == '1':
+                # 即決価格のみの場合、price_typeは不要
+                if 'price_type' in search_params:
+                    del search_params['price_type']
+                
+                # 価格パラメータの変換
+                if 'min' in search_params:
+                    search_params['aucmin_price'] = search_params.pop('min')
+                if 'max' in search_params:
+                    search_params['aucmax_price'] = search_params.pop('max')
+            else:
+                # 通常の価格タイプに応じたパラメータ設定
+                if 'max' in search_params:
+                    max_value = search_params.pop('max')
+                    if search_params.get('price_type') == 'bidorbuyprice':
+                        search_params['aucmax_bidorbuy_price'] = max_value
+                    else:
+                        search_params['aucmax_price'] = max_value
 
             # ブランドIDの処理
             if 'brands' in search_params:
@@ -91,20 +103,6 @@ class ScrapingService:
                 if key not in search_params:
                     search_params[key] = value
 
-            # 並び順の設定
-            if 'sort_order' in search_params:
-                sort_order = search_params.pop('sort_order')
-                if sort_order == 'end_time_desc':
-                    search_params['s1'] = 'end'
-                    search_params['o1'] = 'd'
-                elif sort_order == 'end_time_asc':
-                    search_params['s1'] = 'end'
-                    search_params['o1'] = 'a'
-            # s1とo1が直接指定された場合はそのまま使用
-            elif 's1' in params and 'o1' in params:
-                search_params['s1'] = params['s1']
-                search_params['o1'] = params['o1']
-
             # 商品状態の処理
             if 'item_conditions' in search_params:
                 conditions = search_params.pop('item_conditions').split(',')
@@ -117,57 +115,31 @@ class ScrapingService:
                 if is_free_shipping == '1':
                     search_params['is_postage_mode'] = '1'
 
-            # 出品形式の処理
-            if 'fixed' in search_params:
-                fixed = search_params.pop('fixed')
-                search_params['fixed'] = fixed
-
             # キーワードの強調検索
             if 'p' in search_params:
                 search_params['va'] = search_params['p']
 
             # リクエストURLをログ出力
             request_url = f"{self.BASE_SEARCH_URL}?{requests.compat.urlencode(search_params)}"
+            print(request_url)
 
-            # 最初のページを取得して総件数を確認
-            first_page = self.session.get(self.BASE_SEARCH_URL, params=search_params)
-            first_page.raise_for_status()
-            soup = BeautifulSoup(first_page.text, 'html.parser')
+            # 検索結果を取得
+            response = self.session.get(self.BASE_SEARCH_URL, params=search_params)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
 
-            # import os,datetime
-            # log_dir = "logs/scraping/yahoo_auction/"
-            # os.makedirs(log_dir, exist_ok=True)
-            # timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            # filename = f"{log_dir}list_{timestamp}.html"
-            # with open(filename, "w", encoding="utf-8") as f:
-            #     f.write(soup.prettify())
+            import os,datetime
+            log_dir = "logs/scraping/yahoo_auction/"
+            os.makedirs(log_dir, exist_ok=True)
+            date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"{log_dir}list_{date}.html"
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(soup.prettify())
 
-            # 総件数を取得
-            total_count_elem = soup.select_one('.SearchMode__result')
-            total_count = 0
-            if total_count_elem:
-                count_text = total_count_elem.text
-                import re
-                count_match = re.search(r'約([0-9,]+)件', count_text)
-                if count_match:
-                    total_count = int(count_match.group(1).replace(',', ''))
-
-            # 最初のページの結果を解析
+            # 検索結果を解析
             items = self._parse_search_results(soup)
 
-            # 残りのページを取得（最大5ページまで）
-            max_pages = min(5, (total_count + 99) // 100)
-            for page in range(2, max_pages + 1):
-                search_params['b'] = str((page - 1) * 100 + 1)
-                response = self.session.get(self.BASE_SEARCH_URL, params=search_params)
-                response.raise_for_status()
-                soup = BeautifulSoup(response.text, 'html.parser')
-                items.extend(self._parse_search_results(soup))
-
-            return {
-                'items': items,
-                'total': total_count
-            }
+            return {'items': items, 'total_count': len(items)}
 
         except requests.RequestException as e:
             logger.error(f"リクエストエラー: {str(e)}")
@@ -397,6 +369,7 @@ class ScrapingService:
         """
         items = []
         product_list = soup.select('.Product')
+
         for product in product_list:
             try:
                 # 商品情報の抽出
@@ -418,6 +391,8 @@ class ScrapingService:
                             current_price = price_value.text.strip().replace('円', '').replace(',', '')
                         elif '即決' in label.text:
                             buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
+                        else:
+                            buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
 
                 seller_elem = product.select_one('.Product__seller')
                 end_time_elem = product.select_one('.Product__time')
@@ -429,7 +404,7 @@ class ScrapingService:
                 description_elem = product.select_one('.Product__description')
                 payment_elem = product.select_one('.Product__payment')
 
-                if not all([title_elem, url_elem]) or not current_price:
+                if not all([title_elem, url_elem]):
                     continue
 
                 item = {
