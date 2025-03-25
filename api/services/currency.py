@@ -26,7 +26,6 @@ class CurrencyService:
         rate = cache.get(cache_key)
         
         if rate is not None:
-            logger.info(f"Using cached exchange rate for {from_currency}/{to_currency}")
             return rate
 
         try:
@@ -43,7 +42,6 @@ class CurrencyService:
             # レートをキャッシュに保存
             cache.set(cache_key, rate, cls.CACHE_TIMEOUT)
             
-            logger.info(f"Retrieved new exchange rate for {from_currency}/{to_currency}: {rate}")
             return rate
             
         except requests.exceptions.RequestException as e:
