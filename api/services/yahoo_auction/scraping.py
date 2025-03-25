@@ -157,25 +157,30 @@ class ScrapingService:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            # import os,datetime
-            # log_dir = "logs/scraping/yahoo_auction/"
-            # os.makedirs(log_dir, exist_ok=True)
-            # filename = f"{log_dir}detail_{datetime.datetime.now()}.html"
-            # with open(filename, "w", encoding="utf-8") as f:
-            #     f.write(soup.prettify())
+            import os,datetime
+            log_dir = "logs/scraping/yahoo_auction/"
+            os.makedirs(log_dir, exist_ok=True)
+            date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"{log_dir}detail_{date}.html"
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(soup.prettify())
 
             # 商品基本情報
             data = {}
 
             # 終了判定
             closed_header = soup.find('div', class_='ClosedHeader')
-            if closed_header and 'このオークションは終了しています' in closed_header.get_text():
-                data['end_flag'] = True
+            if closed_header is not None:  # Noneチェックを追加
+                if 'このオークションは終了しています' in closed_header.get_text():
+                    data['end_flag'] = True
             else:
                 data['end_flag'] = False
             
             # タイトル
-            data['title'] = soup.find('h1', class_='ProductTitle__text').get_text(strip=True)
+            data['title'] = ''
+            title_elem = soup.find('h1', class_='ProductTitle__text')
+            if title_elem:
+                data['title'] = title_elem.get_text(strip=True)
 
             # 商品説明の取得
             description_elem = soup.find('div', class_='ProductExplanation__commentBody')
