@@ -65,7 +65,8 @@ class ItemDetailView(APIView):
             title = result['title']
             description = result['description']
             condition = result['condition']
-            price = result['buy_now_price']
+            price = result['buy_now_price_in_tax']
+            shipping = int(request.query_params.get('shipping'))
 
             # カテゴリツリーIDの取得
             category_tree_id = ebay_service_category.get_categories_tree_id()
@@ -93,7 +94,7 @@ class ItemDetailView(APIView):
             selected_condition = 3000
 
             # 価格計算
-            price = calculator_service.calc_price_dollar([price,0])
+            price = calculator_service.calc_price_dollar([price, shipping, 0])
 
             data = {
                 'item_details': result,

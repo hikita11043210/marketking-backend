@@ -26,7 +26,7 @@ class ScrapingService:
                 p               検索キーワード
                 auccat          カテゴリーID
                 va              キーワードの強調検索（pと同じ値）
-                fixed           即決価格ありの出品のみ（1:即決価格のみ, 2:サムネイル表示, 3:オークション形式と即決価格）
+                fixed           表示形式（1:即決価格のみ, 2:オークション形式, 3:両方）
                 istatus         商品の状態（3:未使用, 1:中古, 4:目立った傷や汚れなし）
                 is_postage_mode 送料無料のみ（0 or 1 デフォルトは0）
                 dest_pref_code  配送先の都道府県
@@ -47,7 +47,7 @@ class ScrapingService:
                 'mode': '1',  # 通常検索モード
                 'exflg': '1',  # 詳細検索オプションを有効化
                 'rc_ng': '1',  # 不適切な商品を除外
-                'dest_pref_code': '24',  # デフォルトの配送先（東京）
+                'dest_pref_code': '24',  # デフォルトの配送先（三重）
                 's1': 'end',  # デフォルトのソート項目（終了時間）
                 'o1': 'd',  # デフォルトのソート順（降順）
             }
@@ -55,23 +55,36 @@ class ScrapingService:
             # None値を除外しながらパラメータをマージ
             search_params = {k: v for k, v in params.items() if v is not None}
 
-            # fixed=1の場合の特別な処理
-            if search_params.get('fixed') == '1':
-                # 即決価格のみの場合、price_typeは不要
-                if 'price_type' in search_params:
-                    del search_params['price_type']
-                
-                # 価格パラメータの変換
-                if 'min' in search_params:
-                    search_params['aucmin_price'] = search_params.pop('min')
-                if 'max' in search_params:
-                    search_params['aucmax_price'] = search_params.pop('max')
-            # else:
-            #     # 通常の価格タイプに応じたパラメータ設定
-            #     if 'max' in search_params:
-            #         max_value = search_params.pop('max')
-            #         if search_params.get('price_type') == 'bidorbuyprice':
-            #             search_params['aucmax_bidorbuy_price'] = max_value
+            # 価格パラメータの処理
+            if 'min' in search_params and 'max' in search_params:
+                min_price = search_params.pop('min')
+                max_price = search_params.pop('max')
+                fixed_type = search_params.get('fixed', '3')
+                price_type = search_params.get('price_type', 'currentprice')
+
+                # 即決価格（bidorbuyprice）の場合
+                if price_type == 'bidorbuyprice':
+                    if fixed_type == '2' or fixed_type == '3':
+                        # オークションとすべての場合は aucmin_bidorbuy_price/aucmax_bidorbuy_price を使用
+                        search_params['aucmin_bidorbuy_price'] = min_price
+                        search_params['aucmax_bidorbuy_price'] = max_price
+                    else:
+                        # 定額の場合は aucminprice/aucmaxprice を使用
+                        search_params['aucminprice'] = min_price
+                        search_params['aucmaxprice'] = max_price
+                        if 'price_type' in search_params:
+                            del search_params['price_type']
+
+                # 現在価格（currentprice）の場合
+                else:
+                    if fixed_type == '3':
+                        # すべての場合は min/max をそのまま使用
+                        search_params['min'] = min_price
+                        search_params['max'] = max_price
+                    else:
+                        # オークションと定額の場合は aucminprice/aucmaxprice を使用
+                        search_params['aucminprice'] = min_price
+                        search_params['aucmaxprice'] = max_price
 
             # ブランドIDの処理
             if 'brands' in search_params:
@@ -118,13 +131,11 @@ class ScrapingService:
                 search_params['va'] = search_params['p']
 
             # リクエストURLをログ出力
-            request_url = f"{self.BASE_SEARCH_URL}?{requests.compat.urlencode(search_params)}"
-            print(request_url)
+            # request_url = f"{self.BASE_SEARCH_URL}?{requests.compat.urlencode(search_params)}"
+            # print(request_url)
 
             # 検索結果を取得
             response = self.session.get(self.BASE_SEARCH_URL, params=search_params)
-            # request_url = 'https://auctions.yahoo.co.jp/search/search?p=%E3%83%87%E3%82%B8%E3%82%AB%E3%83%A1&va=%E3%83%87%E3%82%B8%E3%82%AB%E3%83%A1&fixed=1&is_postage_mode=1&dest_pref_code=24&b=1&n=20&mode=1'
-            response = self.session.get(request_url)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -157,13 +168,13 @@ class ScrapingService:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            import os,datetime
-            log_dir = "logs/scraping/yahoo_auction/"
-            os.makedirs(log_dir, exist_ok=True)
-            date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"{log_dir}detail_{date}.html"
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(soup.prettify())
+            # import os,datetime
+            # log_dir = "logs/scraping/yahoo_auction/"
+            # os.makedirs(log_dir, exist_ok=True)
+            # date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            # filename = f"{log_dir}detail_{date}.html"
+            # with open(filename, "w", encoding="utf-8") as f:
+            #     f.write(soup.prettify())
 
             # 商品基本情報
             data = {}
@@ -325,10 +336,6 @@ class ScrapingService:
                 if key not in data or data[key] == '':
                     missing_keys.append(key)
 
-            # 必須キーが不足している場合、デバッグ用HTMLを生成
-            # if missing_keys:
-            #     with open(f"debug_{datetime.now().strftime('%Y%m%d%H%M%S')}.html", "w", encoding="utf-8") as f:
-            #         f.write(soup.prettify())
             return data
 
         except requests.RequestException as e:
