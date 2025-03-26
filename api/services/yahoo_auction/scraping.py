@@ -408,10 +408,16 @@ class ScrapingService:
                             buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
 
                 for container in price_info_containers:
+                    label = container.select_one('.Product__label')
                     price_value = container.select_one('.Product__priceValue')
-                    if price_value:
-                        current_price = price_value.text.strip().replace('円', '').replace(',', '')
-                        buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
+                    if label and price_value:
+                        if '現在' in label.text:
+                            current_price = price_value.text.strip().replace('円', '').replace(',', '')
+                        elif '即決' in label.text:
+                            buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
+                        elif not label.text.strip():  # ラベルが空の場合は固定価格として扱う
+                            buy_now_price = price_value.text.strip().replace('円', '').replace(',', '')
+                            current_price = buy_now_price  # 固定価格の場合は現在価格も同じ
 
                 seller_elem = product.select_one('.Product__seller')
                 end_time_elem = product.select_one('.Product__time')
