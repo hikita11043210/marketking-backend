@@ -269,8 +269,8 @@ class ScrapingService:
 
         except requests.RequestException as e:
             logger.error(f"check_item_exist_リクエストエラー: {str(e)}")
-            return {'success': False, 'error': str(e)}
+            return False
 
         except Exception as e:
             logger.error(f"check_item_exist_スクレイピングエラー: {str(e)}")
-            return {'success': False, 'error': 'データ解析に失敗しました'}
+            return False
