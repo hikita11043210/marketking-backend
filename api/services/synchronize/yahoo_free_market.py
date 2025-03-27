@@ -40,7 +40,6 @@ class SynchronizeYahooFreeMarket():
 
                 total_items = yahoo_free_market_items.count()
                 # ステータスオブジェクトを事前に取得
-                yahoo_active_status = YahooFreeMarketStatus.objects.get(id=1)  # アクティブ
                 yahoo_end_status = YahooFreeMarketStatus.objects.get(id=3)  # 終了済み
                 ebay_end_status = StatusModel.objects.get(id=2)  # eBayの終了ステータス
 
