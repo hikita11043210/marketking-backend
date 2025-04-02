@@ -7,6 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 import logging
 from api.models.ebay import Ebay
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ class SynchronizeYahooFreeMarket():
                 for item in yahoo_free_market_items:
                     try:
                         result = ScrapingService().check_item_exist({'item_id': item.unique_id})
+                        time.sleep(3)  # 連続アクセスによるタイムアウトを防ぐため3秒待機
 
                         #  商品が存在しない場合
                         if result:
