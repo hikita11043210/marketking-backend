@@ -8,6 +8,8 @@ import logging
 from api.models.ebay import Ebay
 from decimal import Decimal
 from django.utils import timezone
+import time
+
 logger = logging.getLogger(__name__)
 
 class SynchronizeYahooAuction():
@@ -45,6 +47,7 @@ class SynchronizeYahooAuction():
                 for item in yahoo_auction_items:
                     try:
                         data = ScrapingService().get_item_detail({'url': item.url})
+                        time.sleep(3)  # 連続アクセスによるタイムアウトを防ぐため3秒待機
 
                         if not data:
                             logger.error(f"スクレイピング結果が不正です - unique_id: {item.unique_id}")
