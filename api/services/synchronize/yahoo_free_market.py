@@ -7,13 +7,67 @@ from django.db import transaction
 from django.utils import timezone
 import logging
 from api.models.ebay import Ebay
-import time
+from itertools import islice
 
 logger = logging.getLogger(__name__)
 
 class SynchronizeYahooFreeMarket():
+    BATCH_SIZE = 10  # 一度に処理するアイテム数
+
     def __init__(self, user):
         self.user = user
+        self.scraping_service = ScrapingService()
+
+    def _process_batch(self, items, yahoo_end_status, ebay_end_status):
+        """
+        バッチ単位でアイテムを処理
+        """
+        updated_items = []
+        count_active_items = 0
+        count_sold_out_items = 0
+        count_change_status_items = 0
+
+        for item in items:
+            try:
+                result = self.scraping_service.check_item_exist({'item_id': item.unique_id})
+
+                if result:
+                    old_status = item.status.id
+                    item.status = yahoo_end_status
+
+                    ebay_item = item.ebay_set.first()
+                    if ebay_item and ebay_item.status.id == 1:
+                        offer_service = Offer(self.user)
+                        offer_service.withdraw_offer(ebay_item.offer_id)
+                        ebay_item.status = ebay_end_status
+                        ebay_item.save()
+
+                    item.save()
+
+                    updated_items.append({
+                        'unique_id': item.unique_id,
+                        'old_status': old_status,
+                        'new_status': item.status.id,
+                    })
+
+                    if old_status == 1 and item.status.id == 3:
+                        count_change_status_items += 1
+
+                    if item.status.id == 1:
+                        count_active_items += 1
+                    elif item.status.id == 3:
+                        count_sold_out_items += 1
+
+            except Exception as item_error:
+                logger.error(f"Yahooフリーマーケットの同期中にエラーが発生しました - アイテムID: {item.unique_id}, エラー: {str(item_error)}")
+                continue
+
+        return {
+            'updated_items': updated_items,
+            'count_active_items': count_active_items,
+            'count_sold_out_items': count_sold_out_items,
+            'count_change_status_items': count_change_status_items
+        }
 
     def synchronize(self):
         """
@@ -21,69 +75,37 @@ class SynchronizeYahooFreeMarket():
         """
         try:
             synchronize_start_time = timezone.now()
-            updated_items = []
-            total_items = 0
-            count_active_items = 0
-            count_sold_out_items = 0
-            count_change_status_items = 0
+            total_updated_items = []
+            total_active_items = 0
+            total_sold_out_items = 0
+            total_change_status_items = 0
             
             with transaction.atomic():
-                # statusとebayの関連を事前に取得
                 yahoo_free_market_items = (
                     YahooFreeMarket.objects
                     .select_for_update()
                     .select_related('status')
-                    .prefetch_related(
-                        'ebay_set__status'  # Ebayモデルとそのstatusを事前に取得
-                    )
+                    .prefetch_related('ebay_set__status')
                     .filter(status_id=1)
                 )
 
                 total_items = yahoo_free_market_items.count()
-                # ステータスオブジェクトを事前に取得
-                yahoo_end_status = YahooFreeMarketStatus.objects.get(id=3)  # 終了済み
-                ebay_end_status = StatusModel.objects.get(id=2)  # eBayの終了ステータス
+                yahoo_end_status = YahooFreeMarketStatus.objects.get(id=3)
+                ebay_end_status = StatusModel.objects.get(id=2)
 
-                for item in yahoo_free_market_items:
-                    try:
-                        result = ScrapingService().check_item_exist({'item_id': item.unique_id})
-                        time.sleep(3)  # 連続アクセスによるタイムアウトを防ぐため3秒待機
+                # バッチ処理
+                it = iter(yahoo_free_market_items)
+                while True:
+                    batch = list(islice(it, self.BATCH_SIZE))
+                    if not batch:
+                        break
 
-                        #  商品が存在しない場合
-                        if result:
-                            old_status = item.status.id
-                            item.status = yahoo_end_status
-
-                            # ebay_setはprefetch_relatedで取得済みなので、first()を使用
-                            ebay_item = item.ebay_set.first()
-                            if ebay_item and ebay_item.status.id == 1:
-                                offer_service = Offer(self.user)
-                                offer_service.withdraw_offer(ebay_item.offer_id)
-                                ebay_item.status = ebay_end_status
-                                ebay_item.save()
-                        
-                            item.save()
-                            
-                            # 更新情報を記録
-                            updated_items.append({
-                                'unique_id': item.unique_id,
-                                'old_status': old_status,
-                                'new_status': item.status.id,
-                            })
-
-                            # ステータス変更のカウント
-                            if old_status == 1 and item.status.id == 3:
-                                count_change_status_items += 1
-
-                            # 現在のステータスに基づいてカウント
-                            if item.status.id == 1:  # アクティブ
-                                count_active_items += 1
-                            elif item.status.id == 3:  # 終了済み
-                                count_sold_out_items += 1
+                    result = self._process_batch(batch, yahoo_end_status, ebay_end_status)
                     
-                    except Exception as item_error:
-                        logger.error(f"Yahooフリーマーケットの同期中にエラーが発生しました - アイテムID: {item.unique_id}, エラー: {str(item_error)}")
-                        continue
+                    total_updated_items.extend(result['updated_items'])
+                    total_active_items += result['count_active_items']
+                    total_sold_out_items += result['count_sold_out_items']
+                    total_change_status_items += result['count_change_status_items']
 
             synchronize_end_time = timezone.now()
 
@@ -91,11 +113,11 @@ class SynchronizeYahooFreeMarket():
                 'synchronize_start_time': synchronize_start_time,
                 'synchronize_end_time': synchronize_end_time,
                 'synchronize_target_item': total_items,
-                'count_active_item': count_active_items,
-                'count_sold_out_item': count_sold_out_items,
-                'count_change_status_item': count_change_status_items,
-                'updated_count': len(updated_items),
-                'updated_items': updated_items
+                'count_active_item': total_active_items,
+                'count_sold_out_item': total_sold_out_items,
+                'count_change_status_item': total_change_status_items,
+                'updated_count': len(total_updated_items),
+                'updated_items': total_updated_items
             }
             
         except Exception as e:

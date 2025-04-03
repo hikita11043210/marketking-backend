@@ -4,17 +4,49 @@ import logging
 import re
 from django.conf import settings
 import json
+import time
+from datetime import datetime
+
 logger = logging.getLogger(__name__)
 
 class ScrapingService:
     BASE_SEARCH_URL = settings.YAHOO_FREE_MARKET_URL
     BASE_ITEM_URL = settings.YAHOO_FREE_MARKET_URL
+    MAX_RETRIES = 3
+    MIN_REQUEST_INTERVAL = 3  # 最小リクエスト間隔（秒）
 
     def __init__(self):
         self.session = requests.Session()
+        self.last_request_time = None
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'ja,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'max-age=0'
         })
+
+    def _make_rate_limited_request(self, url, **kwargs):
+        """
+        レートリミットを考慮したリクエスト実行
+        """
+        current_time = time.time()
+        
+        # 前回のリクエストからの経過時間を計算
+        if self.last_request_time is not None:
+            elapsed = current_time - self.last_request_time
+            if elapsed < self.MIN_REQUEST_INTERVAL:
+                # 次のリクエストまでの待機時間を計算（小数点以下2桁まで）
+                remaining_time = round(self.MIN_REQUEST_INTERVAL - elapsed, 2)
+                if remaining_time > 0:
+                    logger.info(f"次のリクエストまで {remaining_time} 秒待機")
+                    time.sleep(remaining_time)
+
+        # リクエストを実行
+        response = self.session.get(url, **kwargs)
+        self.last_request_time = time.time()
+        return response
 
     def get_items(self, params):
         """
@@ -237,40 +269,69 @@ class ScrapingService:
         returns:
             bool: 商品が存在するかどうか
         """
-        try:
-            item_id = params.get('item_id')
-            response = self.session.get(f'https://paypayfleamarket.yahoo.co.jp/item/{item_id}')
+        item_id = params.get('item_id')
+        for retry in range(self.MAX_RETRIES):
+            try:
+                response = self._make_rate_limited_request(
+                    f'https://paypayfleamarket.yahoo.co.jp/item/{item_id}',
+                    timeout=5,
+                    allow_redirects=True
+                )
 
-            # 結果が存在しない場合（出品取消しをされた場合かもしれない）
-            if response.status_code == 404:
-                logger.warning(f"商品ID {item_id} は存在しません")
-                return True
+                logger.info(f"リクエスト試行 {retry + 1}/{self.MAX_RETRIES} - 商品ID: {item_id}")
+                logger.info(f"ステータスコード: {response.status_code}")
 
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, 'html.parser')
+                if response.status_code == 404:
+                    logger.warning(f"商品ID {item_id} は存在しません")
+                    return True
 
-            # import os,datetime
-            # log_dir = "logs/scraping/yahoo_free_market/"
-            # os.makedirs(log_dir, exist_ok=True)
-            # filename = f"{log_dir}check_{item_id}_{datetime.datetime.now()}.html"
-            # with open(filename, "w", encoding="utf-8") as f:
-            #     f.write(soup.prettify())
+                if response.status_code == 403:
+                    logger.error(f"アクセスが拒否されました (試行 {retry + 1}/{self.MAX_RETRIES})")
+                    if retry < self.MAX_RETRIES - 1:
+                        continue
+                    return False
 
-            # __NEXT_DATA__スクリプトを取得
-            next_data_script = soup.find('script', {'id': '__NEXT_DATA__'})
-            if not next_data_script:
-                return True
+                if response.status_code == 500:
+                    logger.error(f"サーバーエラー発生 (試行 {retry + 1}/{self.MAX_RETRIES}) - 商品ID: {item_id}")
+                    logger.error(f"レスポンスヘッダー: {dict(response.headers)}")
+                    if retry < self.MAX_RETRIES - 1:
+                        continue
+                    return False
 
-            # 売り切れフラグの判定
-            if bool(soup.find('img', class_='sc-7fc76147-7 bpVTgE')):
-                return True
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, 'html.parser')
 
-            return False
+                # __NEXT_DATA__スクリプトを取得
+                next_data_script = soup.find('script', {'id': '__NEXT_DATA__'})
+                if not next_data_script:
+                    return True
 
-        except requests.RequestException as e:
-            logger.error(f"check_item_exist_リクエストエラー: {str(e)}")
-            return False
+                # 売り切れフラグの判定
+                if bool(soup.find('img', class_='sc-7fc76147-7 bpVTgE')):
+                    return True
 
-        except Exception as e:
-            logger.error(f"check_item_exist_スクレイピングエラー: {str(e)}")
-            return False
+                return False
+
+            except requests.Timeout:
+                logger.warning(f"タイムアウト発生 (試行 {retry + 1}/{self.MAX_RETRIES}) - 商品ID: {item_id}")
+                if retry == self.MAX_RETRIES - 1:
+                    return False
+                continue
+
+            except requests.RequestException as e:
+                logger.error(f"リクエストエラー (試行 {retry + 1}/{self.MAX_RETRIES}) - 商品ID: {item_id}")
+                logger.error(f"エラーの種類: {type(e).__name__}")
+                logger.error(f"エラーの詳細: {str(e)}")
+                if retry == self.MAX_RETRIES - 1:
+                    return False
+                continue
+
+            except Exception as e:
+                logger.error(f"スクレイピングエラー (試行 {retry + 1}/{self.MAX_RETRIES}) - 商品ID: {item_id}")
+                logger.error(f"エラーの種類: {type(e).__name__}")
+                logger.error(f"エラーの詳細: {str(e)}")
+                if retry == self.MAX_RETRIES - 1:
+                    return False
+                continue
+
+        return False

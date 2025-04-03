@@ -3,16 +3,47 @@ from bs4 import BeautifulSoup
 import logging
 import re
 from django.conf import settings
+import time
+from django.utils import timezone
+
 logger = logging.getLogger(__name__)
 
 class ScrapingService:
     BASE_SEARCH_URL = settings.YAHOO_AUCTION_URL
+    MIN_REQUEST_INTERVAL = 3  # 最小リクエスト間隔（秒）
 
     def __init__(self):
         self.session = requests.Session()
+        self.last_request_time = None
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'ja,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'max-age=0'
         })
+
+    def _make_rate_limited_request(self, url, **kwargs):
+        """
+        レートリミットを考慮したリクエスト実行
+        """
+        current_time = time.time()
+        
+        # 前回のリクエストからの経過時間を計算
+        if self.last_request_time is not None:
+            elapsed = current_time - self.last_request_time
+            if elapsed < self.MIN_REQUEST_INTERVAL:
+                # 次のリクエストまでの待機時間を計算（小数点以下2桁まで）
+                remaining_time = round(self.MIN_REQUEST_INTERVAL - elapsed, 2)
+                if remaining_time > 0:
+                    logger.info(f"次のリクエストまで {remaining_time} 秒待機")
+                    time.sleep(remaining_time)
+
+        # リクエストを実行
+        response = self.session.get(url, **kwargs)
+        self.last_request_time = time.time()
+        return response
 
     def get_items(self, params):
         """
@@ -314,28 +345,6 @@ class ScrapingService:
                 'url': sorted_images
             }
 
-            # 必須キーの定義
-            required_keys = [
-                'title',
-                'current_price',
-                'current_price_in_tax',
-                'buy_now_price',
-                'buy_now_price_in_tax',
-                'start_time',
-                'end_time',
-                'auction_id',
-                'categories',
-                'condition',
-                'images',
-                'description'
-            ]
-
-            # 存在しないキーを確認
-            missing_keys = []
-            for key in required_keys:
-                if key not in data or data[key] == '':
-                    missing_keys.append(key)
-
             return data
 
         except requests.RequestException as e:
@@ -455,3 +464,85 @@ class ScrapingService:
                 continue
 
         return items 
+
+    def check_item_exist(self, params):
+        """
+        商品が存在するかどうかを確認する
+
+        params:
+            url: 商品URL
+
+        returns:
+            bool: 商品が終了しているかどうか（True: 終了, False: 出品中）
+        """
+        try:
+            response = self._make_rate_limited_request(
+                params.get('url'),
+                timeout=5,
+                allow_redirects=True
+            )
+
+            # 404エラーの場合は商品が存在しない
+            if response.status_code == 404:
+                logger.warning(f"商品URLが存在しません: {params.get('url')}")
+                return True
+
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # オークション終了判定
+            closed_header = soup.find('div', class_='ClosedHeader')
+            if closed_header is not None and 'このオークションは終了しています' in closed_header.get_text():
+                return True
+
+            # 価格情報の取得
+            price_info = {}
+            price_rows = soup.find_all('div', class_='Price__row')
+            for row in price_rows:
+                title = row.find('dt', class_='Price__title')
+                if not title:
+                    continue
+                value = row.find('dd', class_='Price__value')
+                if not value:
+                    continue
+
+                title_text = title.text.strip()
+                price_text = value.get_text(strip=True)
+                
+                # 現在価格または即決価格を取得
+                if '現在' in title_text or '即決' in title_text or title_text == '':
+                    price = price_text.split('円')[0].replace(',', '').strip()
+                    if price:
+                        price_info['price'] = int(price)
+                        break
+
+            # 終了日時の取得
+            price_rows = soup.find_all('tr', class_='Section__tableRow')
+            for row in price_rows:
+                tableHead = row.find('th', class_='Section__tableHead')
+                if not tableHead:
+                    continue
+                if tableHead.get_text(strip=True) == '終了日時':
+                    tableData = row.find('td', class_='Section__tableData')
+                    if tableData:
+                        end_time = convert_yahoo_date(tableData.get_text(strip=True))
+                        if end_time and end_time < timezone.now():
+                            return True
+
+            return False
+
+        except requests.Timeout:
+            logger.warning(f"タイムアウト発生 - URL: {params.get('url')}")
+            return False
+
+        except requests.RequestException as e:
+            logger.error(f"リクエストエラー - URL: {params.get('url')}")
+            logger.error(f"エラーの種類: {type(e).__name__}")
+            logger.error(f"エラーの詳細: {str(e)}")
+            return False
+
+        except Exception as e:
+            logger.error(f"スクレイピングエラー - URL: {params.get('url')}")
+            logger.error(f"エラーの種類: {type(e).__name__}")
+            logger.error(f"エラーの詳細: {str(e)}")
+            return False 
