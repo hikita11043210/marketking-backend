@@ -54,6 +54,15 @@ class ListView(APIView):
                 }
                 for item in ebay_register_items
             ]
+            
+            # ステータスごとの商品数を追加
+            response_data = {
+                'items': response_data,
+                'counts': {
+                    'active': ebay_register_items.filter(status_id=1).count(),
+                    'sold_out': ebay_register_items.filter(status_id=2).count(),
+                }
+            }
             return create_success_response(response_data)
         except Exception as e:
             return create_error_response(str(e))
