@@ -2,7 +2,6 @@ from api.services.ebay.offer import Offer
 from api.models.yahoo import YahooFreeMarket
 from api.services.yahoo_free_market.scraping import ScrapingService
 from api.models.master import Status as StatusModel, YahooFreeMarketStatus
-from api.utils.convert_date import convert_yahoo_date
 from django.db import transaction
 from django.utils import timezone
 import logging

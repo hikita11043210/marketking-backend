@@ -65,7 +65,7 @@ class ItemDetailView(APIView):
             title = result['title']
             description = result['description']
             condition = result['condition']
-            price = result['buy_now_price_in_tax']
+            price = int(result['buy_now_price_in_tax'])
             shipping = int(request.query_params.get('shipping'))
 
             # カテゴリツリーIDの取得

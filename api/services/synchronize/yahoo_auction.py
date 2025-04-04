@@ -30,9 +30,9 @@ class SynchronizeYahooAuction():
 
         for item in items:
             try:
-                detail = self.scraping_service.get_item_detail({'url': item.url})
+                detail = self.scraping_service.check_item_exist({'url': item.url})
                 if detail.get('success') is False:
-                    logger.error(f"商品詳細の取得に失敗しました - unique_id: {item.unique_id}, エラー: {detail.get('error')}")
+                    logger.error(f"商品情報の取得に失敗しました - unique_id: {item.unique_id}, エラー: {detail.get('error')}")
                     continue
 
                 old_status_id = item.status.id
@@ -56,6 +56,7 @@ class SynchronizeYahooAuction():
                         
                         count_change_status_items += 1
                 else:
+                    print(detail)
                     # 価格と終了時間を更新
                     if detail.get('current_price'):
                         item.current_price = detail['current_price']

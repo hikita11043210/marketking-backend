@@ -5,6 +5,8 @@ import re
 from django.conf import settings
 import time
 from django.utils import timezone
+from api.utils.convert_date import convert_yahoo_date
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -210,140 +212,47 @@ class ScrapingService:
             # 商品基本情報
             data = {}
 
-            # 終了判定
-            closed_header = soup.find('div', class_='ClosedHeader')
-            if closed_header is not None:  # Noneチェックを追加
-                if 'このオークションは終了しています' in closed_header.get_text():
-                    data['end_flag'] = True
-            else:
-                data['end_flag'] = False
-            
-            # タイトル
-            data['title'] = ''
-            title_elem = soup.find('h1', class_='ProductTitle__text')
-            if title_elem:
-                data['title'] = title_elem.get_text(strip=True)
-
-            # 商品説明の取得
-            description_elem = soup.find('div', class_='ProductExplanation__commentBody')
-            if description_elem:
-                # 改行を保持するためstrip=Trueを削除し、<br>タグを改行に変換
-                for br in description_elem.find_all('br'):
-                    br.replace_with('\n')
-                # 連続する改行を単一の改行に変換
-                raw_text = description_elem.get_text(strip=False)
-                cleaned_text = re.sub(r'\n+', '\n', raw_text)
-                data['description'] = cleaned_text.strip()
-            else:
-                data['description'] = ''
-
-            # 商品価格
-            data['current_price'] = ''
-            data['current_price_in_tax'] = ''
-            data['buy_now_price'] = ''
-            data['buy_now_price_in_tax'] = ''
-            price_rows = soup.find_all('div', class_='Price__row')
-            for row in price_rows:
-                title = row.find('dt', class_='Price__title')
-                if not title:
-                    continue
-                value = row.find('dd', class_='Price__value')
-                if not value:
-                    continue
+            # __NEXT_DATA__からJSONデータを取得
+            next_data = soup.find('script', {'id': '__NEXT_DATA__'})
+            if next_data:
+                try:
+                    json_data = json.loads(next_data.string)
+                    item_detail = json_data.get('props', {}).get('pageProps', {}).get('initialState', {}).get('item', {}).get('detail', {})
                     
-                # 価格タイトル（現在/即決/定額など）
-                title_text = title.text.strip() if title else ''
-                
-                # 価格テキストの処理（カンマ、円記号、空白を削除）
-                price_text = value.get_text(strip=True)
-                price = ''
-                price_in_tax = '0'
-                
-                # 基本価格の抽出
-                if '円' in price_text:
-                    price = price_text.split('円')[0].replace(',', '').strip()
-                
-                # 税込み価格の抽出（複数のパターンに対応）
-                tax_span = value.find('span', class_='Price__tax')
-                if tax_span:
-                    tax_text = tax_span.get_text(strip=True)
-                    
-                    # パターン1: （税込 X 円）
-                    if '税込' in tax_text and '円' in tax_text:
-                        try:
-                            # 「税込」と「円」の間の数値を抽出
-                            tax_parts = tax_text.split('税込')[1].split('円')[0]
-                            price_in_tax = tax_parts.replace(',', '').strip()
-                        except (IndexError, ValueError):
-                            price_in_tax = '0'
-                    
-                    # パターン2: （税 X 円）
-                    elif '税' in tax_text and '円' in tax_text:
-                        try:
-                            # 「税」と「円」の間の数値を抽出
-                            tax_parts = tax_text.split('税')[1].split('円')[0]
-                            # 税額だけの場合は、本体価格に加算して税込み価格を計算
-                            tax_amount = tax_parts.replace(',', '').strip()
-                            try:
-                                price_in_tax = str(int(price) + int(tax_amount))
-                            except (ValueError, TypeError):
-                                price_in_tax = price  # 変換エラー時は本体価格をそのまま使用
-                        except (IndexError, ValueError):
-                            price_in_tax = price  # エラー時は本体価格をそのまま使用
-                
-                # 価格情報がない場合はスキップ
-                if not price:
-                    continue
-                    
-                # 現在価格（オークション形式の場合）
-                if '現在' in title_text:
-                    data['current_price'] = int(price)
-                    data['current_price_in_tax'] = int(price_in_tax)
-                # 即決価格または定額価格（固定価格形式の場合）
-                elif '即決' in title_text or '価格' in title_text or title_text == '':
-                    data['buy_now_price'] = int(price)
-                    data['buy_now_price_in_tax'] = int(price_in_tax)
-
-            # 商品詳細テーブルの解析
-            price_rows = soup.find_all('tr', class_='Section__tableRow')
-            for row in price_rows:
-                tableHead = row.find('th', class_='Section__tableHead')
-                tableData = row.find('td', class_='Section__tableData')
-                if not tableHead or not tableData:
-                    continue
-
-                title_text = tableHead.get_text(strip=True)
-
-                if title_text == 'オークションID':
-                    data['auction_id'] = tableData.get_text(strip=True)
-                elif title_text == 'カテゴリ':
-                    categories = tableData.find_all('a')
-                    data['categories'] = [cat.get_text(strip=True) for cat in categories]
-                elif title_text == '状態':
-                    condition = tableData.find('a')
-                    data['condition'] = condition.get_text(strip=True)
-                elif title_text == '開始日時':
-                    data['start_time'] = tableData.get_text(strip=True)
-                elif title_text == '終了日時':
-                    data['end_time'] = tableData.get_text(strip=True)
-
-            # 画像取得部分の修正
-            image_elements = soup.select('li.ProductImage__image img, div.Thumbnail__item img')
-            all_images = set()
-            for img in image_elements:
-                # 通常のsrc属性と遅延読み込み用のdata-srcをチェック
-                image_url = img.get('data-src') or img.get('src')
-                if image_url and 'auctions.c.yimg.jp' in image_url:
-                    all_images.add(image_url)
-
-            # 画像URLを整理
-            sorted_images = sorted(
-                all_images, 
-                key=lambda x: int(re.search(r'(\d+)\.jpg', x).group(1)) if re.search(r'(\d+)\.jpg', x) else 0
-            )
-            data['images'] = {
-                'url': sorted_images
-            }
+                    if item_detail:
+                        # 基本情報の取得
+                        data['title'] = item_detail.get('title', '')
+                        data['auction_id'] = item_detail.get('auctionId', '')
+                        data['current_price'] = item_detail.get('price', 0)
+                        data['buy_now_price'] = item_detail.get('bidorbuy', 0)
+                        data['buy_now_price_in_tax'] = item_detail.get('bidorbuy', 0)
+                        data['end_flag'] = item_detail.get('status') == 'closed'
+                        
+                        # 画像情報の取得
+                        images = item_detail.get('img', [])
+                        image_urls = [img.get('image') for img in images if img.get('image')]
+                        data['images'] = {'url': image_urls}
+                        
+                        # カテゴリー情報の取得
+                        category_path = item_detail.get('category', {}).get('path', [])
+                        data['categories'] = [cat.get('name') for cat in category_path if cat.get('name')]
+                        
+                        # 商品状態
+                        data['condition'] = item_detail.get('conditionName', '')
+                        
+                        # 開始・終了時間
+                        data['start_time'] = item_detail.get('startTime', '')
+                        data['end_time'] = item_detail.get('endTime', '')
+                        
+                        # 商品説明
+                        description = item_detail.get('description', [])
+                        if isinstance(description, list):
+                            data['description'] = '\n'.join(description)
+                        else:
+                            data['description'] = str(description)
+                        return data
+                except json.JSONDecodeError:
+                    logger.warning("JSONデータの解析に失敗しました")
 
             return data
 
@@ -467,13 +376,21 @@ class ScrapingService:
 
     def check_item_exist(self, params):
         """
-        商品が存在するかどうかを確認する
+        商品の存在確認と基本情報の取得
 
         params:
             url: 商品URL
 
         returns:
-            bool: 商品が終了しているかどうか（True: 終了, False: 出品中）
+            dict: {
+                'end_flag': bool,          # 商品が終了しているかどうか
+                'current_price': int,      # 現在価格
+                'current_price_in_tax': int,  # 現在価格（税込）
+                'buy_now_price': int,      # 即決価格
+                'buy_now_price_in_tax': int,  # 即決価格（税込）
+                'end_time': str,           # 終了時間
+                'success': bool            # 処理成功フラグ
+            }
         """
         try:
             response = self._make_rate_limited_request(
@@ -485,64 +402,77 @@ class ScrapingService:
             # 404エラーの場合は商品が存在しない
             if response.status_code == 404:
                 logger.warning(f"商品URLが存在しません: {params.get('url')}")
-                return True
+                return {
+                    'end_flag': True,
+                    'success': True
+                }
 
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            # オークション終了判定
-            closed_header = soup.find('div', class_='ClosedHeader')
-            if closed_header is not None and 'このオークションは終了しています' in closed_header.get_text():
-                return True
+            import os,datetime
+            log_dir = "logs/scraping/yahoo_auction/"
+            os.makedirs(log_dir, exist_ok=True)
+            date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"{log_dir}check_item_exist_{date}.html"
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(soup.prettify())
 
-            # 価格情報の取得
-            price_info = {}
-            price_rows = soup.find_all('div', class_='Price__row')
-            for row in price_rows:
-                title = row.find('dt', class_='Price__title')
-                if not title:
-                    continue
-                value = row.find('dd', class_='Price__value')
-                if not value:
-                    continue
+            result = {
+                'end_flag': False,
+                'current_price': None,
+                'current_price_in_tax': None,
+                'buy_now_price': None,
+                'buy_now_price_in_tax': None,
+                'end_time': None,
+                'success': True
+            }
 
-                title_text = title.text.strip()
-                price_text = value.get_text(strip=True)
-                
-                # 現在価格または即決価格を取得
-                if '現在' in title_text or '即決' in title_text or title_text == '':
-                    price = price_text.split('円')[0].replace(',', '').strip()
-                    if price:
-                        price_info['price'] = int(price)
-                        break
+            # __NEXT_DATA__からJSONデータを取得
+            next_data = soup.find('script', {'id': '__NEXT_DATA__'})
+            if next_data:
+                try:
+                    json_data = json.loads(next_data.string)
+                    item_detail = json_data.get('props', {}).get('pageProps', {}).get('initialState', {}).get('item', {}).get('detail', {})
+                    
+                    if item_detail:
+                        # 終了判定
+                        result['end_flag'] = item_detail.get('status') == 'closed'
+                        
+                        # 価格情報
+                        result['current_price'] = item_detail.get('price', 0)
+                        result['current_price_in_tax'] = item_detail.get('price', 0)  # 税込価格が取得できない場合は通常価格を使用
+                        result['buy_now_price'] = item_detail.get('bidorbuy', 0)
+                        result['buy_now_price_in_tax'] = item_detail.get('bidorbuy', 0)  # 税込価格が取得できない場合は通常価格を使用
+                        
+                        # 終了時間
+                        result['end_time'] = item_detail.get('endTime', '')
+                        
+                        # # 終了日時が過ぎている場合は終了フラグを立てる
+                        # if result['end_time']:
+                        #     end_time = convert_yahoo_date(result['end_time'])
+                        #     if end_time < timezone.now():
+                        #         result['end_flag'] = True
+                        return result
 
-            # 終了日時の取得
-            price_rows = soup.find_all('tr', class_='Section__tableRow')
-            for row in price_rows:
-                tableHead = row.find('th', class_='Section__tableHead')
-                if not tableHead:
-                    continue
-                if tableHead.get_text(strip=True) == '終了日時':
-                    tableData = row.find('td', class_='Section__tableData')
-                    if tableData:
-                        end_time = convert_yahoo_date(tableData.get_text(strip=True))
-                        if end_time and end_time < timezone.now():
-                            return True
+                except json.JSONDecodeError:
+                    logger.warning("JSONデータの解析に失敗しました")
+                    return {'success': False, 'error': 'JSONデータの解析に失敗しました'}
 
-            return False
+            return result
 
         except requests.Timeout:
             logger.warning(f"タイムアウト発生 - URL: {params.get('url')}")
-            return False
+            return {'success': False, 'error': 'タイムアウトが発生しました'}
 
         except requests.RequestException as e:
             logger.error(f"リクエストエラー - URL: {params.get('url')}")
             logger.error(f"エラーの種類: {type(e).__name__}")
             logger.error(f"エラーの詳細: {str(e)}")
-            return False
+            return {'success': False, 'error': str(e)}
 
         except Exception as e:
             logger.error(f"スクレイピングエラー - URL: {params.get('url')}")
             logger.error(f"エラーの種類: {type(e).__name__}")
             logger.error(f"エラーの詳細: {str(e)}")
-            return False 
+            return {'success': False, 'error': str(e)} 
