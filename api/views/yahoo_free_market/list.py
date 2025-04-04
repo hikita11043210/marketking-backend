@@ -83,7 +83,12 @@ class YahooFreeMarketListView(APIView):
                     'current_page': page,
                     'has_next': current_page.has_next(),
                     'has_previous': current_page.has_previous()
+                },
+                'counts': {
+                    'active': list_items.filter(status_id=1).count(),
+                    'sold_out': list_items.filter(status_id=2).count(),
                 }
+
             }
             return create_success_response(response_data)
         except Exception as e:
