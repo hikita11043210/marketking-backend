@@ -6,48 +6,18 @@ import time
 
 # 設定
 API_BASE_URL = "https://market-king-backend-app-a8a6479c97ad.herokuapp.com/api/v1"
-USERNAME = 'anakin0512'
-PASSWORD = 'Popo3gou!'
 RECIPIENT_EMAILS = ['th.osigoto0719@gmail.com']
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
 
-def get_jwt_token():
-    """JWTトークンを取得する"""
-    login_url = f'{API_BASE_URL}/auth/login/'
-    
-    for retry in range(MAX_RETRIES):
-        try:
-            response = requests.post(
-                login_url,
-                json={
-                    'username': USERNAME,
-                    'password': PASSWORD
-                },
-                timeout=30  # Herokuのタイムアウトに合わせる
-            )
-            response.raise_for_status()
-            return response.json()['accessToken']
-        except requests.exceptions.RequestException as e:
-            print(f'ログインエラー (試行 {retry + 1}/{MAX_RETRIES}): {str(e)}')
-            if retry < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY)
-                continue
-            return None
-
-def call_sync_api(access_token):
+def call_sync_api():
     """同期APIを呼び出す"""
     sync_url = f'{API_BASE_URL}/synchronize/script/'
     
     for retry in range(MAX_RETRIES):
         try:
-            headers = {
-                'Authorization': f'Bearer {access_token}',
-                'Content-Type': 'application/json'
-            }
             response = requests.get(
-                sync_url, 
-                headers=headers,
+                sync_url,
                 timeout=120  # 長めのタイムアウトを設定
             )
             response.raise_for_status()
@@ -199,16 +169,7 @@ def main():
         return
 
     print('同期処理を開始します...')
-    
-    # JWTトークンを取得
-    access_token = get_jwt_token()
-    if not access_token:
-        print('JWTトークンの取得に失敗しました')
-        return False
-    
-    print('JWTトークンの取得に成功しました')
-    # 同期APIを呼び出し
-    success = call_sync_api(access_token)
+    success = call_sync_api()
     return success
 
 if __name__ == '__main__':

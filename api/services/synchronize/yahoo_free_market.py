@@ -8,15 +8,17 @@ import logging
 from api.models.ebay import Ebay
 from itertools import islice
 import asyncio
+from api.utils.get_default_user import get_default_user
 
 logger = logging.getLogger(__name__)
 
 class SynchronizeYahooFreeMarket():
     BATCH_SIZE = 5  # バッチサイズを小さく
 
-    def __init__(self, user):
-        self.user = user
+    def __init__(self, user=None):
+        self.user = user if user else get_default_user()
         self.scraping_service = ScrapingService()
+        self.offer_service = Offer(self.user)
 
     async def _process_batch(self, items, yahoo_end_status, ebay_end_status):
         """
@@ -38,8 +40,7 @@ class SynchronizeYahooFreeMarket():
 
                         ebay_item = item.ebay_set.first()
                         if ebay_item and ebay_item.status.id == 1:
-                            offer_service = Offer(self.user)
-                            offer_service.withdraw_offer(ebay_item.offer_id)
+                            self.offer_service.withdraw_offer(ebay_item.offer_id)
                             ebay_item.status = ebay_end_status
                             ebay_item.save()
 

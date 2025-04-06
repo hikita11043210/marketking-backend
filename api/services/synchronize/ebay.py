@@ -5,12 +5,14 @@ from api.models.master import Status as StatusModel
 from django.db import transaction
 from django.utils import timezone
 import logging
+from api.utils.get_default_user import get_default_user
 
 logger = logging.getLogger(__name__)
 
 class Status():
-    def __init__(self, user):
-        self.user = user
+    def __init__(self, user=None):
+        self.user = user if user else get_default_user()
+        self.item_status_service = ItemStatusService(self.user)
 
     def synchronize(self):
         try:
@@ -33,7 +35,7 @@ class Status():
                 
                 for item in ebay_register_items:
                     try:
-                        status = ItemStatusService(self.user).get_item_status(item.sku)
+                        status = self.item_status_service.get_item_status(item.sku)
                         
                         new_status = None
                         if status == "ACTIVE":

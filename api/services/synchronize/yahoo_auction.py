@@ -9,15 +9,17 @@ from api.models.ebay import Ebay
 from decimal import Decimal
 from django.utils import timezone
 from itertools import islice
+from api.utils.get_default_user import get_default_user
 
 logger = logging.getLogger(__name__)
 
 class SynchronizeYahooAuction():
     BATCH_SIZE = 10  # 一度に処理するアイテム数
 
-    def __init__(self, user):
-        self.user = user
+    def __init__(self, user=None):
+        self.user = user if user else get_default_user()
         self.scraping_service = ScrapingService()
+        self.offer_service = Offer(self.user)
 
     def _process_batch(self, items, end_status, ebay_end_status):
         """
@@ -43,20 +45,21 @@ class SynchronizeYahooAuction():
 
                     # まだ出品中の場合は出品を取り消す
                     if old_status_id == 1:
-                        offer_service = Offer(self.user)
                         ebay_items = getattr(item, 'prefetched_ebay', [])
                         ebay_item = next((e for e in ebay_items), None)
                         
                         if ebay_item and ebay_item.offer_id:
-                            offer_service.withdraw_offer(ebay_item.offer_id)
-                            ebay_item.status = ebay_end_status
-                            ebay_item.save()
+                            try:
+                                self.offer_service.withdraw_offer(ebay_item.offer_id)
+                                ebay_item.status = ebay_end_status
+                                ebay_item.save()
+                            except Exception as e:
+                                logger.error(f"eBay出品の取り消しに失敗しました - offer_id: {ebay_item.offer_id}, エラー: {str(e)}")
                         else:
                             logger.warning(f"関連するEbayレコードが見つかりませんでした - Yahoo Auction ID: {item.id}")
                         
                         count_change_status_items += 1
                 else:
-                    print(detail)
                     # 価格と終了時間を更新
                     if detail.get('current_price'):
                         item.current_price = detail['current_price']

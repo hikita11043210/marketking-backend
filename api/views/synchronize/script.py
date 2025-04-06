@@ -6,12 +6,18 @@ from api.services.synchronize.ebay import Status
 from api.services.synchronize.yahoo_free_market import SynchronizeYahooFreeMarket
 import asyncio
 from asgiref.sync import sync_to_async
-from rest_framework.permissions import IsAuthenticated
-from api.authentication import AsyncJWTAuthentication
+from django.contrib.auth import get_user_model
+from rest_framework.permissions import AllowAny
+
+User = get_user_model()
 
 class SynchronizeScriptView(APIView):
-    authentication_classes = [AsyncJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # 認証不要に設定
+
+    @sync_to_async
+    def _get_default_user(self):
+        # デフォルトユーザーを取得（anakin0512）
+        return User.objects.get(username='anakin0512')
 
     @sync_to_async
     def _run_status_sync(self, user):
@@ -30,10 +36,13 @@ class SynchronizeScriptView(APIView):
 
     async def get(self, request):
         try:
+            # デフォルトユーザーを取得
+            user = await self._get_default_user()
+            
             # 各同期処理を非同期で実行
-            status_response = await self._run_status_sync(request.user)
-            yahoo_auction_response = await self._run_yahoo_auction_sync(request.user)
-            yahoo_free_market_response = await self._run_yahoo_free_market_sync(request.user)
+            status_response = await self._run_status_sync(user)
+            yahoo_auction_response = await self._run_yahoo_auction_sync(user)
+            yahoo_free_market_response = await self._run_yahoo_free_market_sync(user)
             
             return Response({
                 'status': 'success',
