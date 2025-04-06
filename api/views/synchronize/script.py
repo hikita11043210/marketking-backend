@@ -7,10 +7,10 @@ from api.services.synchronize.yahoo_free_market import SynchronizeYahooFreeMarke
 import asyncio
 from asgiref.sync import sync_to_async
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from api.authentication import AsyncJWTAuthentication
 
 class SynchronizeScriptView(APIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [AsyncJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @sync_to_async
