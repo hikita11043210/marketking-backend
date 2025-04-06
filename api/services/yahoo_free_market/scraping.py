@@ -6,6 +6,8 @@ from django.conf import settings
 import json
 import time
 from datetime import datetime
+import aiohttp
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -16,37 +18,42 @@ class ScrapingService:
     MIN_REQUEST_INTERVAL = 3  # 最小リクエスト間隔（秒）
 
     def __init__(self):
-        self.session = requests.Session()
         self.last_request_time = None
-        self.session.headers.update({
+        self.session = None
+        self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Language': 'ja,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
             'Cache-Control': 'max-age=0'
-        })
+        }
 
-    def _make_rate_limited_request(self, url, **kwargs):
+    async def _get_session(self):
+        if self.session is None:
+            self.session = aiohttp.ClientSession(headers=self.headers)
+        return self.session
+
+    async def _make_rate_limited_request(self, url, **kwargs):
         """
-        レートリミットを考慮したリクエスト実行
+        レートリミットを考慮した非同期リクエスト実行
         """
+        session = await self._get_session()
         current_time = time.time()
         
-        # 前回のリクエストからの経過時間を計算
         if self.last_request_time is not None:
             elapsed = current_time - self.last_request_time
             if elapsed < self.MIN_REQUEST_INTERVAL:
-                # 次のリクエストまでの待機時間を計算（小数点以下2桁まで）
-                remaining_time = round(self.MIN_REQUEST_INTERVAL - elapsed, 2)
-                if remaining_time > 0:
-                    logger.info(f"次のリクエストまで {remaining_time} 秒待機")
-                    time.sleep(remaining_time)
+                delay = self.MIN_REQUEST_INTERVAL - elapsed
+                await asyncio.sleep(delay)
 
-        # リクエストを実行
-        response = self.session.get(url, **kwargs)
-        self.last_request_time = time.time()
-        return response
+        try:
+            async with session.get(url, **kwargs) as response:
+                self.last_request_time = time.time()
+                return await response.text()
+        except Exception as e:
+            logger.error(f"リクエストエラー: {str(e)}")
+            raise
 
     def get_items(self, params):
         """
@@ -259,47 +266,21 @@ class ScrapingService:
         return items 
     
 
-    def check_item_exist(self, params):
+    async def check_item_exist(self, params):
         """
-        商品が存在するかどうかを確認する
-
-        params:
-            item_id: 商品ID
-
-        returns:
-            bool: 商品が存在するかどうか
+        商品が存在するかどうかを確認する（非同期版）
         """
         item_id = params.get('item_id')
         for retry in range(self.MAX_RETRIES):
             try:
-                response = self._make_rate_limited_request(
+                html = await self._make_rate_limited_request(
                     f'https://paypayfleamarket.yahoo.co.jp/item/{item_id}',
-                    timeout=5,
-                    allow_redirects=True
+                    timeout=aiohttp.ClientTimeout(total=5)
                 )
 
                 logger.info(f"リクエスト試行 {retry + 1}/{self.MAX_RETRIES} - 商品ID: {item_id}")
-                logger.info(f"ステータスコード: {response.status_code}")
 
-                if response.status_code == 404:
-                    logger.warning(f"商品ID {item_id} は存在しません")
-                    return True
-
-                if response.status_code == 403:
-                    logger.error(f"アクセスが拒否されました (試行 {retry + 1}/{self.MAX_RETRIES})")
-                    if retry < self.MAX_RETRIES - 1:
-                        continue
-                    return False
-
-                if response.status_code == 500:
-                    logger.error(f"サーバーエラー発生 (試行 {retry + 1}/{self.MAX_RETRIES}) - 商品ID: {item_id}")
-                    logger.error(f"レスポンスヘッダー: {dict(response.headers)}")
-                    if retry < self.MAX_RETRIES - 1:
-                        continue
-                    return False
-
-                response.raise_for_status()
-                soup = BeautifulSoup(response.text, 'html.parser')
+                soup = BeautifulSoup(html, 'html.parser')
 
                 # __NEXT_DATA__スクリプトを取得
                 next_data_script = soup.find('script', {'id': '__NEXT_DATA__'})
@@ -312,18 +293,13 @@ class ScrapingService:
 
                 return False
 
-            except requests.Timeout:
-                logger.warning(f"タイムアウト発生 (試行 {retry + 1}/{self.MAX_RETRIES}) - 商品ID: {item_id}")
-                if retry == self.MAX_RETRIES - 1:
-                    return False
-                continue
-
-            except requests.RequestException as e:
+            except aiohttp.ClientError as e:
                 logger.error(f"リクエストエラー (試行 {retry + 1}/{self.MAX_RETRIES}) - 商品ID: {item_id}")
                 logger.error(f"エラーの種類: {type(e).__name__}")
                 logger.error(f"エラーの詳細: {str(e)}")
                 if retry == self.MAX_RETRIES - 1:
                     return False
+                await asyncio.sleep(1)  # リトライ前に待機
                 continue
 
             except Exception as e:
@@ -332,6 +308,7 @@ class ScrapingService:
                 logger.error(f"エラーの詳細: {str(e)}")
                 if retry == self.MAX_RETRIES - 1:
                     return False
+                await asyncio.sleep(1)
                 continue
 
         return False

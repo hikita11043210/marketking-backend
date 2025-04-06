@@ -1,1 +1,1 @@
-web: gunicorn project.wsgi --log-file -
+web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker backend.asgi:application

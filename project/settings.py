@@ -211,6 +211,16 @@ LOGGING = {
     # その他の設定...
 }
 
+# Async Settings
+ASGI_APPLICATION = 'backend.asgi.application'
+
+# 開発環境でのみ有効にする（本番環境では注意して使用）
+if DEBUG:
+    DJANGO_ALLOW_ASYNC_UNSAFE = True
+
+# タイムアウト設定
+ASYNC_TIMEOUT = 120  # 2分 
+
 # 環境変数
 EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', '').split(',')
 EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
