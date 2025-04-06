@@ -2,71 +2,95 @@ import requests
 import json
 from datetime import datetime
 from api.services.mail.mail import EmailService
+import time
+
 # 設定
-API_BASE_URL = "https://market-king-backend-app-a8a6479c97ad.herokuapp.com/api/v1"  # DjangoのAPIのベースURL
+API_BASE_URL = "https://market-king-backend-app-a8a6479c97ad.herokuapp.com/api/v1"
 USERNAME = 'anakin0512'
 PASSWORD = 'Popo3gou!'
 RECIPIENT_EMAILS = ['th.osigoto0719@gmail.com']
+MAX_RETRIES = 3
+RETRY_DELAY = 5  # seconds
 
 def get_jwt_token():
     """JWTトークンを取得する"""
     login_url = f'{API_BASE_URL}/auth/login/'
     
-    try:
-        response = requests.post(
-            login_url,
-            json={
-                'username': USERNAME,
-                'password': PASSWORD
-            }
-        )
-        response.raise_for_status()
-        return response.json()['accessToken']
-    except requests.exceptions.RequestException as e:
-        print(f'ログインエラー: {str(e)}')
-        if hasattr(e.response, 'text'):
-            print(f'エラー詳細: {e.response.text}')
-        return None
+    for retry in range(MAX_RETRIES):
+        try:
+            response = requests.post(
+                login_url,
+                json={
+                    'username': USERNAME,
+                    'password': PASSWORD
+                },
+                timeout=30  # Herokuのタイムアウトに合わせる
+            )
+            response.raise_for_status()
+            return response.json()['accessToken']
+        except requests.exceptions.RequestException as e:
+            print(f'ログインエラー (試行 {retry + 1}/{MAX_RETRIES}): {str(e)}')
+            if retry < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY)
+                continue
+            return None
 
 def call_sync_api(access_token):
     """同期APIを呼び出す"""
     sync_url = f'{API_BASE_URL}/synchronize/script/'
     
-    try:
-        headers = {
-            'Authorization': f'Bearer {access_token}',
-            'Content-Type': 'application/json'
-        }
-        response = requests.get(sync_url, headers=headers)
-        response.raise_for_status()
-        response_data = response.json()
+    for retry in range(MAX_RETRIES):
+        try:
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json'
+            }
+            response = requests.get(
+                sync_url, 
+                headers=headers,
+                timeout=120  # 長めのタイムアウトを設定
+            )
+            response.raise_for_status()
+            response_data = response.json()
 
-        if response_data["status"] == "success":
-            print(f'同期処理が完了しました')
-            send_notification(create_email_body(response_data))
+            if response_data["status"] == "success":
+                print(f'同期処理が完了しました')
+                send_notification(create_email_body(response_data))
+            else:
+                print(f'同期処理でエラーが発生しました')
+                print(f'エラー詳細: {response_data.get("error", "不明なエラー")}')
+            
+            return True
 
-        else:
-            print(f'同期処理でエラーが発生しました')
-            print(f'エラー詳細: {response_data["error"]}')
-        
-        return True
-    except requests.exceptions.RequestException as e:
-        print(f'同期APIエラー: {str(e)}')
-        if hasattr(e.response, 'text'):
-            print(f'エラー詳細: {e.response.text}')
-        return False
+        except requests.exceptions.Timeout:
+            print(f'タイムアウトが発生しました (試行 {retry + 1}/{MAX_RETRIES})')
+            if retry < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY)
+                continue
+            return False
+
+        except requests.exceptions.RequestException as e:
+            print(f'同期APIエラー (試行 {retry + 1}/{MAX_RETRIES}): {str(e)}')
+            if hasattr(e.response, 'text'):
+                print(f'エラー詳細: {e.response.text}')
+            if retry < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY)
+                continue
+            return False
 
 def send_notification(message):
     """メール通知を送信する"""
-    email_service = EmailService()
-    recipient_emails = RECIPIENT_EMAILS
-    subject = 'Market King 同期更新'
-    result = email_service.send_email_to_multiple_users(recipient_emails, subject, message)
-    if result['success']:
-        print(f'メール通知が送信されました: {result["success"]}')
-    if result['failed']:
-        print(f'メール通知の送信に失敗しました: {result["failed"]}')
-
+    try:
+        email_service = EmailService()
+        recipient_emails = RECIPIENT_EMAILS
+        subject = 'Market King 同期更新'
+        result = email_service.send_email_to_multiple_users(recipient_emails, subject, message)
+        if result['success']:
+            print(f'メール通知が送信されました: {result["success"]}')
+        if result['failed']:
+            print(f'メール通知の送信に失敗しました: {result["failed"]}')
+    except Exception as e:
+        print(f'メール送信エラー: {str(e)}')
 
 def create_email_body(response_data):
     """同期処理の結果からメール本文を作成する"""
@@ -166,13 +190,13 @@ def create_email_body(response_data):
 
 def should_run():
     current_hour = datetime.now().hour
-    target_hours = [0, 2, 3, 4,5,6,7,8,9,10,11, 12,13,14, 15,16,17,18]
+    target_hours = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     return current_hour in target_hours
 
 def main():
     if not should_run():
         print("同期実行時間ではありません")
-        return  # 即終了
+        return
 
     print('同期処理を開始します...')
     
