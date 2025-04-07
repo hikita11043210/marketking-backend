@@ -17,17 +17,5 @@ services:
       - ./docker/postgres/initdb.d:/docker-entrypoint-initdb.d
     platform: linux/amd64
 
-  redis:
-    image: redis:7
-    container_name: market_king_redis
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    platform: linux/amd64
-
 volumes:
   postgres_data:
-  redis_data:

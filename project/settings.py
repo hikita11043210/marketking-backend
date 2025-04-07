@@ -17,7 +17,6 @@ import logging
 from datetime import timedelta, datetime
 from cryptography.fernet import Fernet
 import dj_database_url
-from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -47,7 +46,6 @@ INSTALLED_APPS = [
     'api',
     'rest_framework_simplejwt.token_blacklist',
     'social_django',  # Google認証用
-    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -213,18 +211,15 @@ LOGGING = {
     # その他の設定...
 }
 
-# Celery Configuration
-CELERY_BROKER_URL = os.environ.get('REDISCLOUD_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('REDISCLOUD_URL', 'redis://localhost:6379/0')
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Tokyo'
+# Async Settings
+ASGI_APPLICATION = 'backend.asgi.application'
 
-# Celery Retry Settings
-CELERY_BROKER_CONNECTION_RETRY = True
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-CELERY_BROKER_CONNECTION_MAX_RETRIES = 100
+# 開発環境でのみ有効にする（本番環境では注意して使用）
+if DEBUG:
+    DJANGO_ALLOW_ASYNC_UNSAFE = True
+
+# タイムアウト設定
+ASYNC_TIMEOUT = 120  # 2分 
 
 # 環境変数
 EBAY_OAUTH_SCOPES = os.getenv('EBAY_OAUTH_SCOPES', '').split(',')
