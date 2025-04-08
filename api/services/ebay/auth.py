@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict
 import base64
 import logging
+from django.utils import timezone  # この行を追加
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,8 @@ class EbayAuthService:
         }
         try:
             token_data = self._make_token_request(data)
-            expires_at = datetime.now() + timedelta(seconds=token_data['expires_in'])
+            expires_at = timezone.now() + timedelta(seconds=token_data['expires_in'])
+
             # 既存のトークンを削除
             EbayToken.objects.filter(user_id=user_id).delete()
             # 新しいトークンを作成
@@ -110,7 +112,7 @@ class EbayAuthService:
 
         try:
             token_data = self._make_token_request(data)
-            expires_at = datetime.now() + timedelta(seconds=token_data['expires_in'])
+            expires_at = timezone.now() + timedelta(seconds=token_data['expires_in'])
 
             ebay_token.access_token = token_data['access_token']
             ebay_token.refresh_token = token_data.get('refresh_token', ebay_token.refresh_token)
