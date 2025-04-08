@@ -56,13 +56,20 @@ def call_sync_api(access_token):
                 headers=headers,
                 timeout=600  # 10分のタイムアウト
             )
+            # response.raise_for_status()
+            # response_data = response.json()
+            
+            # logger.info('同期処理が完了しました')
+            # send_notification(create_email_body(response_data))
+            # return True
+
             response.raise_for_status()
-            response_data = response.json()
             
-            logger.info('同期処理が完了しました')
-            send_notification(create_email_body(response_data))
-            return True
-            
+            # レスポンスを確認するだけで、処理の完了は待ちません
+            if response.status_code == 202:  # Accepted
+                logger.info('同期処理が開始されました')
+                return True
+
         except requests.exceptions.Timeout:
             logger.error(f'タイムアウトが発生しました (試行 {retry + 1}/{MAX_RETRIES})')
             if retry < MAX_RETRIES - 1:
@@ -79,66 +86,6 @@ def call_sync_api(access_token):
                 continue
             return False
 
-def send_notification(message):
-    """メール通知を送信する"""
-    try:
-        email_service = EmailService()
-        recipient_emails = RECIPIENT_EMAILS
-        subject = 'Market King 同期更新'
-        result = email_service.send_email_to_multiple_users(recipient_emails, subject, message)
-        if result['success']:
-            logger.info(f'メール通知が送信されました: {result["success"]}')
-        if result['failed']:
-            logger.error(f'メール通知の送信に失敗しました: {result["failed"]}')
-    except Exception as e:
-        logger.error(f'メール送信エラー: {str(e)}')
-
-def create_email_body(response_data):
-    """同期処理の結果からメール本文を作成する"""
-    body = "Market King 同期処理結果のお知らせ\n"
-    body += "=" * 50 + "\n\n"
-
-    # Yahoo Auction
-    yahoo_auction_data = response_data.get('yahoo_auction', {})
-    if yahoo_auction_data:
-        body += "【Yahoo!オークション商品同期】\n"
-        if isinstance(yahoo_auction_data, dict) and 'error' not in yahoo_auction_data:
-            body += f"処理開始時刻: {yahoo_auction_data.get('synchronize_start_time', '-')}\n"
-            body += f"処理終了時刻: {yahoo_auction_data.get('synchronize_end_time', '-')}\n"
-            body += f"対象商品数: {yahoo_auction_data.get('synchronize_target_item', 0)}\n"
-            body += f"ステータス変更商品数: {yahoo_auction_data.get('count_change_status_item', 0)}\n\n"
-        else:
-            body += f"エラーが発生しました: {yahoo_auction_data.get('error', '不明なエラー')}\n\n"
-
-    # Yahoo Free Market
-    yahoo_free_market_data = response_data.get('yahoo_free_market', {})
-    if yahoo_free_market_data:
-        body += "【Yahoo!フリマ商品同期】\n"
-        if isinstance(yahoo_free_market_data, dict) and 'error' not in yahoo_free_market_data:
-            body += f"処理開始時刻: {yahoo_free_market_data.get('synchronize_start_time', '-')}\n"
-            body += f"処理終了時刻: {yahoo_free_market_data.get('synchronize_end_time', '-')}\n"
-            body += f"対象商品数: {yahoo_free_market_data.get('synchronize_target_item', 0)}\n"
-            body += f"ステータス変更商品数: {yahoo_free_market_data.get('count_change_status_item', 0)}\n\n"
-        else:
-            body += f"エラーが発生しました: {yahoo_free_market_data.get('error', '不明なエラー')}\n\n"
-
-    # eBay
-    ebay_data = response_data.get('ebay', {})
-    if ebay_data:
-        body += "【eBay商品同期】\n"
-        if isinstance(ebay_data, dict) and 'error' not in ebay_data:
-            body += f"処理開始時刻: {ebay_data.get('synchronize_start_time', '-')}\n"
-            body += f"処理終了時刻: {ebay_data.get('synchronize_end_time', '-')}\n"
-            body += f"対象商品数: {ebay_data.get('synchronize_target_item', 0)}\n"
-            body += f"ステータス変更商品数: {ebay_data.get('count_change_status_item', 0)}\n\n"
-        else:
-            body += f"エラーが発生しました: {ebay_data.get('error', '不明なエラー')}\n\n"
-
-    body += "=" * 50 + "\n"
-    body += "※このメールは自動送信されています。"
-    
-    return body
-
 def should_run():
     """実行時間のチェック"""
     current_hour = datetime.now().hour
@@ -152,11 +99,13 @@ def run_sync():
             logger.info("同期実行時間ではありません")
             return
 
-        logger.info("同期処理を開始します...")
-        
+        logger.info("JWTトークンを取得します...")
+
         # JWTトークンを取得
         access_token = get_access_token()
-        
+
+        logger.info("同期APIを呼び出します...")
+
         # 同期APIを呼び出し
         success = call_sync_api(access_token)
         
