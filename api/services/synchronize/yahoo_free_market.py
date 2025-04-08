@@ -53,10 +53,10 @@ class SynchronizeYahooFreeMarket():
                     if old_status == 1 and item.status.id == 3:
                         count_change_status_items += 1
 
-                    if item.status.id == 1:
-                        count_active_items += 1
-                    elif item.status.id == 3:
-                        count_sold_out_items += 1
+                if item.status.id == 1:
+                    count_active_items += 1
+                elif item.status.id == 3:
+                    count_sold_out_items += 1
 
             except Exception as item_error:
                 logger.error(f"Yahooフリーマーケットの同期中にエラーが発生しました - アイテムID: {item.unique_id}, エラー: {str(item_error)}")

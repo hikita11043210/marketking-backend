@@ -32,7 +32,6 @@ class SynchronizeScriptView(APIView):
             return Response({
                 'status': 'accepted',
                 'message': '同期処理を開始しました',
-                'task_ids': [task.id for task in result.children]
             }, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:

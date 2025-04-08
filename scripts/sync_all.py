@@ -58,7 +58,6 @@ def call_sync_api(access_token):
         response.raise_for_status()
         
         if response.status_code == 202:  # Accepted
-            logger.info('同期処理が開始されました')
             return True
             
     except requests.exceptions.RequestException as e:
@@ -70,7 +69,7 @@ def call_sync_api(access_token):
 def should_run():
     """実行時間のチェック"""
     current_hour = datetime.now().hour
-    target_hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    target_hours = [0, 3, 6, 9, 12, 15, 18]
     return current_hour in target_hours
 
 def run_sync():
@@ -91,7 +90,7 @@ def run_sync():
         success = call_sync_api(access_token)
         
         if success:
-            logger.info("同期処理が正常に完了しました")
+            logger.info("同期処理を開始しました")
         else:
             logger.error("同期処理が失敗しました")
             
