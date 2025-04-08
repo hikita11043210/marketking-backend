@@ -49,42 +49,23 @@ def call_sync_api(access_token):
     sync_url = f'{API_BASE_URL}/synchronize/script/'
     headers = {'Authorization': f'Bearer {access_token}'}
     
-    for retry in range(MAX_RETRIES):
-        try:
-            response = requests.get(
-                sync_url,
-                headers=headers,
-                timeout=600  # 10分のタイムアウト
-            )
-            # response.raise_for_status()
-            # response_data = response.json()
+    try:
+        response = requests.get(
+            sync_url,
+            headers=headers,
+            timeout=600
+        )
+        response.raise_for_status()
+        
+        if response.status_code == 202:  # Accepted
+            logger.info('同期処理が開始されました')
+            return True
             
-            # logger.info('同期処理が完了しました')
-            # send_notification(create_email_body(response_data))
-            # return True
-
-            response.raise_for_status()
-            
-            # レスポンスを確認するだけで、処理の完了は待ちません
-            if response.status_code == 202:  # Accepted
-                logger.info('同期処理が開始されました')
-                return True
-
-        except requests.exceptions.Timeout:
-            logger.error(f'タイムアウトが発生しました (試行 {retry + 1}/{MAX_RETRIES})')
-            if retry < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY)
-                continue
-            return False
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f'同期APIエラー (試行 {retry + 1}/{MAX_RETRIES}): {str(e)}')
-            if hasattr(e.response, 'text'):
-                logger.error(f'エラー詳細: {e.response.text}')
-            if retry < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY)
-                continue
-            return False
+    except requests.exceptions.RequestException as e:
+        logger.error(f'同期APIエラー: {str(e)}')
+        if hasattr(e.response, 'text'):
+            logger.error(f'エラー詳細: {e.response.text}')
+        return False
 
 def should_run():
     """実行時間のチェック"""

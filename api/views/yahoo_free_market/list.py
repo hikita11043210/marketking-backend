@@ -11,6 +11,9 @@ from django.db import transaction
 import logging
 from django.core.paginator import Paginator
 from django.db.models import Q
+from api.tasks import sync_yahoo_free_market_manual
+from rest_framework.response import Response
+from rest_framework import status
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +144,14 @@ class YahooFreeMarketListView(APIView):
 class SynchronizeYahooFreeMarketView(APIView):
     def get(self, request):
         try:
-            response = SynchronizeYahooFreeMarket(request.user).synchronize()
-            return create_success_response(data=response,message="Yahooフリーマーケットの同期が完了しました")
+            # 非同期タスクとして実行
+            task = sync_yahoo_free_market_manual.delay(request.user.id)
+            
+            return Response({
+                'status': 'accepted',
+                'message': 'Yahoo Free Market同期処理を開始しました',
+                'task_id': task.id
+            }, status=status.HTTP_202_ACCEPTED)
+            
         except Exception as e:
             return create_error_response(str(e))

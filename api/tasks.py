@@ -69,3 +69,61 @@ def send_sync_notification(results):
     except Exception as e:
         logger.error(f'メール送信エラー: {str(e)}')
         raise
+
+@shared_task
+def sync_yahoo_free_market_manual(user_id):
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.get(id=user_id)
+        
+        yahoo_free_market = SynchronizeYahooFreeMarket(user)
+        result = yahoo_free_market.synchronize()
+
+    #     # WebSocketを通じて結果を送信
+    #     channel_layer = get_channel_layer()
+    #     async_to_sync(channel_layer.group_send)(
+    #         f"user_{user_id}",
+    #         {
+    #             "type": "sync.completed",
+    #             "message": {
+    #                 "status": "success",
+    #                 "data": result
+    #             }
+    #         }
+    #     )
+        
+    #     return result
+    # except Exception as e:
+    #     # エラー時もWebSocketで通知
+    #     channel_layer = get_channel_layer()
+    #     async_to_sync(channel_layer.group_send)(
+    #         f"user_{user_id}",
+    #         {
+    #             "type": "sync.error",
+    #             "message": {
+    #                 "status": "error",
+    #                 "error": str(e)
+    #             }
+    #         }
+    #     )
+    #     raise
+
+        return {'status': 'success', 'data': result}
+    except Exception as e:
+        logger.error(f"Yahoo Free Market同期中にエラーが発生しました: {str(e)}")
+        return {'status': 'error', 'error': str(e)}
+
+@shared_task
+def sync_yahoo_auction_manual(user_id):
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.get(id=user_id)
+
+        yahoo_auction = SynchronizeYahooAuction(user)
+        result = yahoo_auction.synchronize()
+        return {'status': 'success', 'data': result}
+    except Exception as e:
+        logger.error(f"Yahoo Auction同期中にエラーが発生しました: {str(e)}")
+        return {'status': 'error', 'error': str(e)}
