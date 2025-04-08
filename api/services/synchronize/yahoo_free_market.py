@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class SynchronizeYahooFreeMarket():
     BATCH_SIZE = 10  # 一度に処理するアイテム数
 
-    def __init__(self, user):
+    def __init__(self, user=None):
         self.user = user if user else get_default_user()
         self.scraping_service = ScrapingService()
 
