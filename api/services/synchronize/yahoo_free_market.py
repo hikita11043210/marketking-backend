@@ -8,14 +8,14 @@ from django.utils import timezone
 import logging
 from api.models.ebay import Ebay
 from itertools import islice
-
+from api.utils.get_default_user import get_default_user
 logger = logging.getLogger(__name__)
 
 class SynchronizeYahooFreeMarket():
     BATCH_SIZE = 10  # 一度に処理するアイテム数
 
     def __init__(self, user):
-        self.user = user
+        self.user = user if user else get_default_user()
         self.scraping_service = ScrapingService()
 
     def _process_batch(self, items, yahoo_end_status, ebay_end_status):
