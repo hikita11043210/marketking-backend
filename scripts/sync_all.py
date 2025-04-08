@@ -89,7 +89,7 @@ def call_sync_api(access_token):
 def should_run():
     """実行時間のチェック"""
     current_hour = datetime.now().hour
-    target_hours = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    target_hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     return current_hour in target_hours
 
 def run_sync():
@@ -118,7 +118,7 @@ def run_sync():
         logger.error(f"同期処理中にエラーが発生しました: {str(e)}")
         # エラー時もメール通知
         error_body = f"同期処理でエラーが発生しました。\nエラー: {str(e)}"
-        send_notification(error_body)
+        # send_notification(error_body)
 
 if __name__ == '__main__':
     run_sync() 
