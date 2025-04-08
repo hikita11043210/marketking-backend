@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class ScrapingService:
     BASE_SEARCH_URL = settings.YAHOO_AUCTION_URL
     MIN_REQUEST_INTERVAL = 3  # 最小リクエスト間隔（秒）
+    MAX_RETRIES = 3  # 最大試行回数を追加
 
     def __init__(self):
         self.session = requests.Session()
@@ -392,87 +393,110 @@ class ScrapingService:
                 'success': bool            # 処理成功フラグ
             }
         """
-        try:
-            response = self._make_rate_limited_request(
-                params.get('url'),
-                timeout=5,
-                allow_redirects=True
-            )
+        for retry in range(self.MAX_RETRIES):
+            try:
+                response = self._make_rate_limited_request(
+                    params.get('url'),
+                    timeout=5,
+                    allow_redirects=True
+                )
 
-            # 404エラーの場合は商品が存在しない
-            if response.status_code == 404:
-                logger.warning(f"商品URLが存在しません: {params.get('url')}")
-                return {
-                    'end_flag': True,
+                logger.info(f"リクエスト試行 {retry + 1}/{self.MAX_RETRIES} - URL: {params.get('url')}")
+                logger.info(f"ステータスコード: {response.status_code}")
+
+                # 404エラーの場合は商品が存在しない
+                if response.status_code == 404:
+                    logger.warning(f"商品URLが存在しません: {params.get('url')}")
+                    return {
+                        'end_flag': True,
+                        'success': True
+                    }
+
+                if response.status_code == 403:
+                    logger.error(f"アクセスが拒否されました (試行 {retry + 1}/{self.MAX_RETRIES})")
+                    if retry < self.MAX_RETRIES - 1:
+                        continue
+                    return {'success': False, 'error': 'アクセスが拒否されました'}
+
+                if response.status_code == 500:
+                    logger.error(f"サーバーエラー発生 (試行 {retry + 1}/{self.MAX_RETRIES}) - URL: {params.get('url')}")
+                    logger.error(f"レスポンスヘッダー: {dict(response.headers)}")
+                    if retry < self.MAX_RETRIES - 1:
+                        continue
+                    return {'success': False, 'error': 'サーバーエラーが発生しました'}
+
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                # import os,datetime
+                # log_dir = "logs/scraping/yahoo_auction/"
+                # os.makedirs(log_dir, exist_ok=True)
+                # date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                # filename = f"{log_dir}check_item_exist_{date}.html"
+                # with open(filename, "w", encoding="utf-8") as f:
+                #     f.write(soup.prettify())
+
+                result = {
+                    'end_flag': False,
+                    'current_price': None,
+                    'current_price_in_tax': None,
+                    'buy_now_price': None,
+                    'buy_now_price_in_tax': None,
+                    'end_time': None,
                     'success': True
                 }
 
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            import os,datetime
-            log_dir = "logs/scraping/yahoo_auction/"
-            os.makedirs(log_dir, exist_ok=True)
-            date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"{log_dir}check_item_exist_{date}.html"
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(soup.prettify())
-
-            result = {
-                'end_flag': False,
-                'current_price': None,
-                'current_price_in_tax': None,
-                'buy_now_price': None,
-                'buy_now_price_in_tax': None,
-                'end_time': None,
-                'success': True
-            }
-
-            # __NEXT_DATA__からJSONデータを取得
-            next_data = soup.find('script', {'id': '__NEXT_DATA__'})
-            if next_data:
-                try:
-                    json_data = json.loads(next_data.string)
-                    item_detail = json_data.get('props', {}).get('pageProps', {}).get('initialState', {}).get('item', {}).get('detail', {})
-                    
-                    if item_detail:
-                        # 終了判定
-                        result['end_flag'] = item_detail.get('status') == 'closed'
+                # __NEXT_DATA__からJSONデータを取得
+                next_data = soup.find('script', {'id': '__NEXT_DATA__'})
+                if next_data:
+                    try:
+                        json_data = json.loads(next_data.string)
+                        item_detail = json_data.get('props', {}).get('pageProps', {}).get('initialState', {}).get('item', {}).get('detail', {})
                         
-                        # 価格情報
-                        result['current_price'] = item_detail.get('price', 0)
-                        result['current_price_in_tax'] = item_detail.get('price', 0)  # 税込価格が取得できない場合は通常価格を使用
-                        result['buy_now_price'] = item_detail.get('bidorbuy', 0)
-                        result['buy_now_price_in_tax'] = item_detail.get('bidorbuy', 0)  # 税込価格が取得できない場合は通常価格を使用
-                        
-                        # 終了時間
-                        result['end_time'] = item_detail.get('endTime', '')
-                        
-                        # # 終了日時が過ぎている場合は終了フラグを立てる
-                        # if result['end_time']:
-                        #     end_time = convert_yahoo_date(result['end_time'])
-                        #     if end_time < timezone.now():
-                        #         result['end_flag'] = True
-                        return result
+                        if item_detail:
+                            # 終了判定
+                            result['end_flag'] = item_detail.get('status') == 'closed' or item_detail.get('status') == 'cancelled'
+                            
+                            # 価格情報
+                            result['current_price'] = item_detail.get('price', 0)
+                            result['current_price_in_tax'] = item_detail.get('price', 0)  # 税込価格が取得できない場合は通常価格を使用
+                            result['buy_now_price'] = item_detail.get('bidorbuy', 0)
+                            result['buy_now_price_in_tax'] = item_detail.get('bidorbuy', 0)  # 税込価格が取得できない場合は通常価格を使用
+                            
+                            # 終了時間
+                            result['end_time'] = item_detail.get('endTime', '')
+                            
+                            # # 終了日時が過ぎている場合は終了フラグを立てる
+                            # if result['end_time']:
+                            #     end_time = convert_yahoo_date(result['end_time'])
+                            #     if end_time < timezone.now():
+                            #         result['end_flag'] = True
+                            return result
 
-                except json.JSONDecodeError:
-                    logger.warning("JSONデータの解析に失敗しました")
-                    return {'success': False, 'error': 'JSONデータの解析に失敗しました'}
+                    except json.JSONDecodeError:
+                        logger.warning("JSONデータの解析に失敗しました")
+                        return {'success': False, 'error': 'JSONデータの解析に失敗しました'}
 
-            return result
+                return result
 
-        except requests.Timeout:
-            logger.warning(f"タイムアウト発生 - URL: {params.get('url')}")
-            return {'success': False, 'error': 'タイムアウトが発生しました'}
+            except requests.Timeout:
+                logger.warning(f"タイムアウト発生 (試行 {retry + 1}/{self.MAX_RETRIES}) - URL: {params.get('url')}")
+                if retry < self.MAX_RETRIES - 1:
+                    continue
+                return {'success': False, 'error': 'タイムアウトが発生しました'}
 
-        except requests.RequestException as e:
-            logger.error(f"リクエストエラー - URL: {params.get('url')}")
-            logger.error(f"エラーの種類: {type(e).__name__}")
-            logger.error(f"エラーの詳細: {str(e)}")
-            return {'success': False, 'error': str(e)}
+            except requests.RequestException as e:
+                logger.error(f"リクエストエラー (試行 {retry + 1}/{self.MAX_RETRIES}) - URL: {params.get('url')}")
+                logger.error(f"エラーの種類: {type(e).__name__}")
+                logger.error(f"エラーの詳細: {str(e)}")
+                if retry < self.MAX_RETRIES - 1:
+                    continue
+                return {'success': False, 'error': str(e)}
 
-        except Exception as e:
-            logger.error(f"スクレイピングエラー - URL: {params.get('url')}")
-            logger.error(f"エラーの種類: {type(e).__name__}")
-            logger.error(f"エラーの詳細: {str(e)}")
-            return {'success': False, 'error': str(e)} 
+            except Exception as e:
+                logger.error(f"スクレイピングエラー (試行 {retry + 1}/{self.MAX_RETRIES}) - URL: {params.get('url')}")
+                logger.error(f"エラーの種類: {type(e).__name__}")
+                logger.error(f"エラーの詳細: {str(e)}")
+                if retry < self.MAX_RETRIES - 1:
+                    continue
+                return {'success': False, 'error': str(e)} 
