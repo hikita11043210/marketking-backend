@@ -7,6 +7,7 @@ import time
 from django.utils import timezone
 from api.utils.convert_date import convert_yahoo_date
 import json
+from urllib.parse import urlparse, parse_qs
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,7 @@ class ScrapingService:
                 brand_id        ブランド指定
                 s1              ソート項目（end:終了時間, price:価格, bids:入札数）
                 o1              ソート順（a:昇順, d:降順）
+                url             検索URL（仮）
 
         Returns:
             list: 検索結果の商品リスト
@@ -169,15 +171,32 @@ class ScrapingService:
             # print(request_url)
 
             # 検索結果を取得
-            response = self.session.get(self.BASE_SEARCH_URL, params=search_params)
+            # response = self.session.get(self.BASE_SEARCH_URL, params=search_params)
+            # response.raise_for_status()
+            # soup = BeautifulSoup(response.text, 'html.parser')
+
+            # URLをパースしてパラメータを取得
+            # url = 'https://auctions.yahoo.co.jp/search/search?p=%E3%82%AB%E3%83%A1%E3%83%A9&auccat=23632%2C26318%2C23336&va=%E3%82%AB%E3%83%A1%E3%83%A9&aucmin_bidorbuy_price=10000&aucmax_bidorbuy_price=30000&price_type=bidorbuyprice&min=10000&max=30000&istatus=1%2C4%2C3&is_postage_mode=1&dest_pref_code=24&b=1&n=20&mode=1'
+            # url = self.BASE_SEARCH_URL + '?' + requests.compat.urlencode(search_params)
+            url = params['url']
+            parsed_url = urlparse(url)
+            search_params = parse_qs(parsed_url.query)
+            
+            # 値を文字列化（parse_qsは値をリストで返すため）
+            for key, value in search_params.items():
+                if isinstance(value, list):
+                    search_params[key] = value[0]
+            
+            response = self._make_rate_limited_request(url, params=search_params)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
-
-            # import os,datetime
+            
+            # #デバッグ用にHTMLを保存（必要に応じてコメントアウト解除）
+            # import os, datetime
             # log_dir = "logs/scraping/yahoo_auction/"
             # os.makedirs(log_dir, exist_ok=True)
             # date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            # filename = f"{log_dir}list_{date}.html"
+            # filename = f"{log_dir}direct_url_{date}.html"
             # with open(filename, "w", encoding="utf-8") as f:
             #     f.write(soup.prettify())
 
