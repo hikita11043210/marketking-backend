@@ -45,6 +45,8 @@ class ListView(APIView):
                     'ebay_price': int(item.price * rate),  # priceに変更
                     'ebay_shipping_price': int(item.shipping_price),  # shipping_priceに変更
                     'final_profit': int(item.final_profit * rate),
+                    'view_count': item.view_count,
+                    'watch_count': item.watch_count,
                     'yahoo_auction_id': item.yahoo_auction_id.unique_id,  # unique_idを参照
                     'yahoo_auction_url': item.yahoo_auction_id.url,
                     'yahoo_auction_item_name': item.yahoo_auction_id.item_name,

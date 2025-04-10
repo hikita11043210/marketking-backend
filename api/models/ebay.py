@@ -43,6 +43,8 @@ class Ebay(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     shipping_price = models.DecimalField(max_digits=10, decimal_places=2)
     final_profit = models.DecimalField(max_digits=10, decimal_places=2)
+    view_count = models.IntegerField(default=0)
+    watch_count = models.IntegerField(default=0)
     yahoo_auction_id = models.ForeignKey(YahooAuction, on_delete=models.PROTECT, null=True, blank=True)
     yahoo_free_market_id = models.ForeignKey(YahooFreeMarket, on_delete=models.PROTECT, null=True, blank=True)
     update_datetime = models.DateTimeField(auto_now=True)

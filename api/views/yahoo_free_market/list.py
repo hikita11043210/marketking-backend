@@ -69,6 +69,8 @@ class YahooFreeMarketListView(APIView):
                         'ebay_price': int(item.price * rate),
                         'ebay_shipping_price': int(item.shipping_price),
                         'final_profit': int(item.final_profit * rate),
+                        'view_count': item.view_count,
+                        'watch_count': item.watch_count,
                         'yahoo_free_market_id': item.yahoo_free_market_id.unique_id,
                         'yahoo_free_market_url': item.yahoo_free_market_id.url,
                         'yahoo_free_market_item_name': item.yahoo_free_market_id.item_name,

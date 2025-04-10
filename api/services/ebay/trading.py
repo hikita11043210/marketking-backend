@@ -91,3 +91,43 @@ class Trading(Common):
         except Exception as e:
             raise Exception(f"カテゴリーアスペクトの取得に失敗しました: {str(e)}")
 
+
+    def get_item_watch_count(self, ebay_item_id: str):
+        """
+        Trading APIを使用してアイテムのウォッチ数を取得
+        """
+        try:
+            endpoint = f"{self.api_url}/ws/api.dll"
+            
+            headers = self._get_headers()
+            headers.update({
+                'X-EBAY-API-COMPATIBILITY-LEVEL': '967',
+                'X-EBAY-API-CALL-NAME': 'GetItem',
+                'X-EBAY-API-SITEID': '0', # US
+                'Content-Type': 'text/xml'
+            })
+            
+            request_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+                <GetItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+                    <RequesterCredentials>
+                        <eBayAuthToken>{self.auth_service.get_user_token().access_token}</eBayAuthToken>
+                    </RequesterCredentials>
+                    <ItemID>{ebay_item_id}</ItemID>
+                    <DetailLevel>ReturnAll</DetailLevel>
+                    <IncludeWatchCount>true</IncludeWatchCount>
+                </GetItemRequest>"""
+            
+            response = requests.post(endpoint, headers=headers, data=request_xml)
+            response.raise_for_status()
+            
+            root = ET.fromstring(response.content)
+            ns = {'': 'urn:ebay:apis:eBLBaseComponents'}
+
+            # ウォッチ数を取得
+            watch_count_elem = root.find('.//WatchCount', ns)
+            if watch_count_elem is not None:
+                return int(watch_count_elem.text)
+            return 0
+
+        except Exception as e:
+            raise Exception(f"ウォッチ数の取得に失敗しました: {str(e)}")

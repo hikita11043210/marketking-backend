@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 import logging
 from api.utils.get_default_user import get_default_user
+from api.services.ebay.trading import Trading
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class Status():
     def __init__(self, user=None):
         self.user = user if user else get_default_user()
         self.item_status_service = ItemStatusService(self.user)
+        self.trading_service = Trading(self.user)
 
     def synchronize(self):
         try:
@@ -23,6 +25,9 @@ class Status():
             count_sold_out_items = 0
             count_change_status_items = 0
             
+            # 閲覧数の取得
+            item_view_data = self.item_status_service.get_item_view_and_watch_count()
+
             with transaction.atomic():
                 ebay_register_items = (
                     Ebay.objects
@@ -36,7 +41,14 @@ class Status():
                 for item in ebay_register_items:
                     try:
                         status = self.item_status_service.get_item_status(item.sku)
+                        item_watch_count = self.trading_service.get_item_watch_count(item.item_id)
                         
+                        if item_view_data:
+                            item.view_count = item_view_data.get(item.item_id, {}).get('view', 0)
+
+                        if item_watch_count:
+                            item.watch_count = item_watch_count
+
                         new_status = None
                         if status == "ACTIVE":
                             new_status = StatusModel.objects.get(id=1)
@@ -51,12 +63,13 @@ class Status():
                             if item.status.id != new_status.id:
                                 old_status_id = item.status.id
                                 item.status = new_status
-                                item.save()
                                 
                                 updated_items.append({
                                     'sku': item.sku,
                                     'old_status': old_status_id,
-                                    'new_status': new_status.id
+                                    'new_status': new_status.id,
+                                    'view_count': item_view_data.get(item.item_id, {}).get('view', 0),
+                                    # 'watch_count': item_view_data.get(item.item_id, {}).get('watch', 0)
                                 })
                                 
                                 if old_status_id == 1:
@@ -66,7 +79,8 @@ class Status():
                                 count_active_items += 1
                             elif new_status.id == 3:
                                 count_sold_out_items += 1
-                    
+                        item.save()
+
                     except Exception as item_error:
                         logger.error(f"商品の同期中にエラーが発生しました - SKU: {item.sku}, エラー: {str(item_error)}")
                         continue
@@ -81,7 +95,8 @@ class Status():
                     'count_sold_out_item': count_sold_out_items,
                     'count_change_status_item': count_change_status_items,
                     'updated_count': len(updated_items),
-                    'updated_items': updated_items
+                    'updated_items': updated_items,
+                    'item_view_and_watch_data': item_view_data
                 }
                 
         except Exception as e:
