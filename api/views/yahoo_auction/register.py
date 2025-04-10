@@ -32,22 +32,6 @@ class ItemDetailView(APIView):
     ヤフオクの商品詳細API
     """
     def get(self, request):
-        # try:
-        #     service = ScrapingService()
-        #     # Yahooオークションの詳細情報取得
-        #     result = service.get_item_detail(request.query_params)
-
-        #     return Response({
-        #         'success': True,
-        #         'message': '商品詳細が取得されました',
-        #         'data': result
-        #     })
-
-        # except ValueError as e:
-        #     return Response({
-        #         'success': False,
-        #         'message': str(e)
-        #     }, status=status.HTTP_400_BAD_REQUEST)
         try:
             # インスタンスを生成
             service = ScrapingService()
@@ -221,7 +205,8 @@ class RegisterView(APIView):
             offer_result = ebay_service_offer.create_offer(offer_data)
             
             # 出品のアクティブ化（ebayに掲載される）
-            ebay_service_offer.publish_offer(offer_result['offerId'])
+            publish_result = ebay_service_offer.publish_offer(offer_result['offerId'])
+            item_id = publish_result['listingId']  # これがeBayの商品ID
 
             with transaction.atomic():
                 # Yahooオークションのデータを保存
@@ -245,7 +230,8 @@ class RegisterView(APIView):
                     price=Decimal(str(product_data['price'])),
                     shipping_price=Decimal(str(other_data['ebay_shipping_price'] if other_data['ebay_shipping_price'] else settings.EBAY_SHIPPING_COST)), # 後ほど送料もフロントから送ってくるつもりだが、今は固定値なので環境変数を必ず参照するようにしている
                     final_profit=Decimal(str(other_data['final_profit'])),
-                    yahoo_auction_id=yahoo_auction
+                    yahoo_auction_id=yahoo_auction,
+                    item_id=item_id
                 )
 
             return create_success_response(

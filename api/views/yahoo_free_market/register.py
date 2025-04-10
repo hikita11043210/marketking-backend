@@ -201,7 +201,8 @@ class YahooFreeMarketRegisterView(APIView):
             offer_result = ebay_service_offer.create_offer(offer_data)
             
             # 出品のアクティブ化（ebayに掲載される）
-            ebay_service_offer.publish_offer(offer_result['offerId'])
+            publish_result = ebay_service_offer.publish_offer(offer_result['offerId'])
+            item_id = publish_result['listingId']  # これがeBayの商品ID
 
             with transaction.atomic():
                 # Yahooフリーマーケットのデータを保存
@@ -219,6 +220,7 @@ class YahooFreeMarketRegisterView(APIView):
                 Ebay.objects.create(
                     user=request.user,
                     sku=sku,
+                    item_id=item_id,
                     offer_id=offer_result['offerId'],
                     status=Status.objects.get(id=1),
                     price=Decimal(str(product_data['price'])),

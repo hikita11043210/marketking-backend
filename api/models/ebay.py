@@ -37,6 +37,7 @@ class Ebay(models.Model):
     """eBayのモデル"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sku = models.CharField(max_length=255, unique=True)
+    item_id = models.CharField(max_length=255, null=True, blank=True)
     offer_id = models.CharField(max_length=255, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.PROTECT)
     price = models.DecimalField(max_digits=10, decimal_places=2)

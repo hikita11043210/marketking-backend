@@ -116,27 +116,3 @@ class Category(Common):
             if hasattr(e.response, 'text'):
                 logger.error(f"Error response: {e.response.text}")
             raise Exception("カテゴリツリーIDの取得に失敗しました")
-
-
-    def get_category_aspects(self, category_id: str):
-        """
-        カテゴリIDからアスペクト情報（商品の属性情報）を取得する
-        Args:
-            category_id (str): カテゴリID
-        Returns:
-            dict: アスペクト情報
-        """
-        try:
-            endpoint = f"{self.api_url}/commerce/taxonomy/v1/category_tree/{settings.EBAY_API_SITE_ID}/get_item_aspects_for_category"
-            headers = self._get_headers()
-            params = {'category_id': category_id}
-            
-            response = requests.get(endpoint, headers=headers, params=params)
-            response.raise_for_status()
-            
-            return response.json()
-            
-        except requests.exceptions.RequestException as e:
-            if hasattr(e.response, 'text'):
-                raise Exception(f"カテゴリのアスペクト情報の取得に失敗しました: {e.response.text}")
-            raise Exception("カテゴリのアスペクト情報の取得に失敗しました")

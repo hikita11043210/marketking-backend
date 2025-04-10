@@ -25,6 +25,8 @@ class TranslatorService:
                 - translated_text: 翻訳されたテキスト
         """
         try:
+            if not self.auth_key:
+                raise Exception("DeepL APIキーが設定されていません。")
             translator = deepl.Translator(self.auth_key)
             result = translator.translate_text(text, target_lang=target_lang)
             return {
