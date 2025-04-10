@@ -232,6 +232,7 @@ class ScrapingService:
                 if thumbnail_elem and thumbnail_elem.get('src'):
                     # .jpg以降のクエリパラメータを削除
                     src = thumbnail_elem.get('src')
+                    item_name = thumbnail_elem.get('alt')
                     jpg_index = src.find('.jpg')
                     if jpg_index != -1:
                         thumbnail_url = src[:jpg_index + 4]  # .jpgまでを含める
@@ -249,7 +250,8 @@ class ScrapingService:
                     items.append({
                         'thumbnail_url': thumbnail_url,
                         'item_id': item_id,
-                        'price': price
+                        'price': price,
+                        'item_name': item_name
                     })
 
             except Exception as e:
