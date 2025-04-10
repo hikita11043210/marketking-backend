@@ -78,6 +78,7 @@ class YahooFreeMarketListView(APIView):
                         'yahoo_free_market_shipping': str(item.yahoo_free_market_id.shipping),
                         'purchase_price': int(item.yahoo_free_market_id.item_price + item.yahoo_free_market_id.shipping),
                         'yahoo_free_market_status': item.yahoo_free_market_id.status.status_name,
+                        'insert_datetime': item.insert_datetime,
                         'update_datetime': item.update_datetime
                     }
                     for item in current_page
