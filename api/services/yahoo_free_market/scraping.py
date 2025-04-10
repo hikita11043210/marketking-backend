@@ -112,7 +112,7 @@ class ScrapingService:
 
             return {
                 'items': items,
-                'total': len(items)
+                'total_count': len(items)
             }
 
         except requests.RequestException as e:
