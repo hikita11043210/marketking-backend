@@ -33,7 +33,7 @@ class YahooFreeMarketSearchView(APIView):
                 message=str(e)
             )
         except Exception as e:
-            logger.error(f"商品検索でエラーが発生: {str(e)}")
             return create_error_response(
+                e,
                 message='検索処理に失敗しました'
             )

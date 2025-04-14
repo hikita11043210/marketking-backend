@@ -303,9 +303,24 @@ class ScrapingService:
                 response.raise_for_status()
                 soup = BeautifulSoup(response.text, 'html.parser')
 
+                # import os,datetime
+                # log_dir = "logs/scraping/yahoo_free_market/"
+                # os.makedirs(log_dir, exist_ok=True)
+                # filename = f"{log_dir}check_item_exist_.html"
+                # with open(filename, "w", encoding="utf-8") as f:
+                #     f.write(soup.prettify())
+
                 # __NEXT_DATA__スクリプトを取得
                 next_data_script = soup.find('script', {'id': '__NEXT_DATA__'})
                 if not next_data_script:
+                    return True
+
+                # JSONデータを解析して商品のステータスを確認
+                next_data_json = json.loads(next_data_script.string)
+                item_status = next_data_json.get('props', {}).get('initialState', {}).get('itemsState', {}).get('items', {}).get('item', {}).get('status')
+                
+                # SOLDステータスの場合も商品が存在したことにする
+                if item_status == "SOLD":
                     return True
 
                 # 売り切れフラグの判定
