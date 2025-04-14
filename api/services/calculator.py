@@ -16,22 +16,23 @@ class CalculatorService:
         self.ebay_store_type = self.settings.ebay_store_type
         # 消費税の取得（id=1の税率を使用）
         self.tax = Tax.objects.get(id=1)
-        # 固定送料
+        # 送料
         self.shipping_cost = int(settings.EBAY_SHIPPING_COST)
         # Payoneer手数料
-        self.payoneer_fee = int(settings.PAYONEER_FEE)
+        self.payoneer_fee = 2
         # 為替レートの取得
         self.exchange_rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))
         if self.exchange_rate == 0:
             # APIからの取得に失敗した場合はデフォルトレートを使用
             self.exchange_rate = Decimal(str(CurrencyService.get_default_rate('USD', 'JPY')))
 
-    def calc_price_yen(self, prices: list[int]) -> dict:
+    def calc_price_yen(self, purchase_price: list[int], purchase_shipping_price: int = 0) -> dict:
         """
         円での価格計算を行う
 
         Args:
-            prices (list[int]): 計算対象の価格リスト
+            purchase_price (list[int]): 計算対象の価格リスト
+            purchase_shipping_price (int): 仕入れ送料
 
         Returns:
             dict: 計算結果
@@ -48,45 +49,55 @@ class CalculatorService:
                 - final_profit_dollar: ドルでの最終利益
         """
         try:
-            # 価格の合計を計算
-            total_price = sum(prices)
+            # 仕入価格の合計
+            purchase_total_price = sum(purchase_price) + purchase_shipping_price
             
             # 各種レートの取得
-            profit_rate = Decimal(str(self.settings.rate)) / 100
-            ebay_fee = Decimal(str(self.ebay_store_type.final_value_fee)) / 100
-            international_fee = Decimal(str(self.ebay_store_type.international_fee)) / 100
-            tax_rate = Decimal(str(self.tax.rate)) / 100
-            payoneer_fee = Decimal(str(self.payoneer_fee)) / 100
+            profit_rate = Decimal(str(self.settings.rate)) / 100                            # 利益率
+            ebay_fee = Decimal(str(self.ebay_store_type.final_value_fee)) / 100             # eBay手数料率
+            international_fee = Decimal(str(self.ebay_store_type.international_fee)) / 100  # 国際手数料率
+            tax_rate = Decimal(str(self.tax.rate)) / 100                                    # 消費税率
+            payoneer_fee = Decimal(str(self.payoneer_fee)) / 100                            # Payoneer手数料率
 
-            # 販売価格の計算（利益がX%になる計算）
-            # 仕入れ価格 + 送料 + 利益 = 販売価格 - (eBay手数料 + 国際手数料 + Payoneer手数料)
-            # 販売価格 = (仕入れ価格 + 送料 + 利益) / (1 - (eBay手数料 + 国際手数料 + Payoneer手数料))
-            denominator = 1 - (ebay_fee + international_fee + payoneer_fee)
+            # 目標とするeBay利益（仕入価格に利益率を掛けた金額）
+            target_profit = purchase_total_price * profit_rate
+
+            # 販売価格の計算（利益がtarget_profitになるように逆算）
+            # ebay税込販売価格 = 販売価格 * (1 + 消費税)
+            # 最終販売手数料 = ebay税込販売価格 * ebay_fee
+            # 国際手数料 = ebay税込販売価格 * international_fee
+            # 粗利1 = 販売価格 - 最終販売手数料 - 国際手数料
+            # 粗利2 = 粗利1 - payoneer_fee
+            # ebay利益 = 粗利2 - 送料 = target_profit
+
+            # 方程式を解いて販売価格を求める
+            # 税込手数料率の計算
+            tax_included_ebay_fee = ebay_fee * (1 + tax_rate)
+            tax_included_international_fee = international_fee * (1 + tax_rate)
+            
+            # 総手数料率の計算
+            total_fee_rate = tax_included_ebay_fee + tax_included_international_fee + payoneer_fee
+            denominator = 1 - total_fee_rate
+            
             if denominator <= 0:
                 raise ValueError("手数料合計が100%を超えているため、計算できません。")
             
-            # 利益を含めた必要金額の計算
-            required_amount = (total_price + self.shipping_cost) * (1 + profit_rate)
-            calculated_price = int(required_amount / denominator)
+            calculated_price = int((target_profit + purchase_total_price + self.shipping_cost) / denominator)
 
-            # 最終利益の計算
-            # 1. 販売価格から手数料を引く
-            ebay_fee_amount = calculated_price * ebay_fee
-            international_fee_amount = calculated_price * international_fee
-            total_fee = ebay_fee_amount + international_fee_amount
-            
-            # 2. 手数料に対する消費税を計算（手数料にのみ適用）
-            tax_on_fee = total_fee * tax_rate
-            
-            # 3. 最終利益の計算
-            # 販売価格 - 仕入れ価格 - 送料 - 手数料 - 手数料の消費税
-            gross_profit = calculated_price - total_price - self.shipping_cost - total_fee - tax_on_fee
-            
-            # 4. Payoneer手数料を引く
-            final_profit = gross_profit - (gross_profit * payoneer_fee)
+            # 最終利益の検証計算
+            # 1. 税込販売価格の計算
+            tax_included_price = calculated_price * (1 + tax_rate)
+            # 2. 各手数料の計算
+            ebay_fee_amount = tax_included_price * ebay_fee
+            international_fee_amount = tax_included_price * international_fee
+            payoneer_fee_amount = calculated_price * payoneer_fee
+            # 3. 総コストの計算
+            total_cost = purchase_total_price + self.shipping_cost + ebay_fee_amount + international_fee_amount + payoneer_fee_amount
+            # 4. 最終利益の計算
+            final_profit = calculated_price - total_cost
 
             return {
-                'original_price': total_price,
+                'original_price': purchase_total_price,
                 'shipping_cost': self.shipping_cost,
                 'rate': float(profit_rate),
                 'ebay_fee': float(ebay_fee),
@@ -94,7 +105,7 @@ class CalculatorService:
                 'tax_rate': float(tax_rate),
                 'calculated_price_yen': calculated_price,
                 'calculated_price_dollar': None,
-                'exchange_rate': None,
+                'exchange_rate': float(self.exchange_rate),
                 'final_profit_yen': int(final_profit),
                 'final_profit_dollar': None
             }
