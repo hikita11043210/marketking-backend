@@ -24,6 +24,10 @@ from .views.yahoo_free_market.search import YahooFreeMarketSearchView
 from .views.yahoo_free_market.register import YahooFreeMarketItemDetailView, YahooFreeMarketRegisterView
 from .views.yahoo_free_market.list import YahooFreeMarketListView, SynchronizeYahooFreeMarketView
 from .views.ebay.list import SynchronizeEbayView
+# 古物台帳関連のビューをインポート
+from .views.antique_ledger.transaction_type import TransactionTypeListAPIView
+from .views.antique_ledger.transaction import TransactionListCreateAPIView, TransactionDetailAPIView
+
 urlpatterns = [
     # 認証関連のエンドポイント
     path('auth/login/', LoginView.as_view(), name='auth-login'),
@@ -56,4 +60,9 @@ urlpatterns = [
     path('yahoo-free-market/register/', YahooFreeMarketRegisterView.as_view(), name='yahoo-free-market-register'),
     path('yahoo-free-market/list/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-list'),
     path('yahoo-free-market/delete/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-delete'),
+    
+    # 古物台帳関連のエンドポイント
+    path('antique-ledger/transaction-types/', TransactionTypeListAPIView.as_view(), name='transaction-types'),
+    path('antique-ledger/transactions/', TransactionListCreateAPIView.as_view(), name='transaction-list-create'),
+    path('antique-ledger/transactions/<int:pk>/', TransactionDetailAPIView.as_view(), name='transaction-detail'),
 ] 

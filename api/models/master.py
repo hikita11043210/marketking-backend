@@ -139,3 +139,13 @@ class YahooFreeMarketStatus(models.Model):
 
     def __str__(self):
         return self.status_name
+
+class TransactionType(models.Model):
+    """取引区分マスタ"""
+    value = models.CharField(max_length=50, null=False, unique=True)
+
+    class Meta:
+        db_table = 'm_transaction_types'
+
+    def __str__(self):
+        return self.value
