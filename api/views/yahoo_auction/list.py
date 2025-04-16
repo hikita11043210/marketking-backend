@@ -36,8 +36,9 @@ class ListView(APIView):
             rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))
 
             # 一覧出力時のデータを作成
-            response_data = [
-                {
+            items_data = []
+            for item in ebay_register_items:
+                item_data = {
                     'id': item.id,
                     'status': item.status.status_name,
                     'sku': item.sku,
@@ -47,7 +48,8 @@ class ListView(APIView):
                     'final_profit': int(item.final_profit * rate),
                     'view_count': item.view_count,
                     'watch_count': item.watch_count,
-                    'yahoo_auction_id': item.yahoo_auction_id.unique_id,  # unique_idを参照
+                    'yahoo_auction_id': item.yahoo_auction_id.id,
+                    'yahoo_auction_unique_id': item.yahoo_auction_id.unique_id,
                     'yahoo_auction_url': item.yahoo_auction_id.url,
                     'yahoo_auction_item_name': item.yahoo_auction_id.item_name,
                     'yahoo_auction_item_price': str(item.yahoo_auction_id.item_price),
@@ -58,12 +60,11 @@ class ListView(APIView):
                     'insert_datetime': item.insert_datetime,
                     'update_datetime': item.update_datetime
                 }
-                for item in ebay_register_items
-            ]
+                items_data.append(item_data)
             
             # ステータスごとの商品数を追加
             response_data = {
-                'items': response_data,
+                'items': items_data,
                 'counts': {
                     'active': ebay_register_items.filter(status_id=1).count(),
                     'sold_out': ebay_register_items.filter(status_id=2).count(),

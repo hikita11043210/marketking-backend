@@ -27,6 +27,8 @@ from .views.ebay.list import SynchronizeEbayView
 # 古物台帳関連のビューをインポート
 from .views.antique_ledger.transaction_type import TransactionTypeListAPIView
 from .views.antique_ledger.transaction import TransactionListCreateAPIView, TransactionDetailAPIView
+from .views.yahoo_auction import YahooAuctionStatusUpdateAPIView
+from .views.yahoo_free_market import YahooFreeMarketStatusUpdateAPIView
 
 urlpatterns = [
     # 認証関連のエンドポイント
@@ -60,6 +62,10 @@ urlpatterns = [
     path('yahoo-free-market/register/', YahooFreeMarketRegisterView.as_view(), name='yahoo-free-market-register'),
     path('yahoo-free-market/list/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-list'),
     path('yahoo-free-market/delete/', YahooFreeMarketListView.as_view(), name='yahoo-free-market-delete'),
+    
+    # ステータス更新エンドポイント
+    path('yahoo-auction/status-update/<int:pk>/', YahooAuctionStatusUpdateAPIView.as_view(), name='yahoo-auction-status-update'),
+    path('yahoo-free-market/status-update/<int:pk>/', YahooFreeMarketStatusUpdateAPIView.as_view(), name='yahoo-free-market-status-update'),
     
     # 古物台帳関連のエンドポイント
     path('antique-ledger/transaction-types/', TransactionTypeListAPIView.as_view(), name='transaction-types'),

@@ -59,30 +59,33 @@ class YahooFreeMarketListView(APIView):
             rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))
 
             # 一覧出力時のデータを作成
+            items_data = []
+            for item in current_page:
+                item_data = {
+                    'id': item.id,
+                    'status': item.status.status_name,
+                    'sku': item.sku,
+                    'offer_id': item.offer_id,
+                    'ebay_price': int(item.price * rate),
+                    'ebay_shipping_price': int(item.shipping_price),
+                    'final_profit': int(item.final_profit * rate),
+                    'view_count': item.view_count,
+                    'watch_count': item.watch_count,
+                    'yahoo_free_market_id': item.yahoo_free_market_id.id,
+                    'yahoo_free_market_unique_id': item.yahoo_free_market_id.unique_id,
+                    'yahoo_free_market_url': item.yahoo_free_market_id.url,
+                    'yahoo_free_market_item_name': item.yahoo_free_market_id.item_name,
+                    'yahoo_free_market_item_price': str(item.yahoo_free_market_id.item_price),
+                    'yahoo_free_market_shipping': str(item.yahoo_free_market_id.shipping),
+                    'purchase_price': int(item.yahoo_free_market_id.item_price + item.yahoo_free_market_id.shipping),
+                    'yahoo_free_market_status': item.yahoo_free_market_id.status.status_name,
+                    'insert_datetime': item.insert_datetime,
+                    'update_datetime': item.update_datetime
+                }
+                items_data.append(item_data)
+
             response_data = {
-                'items': [
-                    {
-                        'id': item.id,
-                        'status': item.status.status_name,
-                        'sku': item.sku,
-                        'offer_id': item.offer_id,
-                        'ebay_price': int(item.price * rate),
-                        'ebay_shipping_price': int(item.shipping_price),
-                        'final_profit': int(item.final_profit * rate),
-                        'view_count': item.view_count,
-                        'watch_count': item.watch_count,
-                        'yahoo_free_market_id': item.yahoo_free_market_id.unique_id,
-                        'yahoo_free_market_url': item.yahoo_free_market_id.url,
-                        'yahoo_free_market_item_name': item.yahoo_free_market_id.item_name,
-                        'yahoo_free_market_item_price': str(item.yahoo_free_market_id.item_price),
-                        'yahoo_free_market_shipping': str(item.yahoo_free_market_id.shipping),
-                        'purchase_price': int(item.yahoo_free_market_id.item_price + item.yahoo_free_market_id.shipping),
-                        'yahoo_free_market_status': item.yahoo_free_market_id.status.status_name,
-                        'insert_datetime': item.insert_datetime,
-                        'update_datetime': item.update_datetime
-                    }
-                    for item in current_page
-                ],
+                'items': items_data,
                 'pagination': {
                     'total_count': paginator.count,
                     'total_pages': paginator.num_pages,
@@ -94,7 +97,6 @@ class YahooFreeMarketListView(APIView):
                     'active': list_items.filter(status_id=1).count(),
                     'sold_out': list_items.filter(status_id=2).count(),
                 }
-
             }
             return create_success_response(response_data)
         except Exception as e:
