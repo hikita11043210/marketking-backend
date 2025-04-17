@@ -1,151 +1,198 @@
-from datetime import date
-from decimal import Decimal
-from typing import Dict, Any, Tuple
+from decimal import Decimal, ROUND_HALF_UP, ROUND_UP
+from typing import Dict, Any, Optional
 
 from api.models.master import (
-    Service,
     Countries,
-    Shipping,
-    ShippingSurcharge,
+    ShippingRatesFedex,
+    ShippingRatesDhl,
+    ShippingRatesEconomy,
 )
 
 class ShippingCalculator:
-    # FedExのサイズ制限定数
-    NORMAL_LENGTH_LIMIT = 121  # cm
-    OVERSIZE_LENGTH_LIMIT = 243  # cm
-    OVERSIZE_LENGTH_GIRTH_LIMIT = 330  # cm
-    OVERSIZE_SURCHARGE = Decimal('2500.00')  # 追加料金
-    def __init__(self, service_id: int):
-        self.service = Service.objects.get(id=service_id)
-
-    def calculate_dimensional_weight(self, length: int, width: int, height: int) -> Decimal:
-        """寸法重量を計算"""
-        return Decimal(str((length * width * height) / 5000))
-
-    def check_size_restrictions(self, length: int, width: int, height: int) -> Tuple[bool, Decimal]:
-        """サイズ制限をチェックし、追加料金を計算
+    """送料計算サービス"""
+    
+    # 容積重量の計算用定数
+    FEDEX_DHL_DIVISOR = 5000
+    ECONOMY_DIVISOR = 8000
+    
+    def __init__(self):
+        pass
+    
+    def get_country(self, country_code: str) -> Optional[Countries]:
+        """国コードから国データを取得"""
+        try:
+            return Countries.objects.get(code=country_code)
+        except Countries.DoesNotExist:
+            return None
+    
+    def calculate_dimensional_weight(self, length: int, width: int, height: int, service_type: str) -> Decimal:
+        """容積重量を計算
+        
+        Args:
+            length: 長さ(cm)
+            width: 幅(cm)
+            height: 高さ(cm)
+            service_type: サービスタイプ('fedex', 'dhl', 'economy')
+            
         Returns:
-            Tuple[制限超過の有無, 追加料金]
+            容積重量(kg)
         """
-        # 長さ + 胴回り(2w + 2h)の計算
-        girth = 2 * (width + height)
-        length_girth_total = length + girth
-
-        # オーバーサイズチェック
-        if length > self.OVERSIZE_LENGTH_LIMIT or length_girth_total > self.OVERSIZE_LENGTH_GIRTH_LIMIT:
-            return True, self.OVERSIZE_SURCHARGE
+        volume = length * width * height
         
-        # 通常サイズ超過チェック
-        if length > self.NORMAL_LENGTH_LIMIT:
-            return True, Decimal('1000.00')  # 通常サイズ超過の追加料金
-        
-        return False, Decimal('0')
-
-    def get_surcharges(self, base_price: Decimal) -> Dict[str, Decimal]:
-        """現在適用される追加料金を取得"""
-        today = date.today()
-        surcharges = {}
-        
-        active_surcharges = ShippingSurcharge.objects.filter(
-            service=self.service,
-            start_date__lte=today
-        ).filter(end_date__isnull=True)
-
-        for surcharge in active_surcharges:
-            amount = Decimal('0')
-            if surcharge.rate:
-                amount = base_price * (surcharge.rate / 100)
-            if surcharge.fixed_amount:
-                amount += surcharge.fixed_amount
-            surcharges[surcharge.surcharge_type] = amount
-
-        return surcharges
-
-    def calculate_shipping_cost(self, country_code: str, length: int, width: int, 
-                              height: int, weight: float) -> Dict[str, Any]:
+        if service_type in ['fedex', 'dhl']:
+            divisor = self.FEDEX_DHL_DIVISOR
+        else:  # economy
+            divisor = self.ECONOMY_DIVISOR
+            
+        # 容積重量を計算（小数点第1位まで）
+        dimensional_weight = Decimal(str(volume)) / Decimal(str(divisor))
+        # 小数点以下が0の場合はそのまま、それ以外は切り上げ
+        if dimensional_weight % 1 == 0:
+            return dimensional_weight.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
+        return dimensional_weight.quantize(Decimal('0.1'), rounding=ROUND_UP)
+    
+    def get_fedex_rate(self, zone: int, weight: Decimal) -> Optional[int]:
+        """FedExの送料を取得"""
+        try:
+            # 重量以下の最大の重量区分を取得
+            shipping_rate = ShippingRatesFedex.objects.filter(
+                zone=zone,
+                weight__gte=weight
+            ).order_by('weight').first()
+            
+            if not shipping_rate:
+                # 最大重量を超える場合は最大の重量区分を使用
+                shipping_rate = ShippingRatesFedex.objects.filter(
+                    zone=zone
+                ).order_by('-weight').first()
+                
+            if shipping_rate:
+                return shipping_rate.rate
+                
+            return None
+        except Exception:
+            return None
+    
+    def get_dhl_rate(self, zone: int, weight: Decimal, is_document: bool) -> Optional[int]:
+        """DHLの送料を取得"""
+        try:
+            # 重量以下の最大の重量区分を取得
+            shipping_rate = ShippingRatesDhl.objects.filter(
+                zone=zone,
+                weight__gte=weight,
+                is_document=is_document
+            ).order_by('weight').first()
+            
+            if not shipping_rate:
+                # 最大重量を超える場合は最大の重量区分を使用
+                shipping_rate = ShippingRatesDhl.objects.filter(
+                    zone=zone,
+                    is_document=is_document
+                ).order_by('-weight').first()
+                
+            if shipping_rate:
+                return shipping_rate.rate
+                
+            return None
+        except Exception:
+            return None
+    
+    def get_economy_rate(self, country_id: int, weight: Decimal) -> Optional[int]:
+        """Economyの送料を取得"""
+        try:
+            # 重量以下の最大の重量区分を取得
+            shipping_rate = ShippingRatesEconomy.objects.filter(
+                country_id=country_id,
+                weight__gte=weight
+            ).order_by('weight').first()
+            
+            if not shipping_rate:
+                # 最大重量を超える場合は最大の重量区分を使用
+                shipping_rate = ShippingRatesEconomy.objects.filter(
+                    country_id=country_id
+                ).order_by('-weight').first()
+                
+            if shipping_rate:
+                return shipping_rate.rate
+                
+            return None
+        except Exception:
+            return None
+    
+    def calculate_shipping_cost(self, country_code: str, weight: float, length: int = 0, width: int = 0, 
+                               height: int = 0, is_document: bool = False) -> Dict[str, Any]:
         """送料を計算"""
         try:
-            country = Countries.objects.get(country_code=country_code, service=self.service)
-            weight_decimal = Decimal(str(weight))
-            dim_weight = self.calculate_dimensional_weight(length, width, height)
-            
-            # 実重量と容積重量の大きい方を使用
-            calc_weight = max(weight_decimal, dim_weight)
-            # 基本送料を取得
-            try:
-                # 重量区分の一覧を取得
-                weight_ranges = Shipping.objects.filter(
-                    service=self.service,
-                    zone=country.zone
-                ).order_by('weight').values_list('weight', flat=True)
-
-                # 適切な重量区分を見つける
-                target_weight = None
-                for w in weight_ranges:
-                    if calc_weight <= w:
-                        target_weight = w
-                        break
-                if not target_weight:
-                    return {
-                        'success': False,
-                        'error': f'この重量（{calc_weight}kg）での配送料金が設定されていません'
-                    }
-
-                # 重複チェックのためにすべてのマッチするレコードを取得
-                matching_rates = Shipping.objects.filter(
-                    service=self.service,
-                    zone=country.zone,
-                    weight=target_weight
-                ).values('id', 'service_id', 'zone', 'weight', 'basic_price')
-
-                # 最新のレコード（IDが最大のもの）を取得
-                shipping_rate = Shipping.objects.filter(
-                    service=self.service,
-                    zone=country.zone,
-                    weight=target_weight
-                ).order_by('-id').first()
-
-                if not shipping_rate:
-                    return {
-                        'success': False,
-                        'error': f'送料の取得に失敗しました'
-                    }
-
-                basic_price = shipping_rate.basic_price
-            except Exception as e:
+            # 国データを取得
+            country = self.get_country(country_code)
+            if not country:
                 return {
                     'success': False,
-                    'error': f'送料の取得に失敗しました: {str(e)}'
+                    'error': f'国コード {country_code} の情報が見つかりません'
                 }
-
-            # サイズ制限チェックと追加料金計算
-            is_oversized, size_surcharge = self.check_size_restrictions(length, width, height)
-
-            # その他の追加料金（燃料サーチャージなど）
-            surcharges = self.get_surcharges(basic_price)
-            if is_oversized:
-                surcharges['OVERSIZE'] = size_surcharge
             
-            # 合計金額を計算
-            total_surcharges = sum(surcharges.values())
-            total_amount = basic_price + total_surcharges
-
+            weight_decimal = Decimal(str(weight)).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
+            
+            # 容積重量の計算（寸法が提供されている場合のみ）
+            fedex_dim_weight = dhl_dim_weight = economy_dim_weight = Decimal('0')
+            
+            if all([length, width, height]):
+                fedex_dim_weight = self.calculate_dimensional_weight(length, width, height, 'fedex')
+                dhl_dim_weight = fedex_dim_weight  # FedExとDHLは同じ計算式
+                economy_dim_weight = self.calculate_dimensional_weight(length, width, height, 'economy')
+            
+            # 各配送方法で使用する重量（実重量と容積重量の大きい方）
+            fedex_weight = max(weight_decimal, fedex_dim_weight)
+            dhl_weight = max(weight_decimal, dhl_dim_weight)
+            economy_weight = max(weight_decimal, economy_dim_weight)
+            
+            # 各送料を取得
+            fedex_rate = self.get_fedex_rate(country.zone_fedex, fedex_weight)
+            dhl_rate = self.get_dhl_rate(country.zone_dhl, dhl_weight, is_document)
+            economy_rate = self.get_economy_rate(country.id, economy_weight)
+            
+            # レスポンス用のデータ準備
+            shipping_rates = {}
+            weights_used = {}
+            
+            if fedex_rate is not None:
+                shipping_rates['fedex'] = fedex_rate
+                weights_used['fedex'] = float(fedex_weight)
+            
+            if dhl_rate is not None:
+                shipping_rates['dhl'] = dhl_rate
+                weights_used['dhl'] = float(dhl_weight)
+            
+            if economy_rate is not None:
+                shipping_rates['economy'] = economy_rate
+                weights_used['economy'] = float(economy_weight)
+            
+            # 推奨サービスを決定（最も安いものを選択）
+            recommended_service = None
+            min_rate = float('inf')
+            
+            for service, rate in shipping_rates.items():
+                if rate < min_rate:
+                    min_rate = rate
+                    recommended_service = service
+            
             return {
                 'success': True,
                 'message': 'データの取得に成功しました',
                 'data': {
-                    'base_rate': float(basic_price),
-                    'surcharges': {k: float(v) for k, v in surcharges.items()},
-                    'total_amount': float(total_amount),
-                    'weight_used': float(calc_weight),
-                    'zone': country.zone,
-                    'is_oversized': is_oversized,
-                    'weight_range': float(target_weight)  # デバッグ用に重量区分も返す
+                    'country': {
+                        'code': country.code,
+                        'name': country.name
+                    },
+                    'physical_weight': float(weight_decimal),
+                    'weights_used': weights_used,
+                    'shipping_rates': shipping_rates,
+                    'recommended_service': recommended_service
                 }
             }
-
-        except (Countries.DoesNotExist, Shipping.DoesNotExist) as e:
+            
+        except Exception as e:
             return {
                 'success': False,
-                'error': str(e)
+                'error': f'送料計算中にエラーが発生しました: {str(e)}'
             } 

@@ -14,45 +14,69 @@ class Service(models.Model):
 
 class Countries(models.Model):
     """国マスタ"""
-    country_code = models.CharField(max_length=2, unique=True, null=False)
-    country_name = models.CharField(max_length=100, null=False)
-    country_name_jp = models.CharField(max_length=100, null=False)
-    zone = models.CharField(max_length=1, null=False)
-    service = models.ForeignKey(Service, on_delete=models.PROTECT)
+    code = models.CharField(max_length=2, unique=True, null=False)
+    name = models.CharField(max_length=100, null=False)
+    zone_fedex = models.IntegerField(null=True, blank=True)
+    zone_dhl = models.IntegerField(null=True, blank=True)
+    zone_economy = models.IntegerField(null=True, blank=True)
 
     class Meta:
         db_table = 'm_countries'
+        indexes = [
+            models.Index(fields=['code']),
+        ]
 
     def __str__(self):
-        return f"{self.country_code} - {self.country_name}"
+        return f"{self.code} - {self.name}"
 
-class Shipping(models.Model):
-    """送料マスタ"""
-    zone = models.CharField(max_length=1, null=False)
-    weight = models.IntegerField(null=False)
-    basic_price = models.DecimalField(max_digits=10, decimal_places=2, null=False)
-    service = models.ForeignKey(Service, on_delete=models.PROTECT)
+class ShippingRatesFedex(models.Model):
+    """FedEx送料マスタ"""
+    zone = models.IntegerField(null=False)
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=False)
+    rate = models.IntegerField(null=False)
 
     class Meta:
-        db_table = 'm_shipping'
+        db_table = 'm_shipping_rates_fedex'
+        indexes = [
+            models.Index(fields=['zone']),
+            models.Index(fields=['weight']),
+        ]
 
     def __str__(self):
-        return f"Zone {self.zone} - {self.weight}kg"
+        return f"FedEx Zone {self.zone} - {self.weight}kg: {self.rate}円"
 
-class ShippingSurcharge(models.Model):
-    """追加料金マスタ"""
-    service = models.ForeignKey(Service, on_delete=models.PROTECT)
-    surcharge_type = models.CharField(max_length=50, null=False)  # 'FUEL', 'OVERSIZE', 'SATURDAY' など
-    rate = models.DecimalField(max_digits=5, decimal_places=2, null=False)  # 割合（%）
-    fixed_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)  # 固定金額（ある場合）
-    start_date = models.DateField(null=False)
-    end_date = models.DateField(null=True)  # nullの場合は現在有効
+class ShippingRatesDhl(models.Model):
+    """DHL送料マスタ"""
+    zone = models.IntegerField(null=False)
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=False)
+    is_document = models.BooleanField(default=False)
+    rate = models.IntegerField(null=False)
 
     class Meta:
-        db_table = 'm_shipping_surcharge'
+        db_table = 'm_shipping_rates_dhl'
+        indexes = [
+            models.Index(fields=['zone']),
+            models.Index(fields=['weight']),
+        ]
 
     def __str__(self):
-        return f"{self.service.service_name} - {self.surcharge_type}" 
+        doc_type = "書類" if self.is_document else "物品"
+        return f"DHL Zone {self.zone} - {self.weight}kg ({doc_type}): {self.rate}円"
+
+class ShippingRatesEconomy(models.Model):
+    """Economy送料マスタ"""
+    country = models.ForeignKey(Countries, on_delete=models.CASCADE)
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=False)
+    rate = models.IntegerField(null=False)
+
+    class Meta:
+        db_table = 'm_shipping_rates_economy'
+        indexes = [
+            models.Index(fields=['weight']),
+        ]
+
+    def __str__(self):
+        return f"Economy {self.country.name} - {self.weight}kg: {self.rate}円"
 
 class EbayStoreType(models.Model):
     """eBayストアタイプマスタ"""
