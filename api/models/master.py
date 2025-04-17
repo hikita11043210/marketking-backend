@@ -3,6 +3,7 @@ from django.conf import settings  # settingsをインポート
 from .user import User  # Userモデルを直接インポート
 
 class Service(models.Model):
+    """サービスマスタ"""
     service_name = models.CharField(max_length=100, null=False)
 
     class Meta:
@@ -12,6 +13,7 @@ class Service(models.Model):
         return self.service_name
 
 class Countries(models.Model):
+    """国マスタ"""
     country_code = models.CharField(max_length=2, unique=True, null=False)
     country_name = models.CharField(max_length=100, null=False)
     country_name_jp = models.CharField(max_length=100, null=False)
@@ -25,6 +27,7 @@ class Countries(models.Model):
         return f"{self.country_code} - {self.country_name}"
 
 class Shipping(models.Model):
+    """送料マスタ"""
     zone = models.CharField(max_length=1, null=False)
     weight = models.IntegerField(null=False)
     basic_price = models.DecimalField(max_digits=10, decimal_places=2, null=False)
@@ -37,6 +40,7 @@ class Shipping(models.Model):
         return f"Zone {self.zone} - {self.weight}kg"
 
 class ShippingSurcharge(models.Model):
+    """追加料金マスタ"""
     service = models.ForeignKey(Service, on_delete=models.PROTECT)
     surcharge_type = models.CharField(max_length=50, null=False)  # 'FUEL', 'OVERSIZE', 'SATURDAY' など
     rate = models.DecimalField(max_digits=5, decimal_places=2, null=False)  # 割合（%）
@@ -51,6 +55,7 @@ class ShippingSurcharge(models.Model):
         return f"{self.service.service_name} - {self.surcharge_type}" 
 
 class EbayStoreType(models.Model):
+    """eBayストアタイプマスタ"""
     store_type = models.CharField(max_length=50, unique=True, null=False)
     monthly_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     monthly_fee_annual = models.DecimalField(max_digits=10, decimal_places=2, null=True)
@@ -67,6 +72,7 @@ class EbayStoreType(models.Model):
         return self.store_type
 
 class Tax(models.Model):
+    """税率マスタ"""
     rate = models.DecimalField(max_digits=4, decimal_places=2, null=False)
 
     class Meta:
@@ -76,6 +82,7 @@ class Tax(models.Model):
         return f"{self.rate}%"
 
 class Setting(models.Model):
+    """設定マスタ"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='settings')
     ebay_store_type = models.ForeignKey(EbayStoreType, on_delete=models.PROTECT, related_name='settings')
     yahoo_client_id = models.CharField(max_length=255, null=True, blank=True)
@@ -104,6 +111,7 @@ class Setting(models.Model):
         return settings
 
 class Status(models.Model):
+    """ステータスマスタ"""
     status_name = models.CharField(max_length=100, null=False)
 
     class Meta:
@@ -113,6 +121,7 @@ class Status(models.Model):
         return self.status_name
 
 class Condition(models.Model):
+    """商品状態マスタ"""
     condition_id = models.IntegerField(null=False)
     condition_enum = models.CharField(max_length=30, null=False)
 
@@ -123,6 +132,7 @@ class Condition(models.Model):
         return f"{self.condition_id} - {self.condition_enum}"
 
 class YahooAuctionStatus(models.Model):
+    """Yahooオークションステータスマスタ"""
     status_name = models.CharField(max_length=100, null=False)
 
     class Meta:
@@ -132,6 +142,7 @@ class YahooAuctionStatus(models.Model):
         return self.status_name
 
 class YahooFreeMarketStatus(models.Model):
+    """Yahooフリーマーケットステータスマスタ"""
     status_name = models.CharField(max_length=100, null=False)
 
     class Meta:
