@@ -448,9 +448,9 @@ class ImportService:
             if carrier_type.lower() == 'fedex':
                 logger.info("FedEx用の国マスタ取込設定を使用します")
                 # Fedexの場合: C8-C202, B8-B202, D8-D202
+                name_en_col = 0  # A列
+                name_ja_col = 1  # B列
                 code_col = 2  # C列
-                name_ja_col = 0  # A列
-                name_en_col = 1  # B列
                 zone_col = 3  # D列
                 je_ip_col = 4  # E列
                 je_ficp_col = 5  # F列
