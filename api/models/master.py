@@ -12,26 +12,67 @@ class Service(models.Model):
     def __str__(self):
         return self.service_name
 
-class Countries(models.Model):
-    """国マスタ"""
-    code = models.CharField(max_length=2, unique=True, null=False)
-    name = models.CharField(max_length=100, null=False)
-    zone_fedex = models.IntegerField(null=True, blank=True)
-    zone_dhl = models.IntegerField(null=True, blank=True)
-    zone_economy = models.IntegerField(null=True, blank=True)
+class CountriesFedex(models.Model):
+    """Fedex国マスタ"""
+    name_en = models.CharField(max_length=250, null=False)
+    name_ja = models.CharField(max_length=250, null=False)
+    code = models.CharField(max_length=2, null=False)
+    zone = models.CharField(max_length=2, null=False)
+    je_ip = models.CharField(max_length=3, null=False)
+    je_ficp = models.CharField(max_length=3, null=False)
+    ji_ip = models.CharField(max_length=3, null=False)
+    ji_ficp = models.CharField(max_length=3, null=False)
 
     class Meta:
-        db_table = 'm_countries'
+        db_table = 'm_countries_fedex'
         indexes = [
             models.Index(fields=['code']),
         ]
 
     def __str__(self):
-        return f"{self.code} - {self.name}"
+        return f"{self.code} - {self.name_ja}"
+
+class CountriesDhl(models.Model):
+    """DHL国マスタ"""
+    name_en = models.CharField(max_length=250, null=False)
+    name_ja = models.CharField(max_length=250, null=False)
+    code = models.CharField(max_length=2, null=False)
+    zone = models.CharField(max_length=2, null=False)
+    express_envelope = models.CharField(max_length=3, null=False)
+    express_worldwide = models.CharField(max_length=3, null=False)
+    express_worldwide_1200 = models.CharField(max_length=3, null=False)
+    express_worldwide_1030 = models.CharField(max_length=3, null=False)
+    express_worldwide_0900 = models.CharField(max_length=3, null=False)
+
+    class Meta:
+        db_table = 'm_countries_dhl'
+        indexes = [
+            models.Index(fields=['code']),
+        ]
+
+    def __str__(self):
+        return f"{self.code} - {self.name_ja}"
+
+
+class CountriesEconomy(models.Model):
+    """Economy国マスタ"""
+    name_en = models.CharField(max_length=250, null=False)
+    name_ja = models.CharField(max_length=250, null=False)
+    code = models.CharField(max_length=2, null=False)
+    zone = models.CharField(max_length=2, null=False)
+
+    class Meta:
+        db_table = 'm_countries_economy'
+        indexes = [
+            models.Index(fields=['code']),
+        ]
+
+    def __str__(self):
+        return f"{self.code} - {self.name_ja}"
 
 class ShippingRatesFedex(models.Model):
     """FedEx送料マスタ"""
-    zone = models.IntegerField(null=False)
+    zone = models.CharField(max_length=2, null=False)
     weight = models.DecimalField(max_digits=5, decimal_places=2, null=False)
     rate = models.IntegerField(null=False)
 
@@ -47,7 +88,7 @@ class ShippingRatesFedex(models.Model):
 
 class ShippingRatesDhl(models.Model):
     """DHL送料マスタ"""
-    zone = models.IntegerField(null=False)
+    zone = models.CharField(max_length=2, null=False)
     weight = models.DecimalField(max_digits=5, decimal_places=2, null=False)
     is_document = models.BooleanField(default=False)
     rate = models.IntegerField(null=False)
@@ -65,7 +106,7 @@ class ShippingRatesDhl(models.Model):
 
 class ShippingRatesEconomy(models.Model):
     """Economy送料マスタ"""
-    country = models.ForeignKey(Countries, on_delete=models.CASCADE)
+    country = models.ForeignKey(CountriesEconomy, on_delete=models.CASCADE)
     weight = models.DecimalField(max_digits=5, decimal_places=2, null=False)
     rate = models.IntegerField(null=False)
 

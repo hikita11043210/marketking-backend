@@ -2,7 +2,9 @@ from decimal import Decimal, ROUND_HALF_UP, ROUND_UP
 from typing import Dict, Any, Optional
 
 from api.models.master import (
-    Countries,
+    CountriesFedex,
+    CountriesDhl,
+    CountriesEconomy,
     ShippingRatesFedex,
     ShippingRatesDhl,
     ShippingRatesEconomy,
@@ -18,11 +20,11 @@ class ShippingCalculator:
     def __init__(self):
         pass
     
-    def get_country(self, country_code: str) -> Optional[Countries]:
+    def get_country(self, country_code: str) -> Optional[CountriesFedex]:
         """国コードから国データを取得"""
         try:
-            return Countries.objects.get(code=country_code)
-        except Countries.DoesNotExist:
+            return CountriesFedex.objects.get(code=country_code)
+        except CountriesFedex.DoesNotExist:
             return None
     
     def calculate_dimensional_weight(self, length: int, width: int, height: int, service_type: str) -> Decimal:

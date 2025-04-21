@@ -29,6 +29,8 @@ from .views.antique_ledger.transaction_type import TransactionTypeListAPIView
 from .views.antique_ledger.transaction import TransactionListCreateAPIView, TransactionDetailAPIView
 from .views.yahoo_auction import YahooAuctionStatusUpdateAPIView
 from .views.yahoo_free_market import YahooFreeMarketStatusUpdateAPIView
+# マスターデータインポート関連のビューをインポート
+from .views.master.import_view import ImportShippingRatesAPIView
 
 urlpatterns = [
     # 認証関連のエンドポイント
@@ -71,4 +73,7 @@ urlpatterns = [
     path('antique-ledger/transaction-types/', TransactionTypeListAPIView.as_view(), name='transaction-types'),
     path('antique-ledger/transactions/', TransactionListCreateAPIView.as_view(), name='transaction-list-create'),
     path('antique-ledger/transactions/<int:pk>/', TransactionDetailAPIView.as_view(), name='transaction-detail'),
+    
+    # マスターデータインポート関連のエンドポイント
+    path('master/import/', ImportShippingRatesAPIView.as_view(), name='master-import'),
 ] 

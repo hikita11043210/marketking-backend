@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from api.services.shipping_calculator import ShippingCalculator
-from api.models.master import Countries
+from api.models.master import CountriesFedex, CountriesDhl, CountriesEconomy
 from api.utils.throttles import AuctionDetailThrottle
 
 class CalculatorShippingView(APIView):
@@ -11,7 +11,7 @@ class CalculatorShippingView(APIView):
     def get(self, request):
         """利用可能な国のリストを取得"""
         try:
-            countries = Countries.objects.all().values('code', 'name')
+            countries = CountriesFedex.objects.all().values('code', 'name')
             return Response({
                 'success': True,
                 'message': 'データの取得に成功しました',
