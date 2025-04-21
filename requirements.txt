@@ -64,4 +64,5 @@ celery==5.3.6
 redis==5.0.1
 django-celery-results==2.5.1
 numpy==2.2.5
-pandas==2.2.2
+pandas==2.2.3
+python-dateutil==2.9.0.post0
