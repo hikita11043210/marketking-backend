@@ -2,6 +2,7 @@ from api.services.ebay.common import Common
 import requests
 import json
 from django.http import JsonResponse
+import logging
 
 class Offer(Common):
     def get_offer_status(self, sku: str):
@@ -129,3 +130,70 @@ class Offer(Common):
             if hasattr(e.response, 'text'):
                 raise Exception(f"出品の取り下げに失敗しました: {e.response.text}")
             raise Exception("出品の取り下げに失敗しました")
+
+    def end_fixed_price_item(self, item_id):
+        """
+        Trading APIを使用して商品を「終了済み」にする
+        Args:
+            item_id (str): 終了する商品のeBay商品ID
+        Returns:
+            dict: 処理結果
+        """
+        try:
+            endpoint = f"{self.api_url}/ws/api.dll"
+            
+            headers = self._get_headers()
+            headers.update({
+                'X-EBAY-API-COMPATIBILITY-LEVEL': '967',
+                'X-EBAY-API-CALL-NAME': 'EndFixedPriceItem',
+                'X-EBAY-API-SITEID': '0',  # US
+                'Content-Type': 'text/xml'
+            })
+            
+            request_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+                <EndFixedPriceItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+                    <RequesterCredentials>
+                        <eBayAuthToken>{self.auth_service.get_user_token().access_token}</eBayAuthToken>
+                    </RequesterCredentials>
+                    <ItemID>{item_id}</ItemID>
+                    <EndingReason>NotAvailable</EndingReason>
+                </EndFixedPriceItemRequest>"""
+            
+            response = requests.post(endpoint, headers=headers, data=request_xml)
+            response.raise_for_status()
+            
+            return {
+                'success': True,
+                'message': '商品を終了済みにしました'
+            }
+            
+        except Exception as e:
+            raise Exception(f"商品の終了処理に失敗しました: {str(e)}")
+
+    def delete_ended_item(self, item_id):
+        """
+        Trading APIを使用して終了済み商品をユーザーインターフェースから削除する
+        現在のeBay APIではDeleteFixedPriceItemがサポートされていないため、
+        終了済みにすることで対応します。
+        
+        Args:
+            item_id (str): 削除する商品のeBay商品ID
+        Returns:
+            dict: 処理結果
+        """
+        logger = logging.getLogger(__name__)
+        logger.info(f"終了済み商品の削除を試みます: item_id={item_id}")
+        
+        try:
+            # DeleteFixedPriceItemがサポートされていないため、
+            # 代わりにEndFixedPriceItemを使用して終了済みにする
+            result = self.end_fixed_price_item(item_id)
+            
+            logger.info(f"終了済み商品をend_fixed_price_itemで処理しました: item_id={item_id}")
+            return {
+                'success': True,
+                'message': '終了済み商品を削除しました（終了済み状態に変更）'
+            }
+        except Exception as e:
+            logger.error(f"終了済み商品の削除に失敗しました: {str(e)}")
+            raise Exception(f"終了済み商品の削除に失敗しました: {str(e)}")
