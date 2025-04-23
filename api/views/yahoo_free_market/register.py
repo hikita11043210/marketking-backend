@@ -223,9 +223,14 @@ class YahooFreeMarketRegisterView(APIView):
                     item_id=item_id,
                     offer_id=offer_result['offerId'],
                     status=Status.objects.get(id=1),
-                    price=Decimal(str(product_data['price'])),
-                    shipping_price=Decimal(str(other_data['ebay_shipping_price'] if other_data['ebay_shipping_price'] else settings.EBAY_SHIPPING_COST)), # 後ほど送料もフロントから送ってくるつもりだが、今は固定値なので環境変数を必ず参照するようにしている
-                    final_profit=Decimal(str(other_data['final_profit'])),
+                    product_name=product_data['title'],
+                    url=f"https://www.ebay.com/itm/{item_id}",
+                    quantity=product_data['quantity'],
+                    price_dollar=Decimal(str(other_data['calculated_price_dollar'])),
+                    price_yen=Decimal(str(other_data['calculated_price_yen'])),
+                    shipping_price=Decimal(str(other_data['ebay_shipping_price'])),
+                    final_profit_dollar=Decimal(str(other_data['final_profit_dollar'])),
+                    final_profit_yen=Decimal(str(other_data['final_profit_yen'])),
                     yahoo_free_market_id=yahoo_free_market
                 )
 

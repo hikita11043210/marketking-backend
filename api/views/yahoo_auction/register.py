@@ -24,6 +24,7 @@ from api.services.ai.ai import Ai
 from api.services.calculator import CalculatorService
 from api.services.translator import TranslatorService
 from api.services.ebay.marketplace import Marketplace
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,42 @@ class ItemDetailView(APIView):
             )
 
 
+def wait_for_inventory_item(inventory_service, sku, max_attempts=3, delay_seconds=2):
+    """
+    在庫アイテムがeBayシステムに反映されるまで待機する
+    
+    Args:
+        inventory_service: Inventoryサービスのインスタンス
+        sku: 確認する商品のSKU
+        max_attempts: 最大試行回数
+        delay_seconds: 試行間の待機秒数
+        
+    Returns:
+        bool: 在庫アイテムが見つかったかどうか
+    """
+    logger.info(f"在庫アイテム {sku} の反映を待機中...")
+    
+    # まず最初に固定で待機
+    time.sleep(delay_seconds)
+    
+    for attempt in range(max_attempts):
+        try:
+            # 在庫アイテムの取得を試みる
+            inventory_item = inventory_service.get_inventory_item_for_sku(sku)
+            if inventory_item:
+                logger.info(f"在庫アイテム {sku} が正常に反映されました（試行回数: {attempt + 1}）")
+                return True
+            
+            # 見つからなかった場合は待機して再試行
+            logger.warning(f"在庫アイテム {sku} がまだ反映されていません。待機中...（試行回数: {attempt + 1}/{max_attempts}）")
+            time.sleep(delay_seconds)
+        except Exception as e:
+            logger.error(f"在庫アイテム確認中にエラーが発生しました: {str(e)}")
+            time.sleep(delay_seconds)
+    
+    logger.error(f"在庫アイテム {sku} の反映確認が失敗しました（最大試行回数到達）")
+    return False
+
 
 class RegisterView(APIView):
     """eBayに商品を出品するView"""
@@ -174,6 +211,17 @@ class RegisterView(APIView):
 
             # 商品情報の登録処理
             ebay_service_inventory.create_inventory_item(sku, register_data)
+            logger.info(f"新しい在庫項目を作成しました: SKU={sku}")
+            
+            # 在庫アイテムがeBayシステムに反映されるまで待機
+            if not wait_for_inventory_item(ebay_service_inventory, sku):
+                # 反映されなかった場合は削除を試みて終了
+                try:
+                    ebay_service_inventory.delete_inventory_item(sku)
+                    logger.info(f"在庫項目反映失敗のため削除しました: SKU={sku}")
+                except Exception as cleanup_error:
+                    logger.error(f"在庫項目削除に失敗しました: {str(cleanup_error)}")
+                return create_error_response("在庫項目の作成が完了しませんでした。再度お試しください。")
 
             # ロケーション情報を取得
             # 初回は存在しなかったので新規登録を行った（発送元の住所）
@@ -227,9 +275,14 @@ class RegisterView(APIView):
                     sku=sku,
                     offer_id=offer_result['offerId'],
                     status=Status.objects.get(id=1),
-                    price=Decimal(str(product_data['price'])),
-                    shipping_price=Decimal(str(other_data['ebay_shipping_price'] if other_data['ebay_shipping_price'] else settings.EBAY_SHIPPING_COST)), # 後ほど送料もフロントから送ってくるつもりだが、今は固定値なので環境変数を必ず参照するようにしている
-                    final_profit=Decimal(str(other_data['final_profit'])),
+                    product_name=product_data['title'],
+                    url=f"https://www.ebay.com/itm/{item_id}",
+                    quantity=product_data['quantity'],
+                    price_dollar=Decimal(str(other_data['calculated_price_dollar'])),
+                    price_yen=Decimal(str(other_data['calculated_price_yen'])),
+                    shipping_price=Decimal(str(other_data['ebay_shipping_price'])),
+                    final_profit_dollar=Decimal(str(other_data['final_profit_dollar'])),
+                    final_profit_yen=Decimal(str(other_data['final_profit_yen'])),
                     yahoo_auction_id=yahoo_auction,
                     item_id=item_id
                 )
@@ -241,6 +294,12 @@ class RegisterView(APIView):
 
         except Exception as e:
             # ebay側にゴミデータが残らないように削除する
-            ebay_service_inventory.delete_inventory_item(sku)
+            try:
+                ebay_service_inventory.delete_inventory_item(sku)
+                logger.info(f"エラー発生のため在庫項目を削除しました: SKU={sku}")
+            except Exception as cleanup_error:
+                logger.error(f"エラー後の在庫項目削除に失敗しました: {str(cleanup_error)}")
+                
             # エラー時の内容をログ出力
+            logger.error(f"商品登録処理でエラーが発生しました: {str(e)}")
             return create_error_response("商品登録に失敗しました。詳細はエラーログを確認してください。")

@@ -21,7 +21,7 @@ class SynchronizeYahooAuction():
         self.scraping_service = ScrapingService()
         self.offer_service = Offer(self.user)
 
-    def _process_batch(self, items, end_status, ebay_end_status):
+    def _process_batch(self, items, active_status, end_status, ebay_end_status):
         """
         バッチ単位でアイテムを処理
         """
@@ -38,7 +38,7 @@ class SynchronizeYahooAuction():
                     continue
 
                 old_status_id = item.status.id
-                
+
                 # オークション終了判定
                 if detail.get('end_flag'):
                     item.status = end_status
@@ -61,16 +61,11 @@ class SynchronizeYahooAuction():
                         count_change_status_items += 1
                 else:
                     # 価格と終了時間を更新
-                    if detail.get('current_price'):
-                        item.current_price = detail['current_price']
-                    if detail.get('current_price_in_tax'):
-                        item.current_price_in_tax = detail['current_price_in_tax']
-                    if detail.get('buy_now_price'):
-                        item.buy_now_price = detail['buy_now_price']
                     if detail.get('buy_now_price_in_tax'):
-                        item.buy_now_price_in_tax = detail['buy_now_price_in_tax']
+                        item.item_price = detail['buy_now_price_in_tax']
                     if detail.get('end_time'):
                         item.end_time = convert_yahoo_date(detail['end_time'])
+                    item.status = active_status
 
                 item.save()
                 
@@ -99,7 +94,7 @@ class SynchronizeYahooAuction():
             'count_change_status_items': count_change_status_items
         }
 
-    def synchronize(self):
+    def synchronize(self, yahoo_auction_item: YahooAuction = None):
         """
         Yahooオークションの商品ステータスを同期する
         """
@@ -111,21 +106,37 @@ class SynchronizeYahooAuction():
             total_change_status_items = 0
             
             with transaction.atomic():
-                yahoo_auction_items = (
-                    YahooAuction.objects
-                    .select_for_update()
-                    .select_related('status')
-                    .prefetch_related(
-                        models.Prefetch(
-                            'ebay_set',
-                            queryset=Ebay.objects.select_related('status'),
-                            to_attr='prefetched_ebay'
+                if yahoo_auction_item.id:
+                    yahoo_auction_items = (
+                        YahooAuction.objects
+                        .select_for_update()
+                        .select_related('status')
+                        .prefetch_related(
+                            models.Prefetch(
+                                'ebay_set',
+                                queryset=Ebay.objects.select_related('status'),
+                                to_attr='prefetched_ebay'
+                            )
                         )
+                        .filter(id=yahoo_auction_item.id)
                     )
-                    .filter(status_id=1)
-                )
+                else:
+                    yahoo_auction_items = (
+                        YahooAuction.objects
+                        .select_for_update()
+                        .select_related('status')
+                        .prefetch_related(
+                            models.Prefetch(
+                                'ebay_set',
+                                queryset=Ebay.objects.select_related('status'),
+                                to_attr='prefetched_ebay'
+                            )
+                        )
+                        .filter(status_id=1)
+                    )
 
                 total_items = yahoo_auction_items.count()
+                active_status = YahooAuctionStatus.objects.get(id=1)
                 end_status = YahooAuctionStatus.objects.get(id=3)
                 ebay_end_status = StatusModel.objects.get(id=2)
 
@@ -136,7 +147,7 @@ class SynchronizeYahooAuction():
                     if not batch:
                         break
 
-                    result = self._process_batch(batch, end_status, ebay_end_status)
+                    result = self._process_batch(batch, active_status, end_status, ebay_end_status)
                     
                     total_updated_items.extend(result['updated_items'])
                     total_active_items += result['count_active_items']

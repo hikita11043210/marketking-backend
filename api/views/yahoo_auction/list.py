@@ -32,31 +32,30 @@ class ListView(APIView):
             # for item in data:
             #     ebay_service_inventory.delete_inventory_item(item['sku']) # ebayから削除
 
-            # 一覧出力時の変換レートを取得
-            rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))
-
             # 一覧出力時のデータを作成
             items_data = []
             for item in ebay_register_items:
                 item_data = {
-                    'id': item.id,
-                    'status': item.status.status_name,
-                    'sku': item.sku,
-                    'offer_id': item.offer_id,
-                    'ebay_price': int(item.price * rate),  # priceに変更
-                    'ebay_shipping_price': int(item.shipping_price),  # shipping_priceに変更
-                    'final_profit': int(item.final_profit * rate),
-                    'view_count': item.view_count,
-                    'watch_count': item.watch_count,
-                    'yahoo_auction_id': item.yahoo_auction_id.id,
-                    'yahoo_auction_unique_id': item.yahoo_auction_id.unique_id,
-                    'yahoo_auction_url': item.yahoo_auction_id.url,
-                    'yahoo_auction_item_name': item.yahoo_auction_id.item_name,
-                    'yahoo_auction_item_price': str(item.yahoo_auction_id.item_price),
-                    'yahoo_auction_shipping': str(item.yahoo_auction_id.shipping),
-                    'purchase_price': int(item.yahoo_auction_id.item_price + item.yahoo_auction_id.shipping),
-                    'yahoo_auction_end_time': item.yahoo_auction_id.end_time.isoformat(),
-                    'yahoo_auction_status': item.yahoo_auction_id.status.status_name,
+                    'ebay_id': item.id,
+                    'ebay_status': item.status.status_name,
+                    'ebay_sku': item.sku,
+                    'ebay_offer_id': item.offer_id,
+                    'ebay_price_dollar': item.price_dollar,
+                    'ebay_price_yen': item.price_yen,
+                    'ebay_shipping_price': item.shipping_price,
+                    'ebay_final_profit_dollar': item.final_profit_dollar,
+                    'ebay_final_profit_yen': item.final_profit_yen,
+                    'ebay_view_count': item.view_count,
+                    'ebay_watch_count': item.watch_count,
+                    'ya_id': item.yahoo_auction_id.id,
+                    'ya_unique_id': item.yahoo_auction_id.unique_id,
+                    'ya_url': item.yahoo_auction_id.url,
+                    'ya_item_name': item.yahoo_auction_id.item_name,
+                    'ya_item_price': str(item.yahoo_auction_id.item_price),
+                    'ya_shipping': str(item.yahoo_auction_id.shipping),
+                    'ya_purchase_amount': int(item.yahoo_auction_id.item_price + item.yahoo_auction_id.shipping),
+                    'ya_end_time': item.yahoo_auction_id.end_time.isoformat(),
+                    'ya_status': item.yahoo_auction_id.status.status_name,
                     'insert_datetime': item.insert_datetime,
                     'update_datetime': item.update_datetime
                 }

@@ -17,7 +17,7 @@ from .views.ebay.category import EbayCategoryView
 from .views.ebay.itemSpecifics import EbayItemSpecificsView
 from .views.ebay.condition import EbayConditionView
 from .views.yahoo_auction.list import ListView, SynchronizeYahooAuctionView
-from .views.ebay.offer import OfferView
+from .views.ebay.offer import OfferView, SkuHistoryView
 from .views.ebay.categoryItemSpecifics import EbayCategoryItemSpecificsView
 from .views.synchronize.script import SynchronizeScriptView
 from .views.yahoo_free_market.search import YahooFreeMarketSearchView
@@ -31,6 +31,12 @@ from .views.yahoo_auction import YahooAuctionStatusUpdateAPIView
 from .views.yahoo_free_market import YahooFreeMarketStatusUpdateAPIView
 # マスターデータインポート関連のビューをインポート
 from .views.master.import_view import ImportShippingRatesAPIView
+# ボタン操作関連のビューをインポート
+from .views.ebay.actions import WithdrawItemView, RepublishItemView, PurchaseRegistrationView, SynchronizeItemView, SalesRegistrationView
+# 売上、仕入れ、経費関連のビューをインポート
+from .views.sales import SaleListCreateAPIView, SaleDetailAPIView
+from .views.purchases import PurchaseListCreateAPIView, PurchaseDetailAPIView
+from .views.expenses import ExpenseListCreateAPIView, ExpenseDetailAPIView
 
 urlpatterns = [
     # 認証関連のエンドポイント
@@ -54,7 +60,8 @@ urlpatterns = [
     path('ebay/register/', RegisterView.as_view()),
     path('ebay/condition/', EbayConditionView.as_view()),
     path('list/', ListView.as_view()),
-    path('ebay/offer/', OfferView.as_view()),
+    path('ebay/offer/', OfferView.as_view(), name='ebay-offer'),
+    path('ebay/sku-history/', SkuHistoryView.as_view(), name='ebay-sku-history'),
     path('synchronize/ebay/', SynchronizeEbayView.as_view()),
     path('synchronize/yahoo-auction/', SynchronizeYahooAuctionView.as_view()),
     path('synchronize/yahoo-free-market/', SynchronizeYahooFreeMarketView.as_view()),
@@ -76,4 +83,23 @@ urlpatterns = [
     
     # マスターデータインポート関連のエンドポイント
     path('master/import/', ImportShippingRatesAPIView.as_view(), name='master-import'),
+
+    # ボタン操作関連のエンドポイント
+    path('ebay/actions/withdraw/', WithdrawItemView.as_view(), name='ebay-withdraw-item'),
+    path('ebay/actions/republish/', RepublishItemView.as_view(), name='ebay-republish-item'),
+    path('ebay/actions/purchase/', PurchaseRegistrationView.as_view(), name='ebay-purchase-registration'),
+    path('ebay/actions/synchronize/', SynchronizeItemView.as_view(), name='ebay-synchronize-item'),
+    path('ebay/actions/sales/', SalesRegistrationView.as_view(), name='ebay-sales-registration'),
+    
+    # 売上関連のエンドポイント
+    path('sales/', SaleListCreateAPIView.as_view(), name='sales-list-create'),
+    path('sales/<int:pk>/', SaleDetailAPIView.as_view(), name='sales-detail'),
+    
+    # 仕入れ関連のエンドポイント
+    path('purchases/', PurchaseListCreateAPIView.as_view(), name='purchases-list-create'),
+    path('purchases/<int:pk>/', PurchaseDetailAPIView.as_view(), name='purchases-detail'),
+    
+    # 経費関連のエンドポイント
+    path('expenses/', ExpenseListCreateAPIView.as_view(), name='expenses-list-create'),
+    path('expenses/<int:pk>/', ExpenseDetailAPIView.as_view(), name='expenses-detail'),
 ] 

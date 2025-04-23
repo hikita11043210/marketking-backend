@@ -4,13 +4,16 @@ import json
 from django.http import JsonResponse
 import logging
 
+logger = logging.getLogger(__name__)
+
 class Offer(Common):
-    def get_offer_status(self, sku: str):
+    def get_offers_by_sku(self, sku: str):
         """
-        商品の出品状態を取得する
+        SKUに基づいて商品のオファー情報を取得する
+        Args:
+            sku (str): 商品のSKU
         Returns:
-            - PUBLISHED: 出品中
-            - UNPUBLISHED: 取り下げ
+            list: オファー情報のリスト
         """
         try:
             endpoint = f"{self.api_url}/sell/inventory/v1/offer"
@@ -22,14 +25,29 @@ class Offer(Common):
             response = requests.get(endpoint, headers=headers, params=params)
             response.raise_for_status()
             
-            offers = response.json().get('offers', [])
+            return response.json().get('offers', [])
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"オファー情報の取得に失敗しました: {str(e)}")
+            if hasattr(e.response, 'text'):
+                logger.error(f"API応答: {e.response.text}")
+            return []
 
+    def get_offer_status(self, sku: str):
+        """
+        商品の出品状態を取得する
+        Returns:
+            - PUBLISHED: 出品中
+            - UNPUBLISHED: 取り下げ
+        """
+        try:
+            offers = self.get_offers_by_sku(sku)
             if not offers:
                 return None
 
             return offers[0].get('status')
             
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             raise Exception(f"オファー情報の取得に失敗しました: {str(e)}")
 
 
@@ -181,7 +199,6 @@ class Offer(Common):
         Returns:
             dict: 処理結果
         """
-        logger = logging.getLogger(__name__)
         logger.info(f"終了済み商品の削除を試みます: item_id={item_id}")
         
         try:

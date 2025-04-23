@@ -7,7 +7,7 @@ from django.utils import timezone
 import logging
 from api.utils.get_default_user import get_default_user
 from api.services.ebay.trading import Trading
-
+from api.services.ebay.offer import Offer
 logger = logging.getLogger(__name__)
 
 class Status():
@@ -15,8 +15,9 @@ class Status():
         self.user = user if user else get_default_user()
         self.item_status_service = ItemStatusService(self.user)
         self.trading_service = Trading(self.user)
+        self.offer_service = Offer(self.user)
 
-    def synchronize(self):
+    def synchronize(self, ebay_item: Ebay = None):
         try:
             synchronize_start_time = timezone.now()
             updated_items = []
@@ -29,11 +30,19 @@ class Status():
             item_view_data = self.item_status_service.get_item_view_and_watch_count()
 
             with transaction.atomic():
-                ebay_register_items = (
-                    Ebay.objects
-                    .select_for_update()
-                    .filter(status_id=1)
-                )
+                if ebay_item:
+                    ebay_register_items = (
+                        Ebay.objects
+                        .select_for_update()
+                        .filter(id=ebay_item.id)
+                        .exclude(status_id=2)
+                    )
+                else:
+                    ebay_register_items = (
+                        Ebay.objects
+                        .select_for_update()
+                        .filter(status_id=1)
+                    )
                 
                 ebay_register_items = ebay_register_items.select_related('status')
                 total_items = ebay_register_items.count()
@@ -54,8 +63,10 @@ class Status():
                             new_status = StatusModel.objects.get(id=1)
                         elif status == "SOLD_OUT":
                             new_status = StatusModel.objects.get(id=3)
+                            self.offer_service.delete_ended_item(item.item_id)
                         elif status == "ENDED":
                             new_status = StatusModel.objects.get(id=2)
+                            self.offer_service.delete_ended_item(item.item_id)
                         elif status == "NOT_FOUND":
                             new_status = StatusModel.objects.get(id=5)
                         

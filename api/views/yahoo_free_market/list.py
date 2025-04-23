@@ -55,30 +55,34 @@ class YahooFreeMarketListView(APIView):
             paginator = Paginator(list_items, limit)
             current_page = paginator.get_page(page)
             
-            # 一覧出力時の変換レートを取得
-            rate = Decimal(str(CurrencyService.get_exchange_rate('USD', 'JPY')))
-
             # 一覧出力時のデータを作成
             items_data = []
             for item in current_page:
                 item_data = {
-                    'id': item.id,
-                    'status': item.status.status_name,
-                    'sku': item.sku,
-                    'offer_id': item.offer_id,
-                    'ebay_price': int(item.price * rate),
-                    'ebay_shipping_price': int(item.shipping_price),
-                    'final_profit': int(item.final_profit * rate),
-                    'view_count': item.view_count,
-                    'watch_count': item.watch_count,
-                    'yahoo_free_market_id': item.yahoo_free_market_id.id,
-                    'yahoo_free_market_unique_id': item.yahoo_free_market_id.unique_id,
-                    'yahoo_free_market_url': item.yahoo_free_market_id.url,
-                    'yahoo_free_market_item_name': item.yahoo_free_market_id.item_name,
-                    'yahoo_free_market_item_price': str(item.yahoo_free_market_id.item_price),
-                    'yahoo_free_market_shipping': str(item.yahoo_free_market_id.shipping),
-                    'purchase_price': int(item.yahoo_free_market_id.item_price + item.yahoo_free_market_id.shipping),
-                    'yahoo_free_market_status': item.yahoo_free_market_id.status.status_name,
+                    'ebay_id': item.id,
+                    'ebay_status': item.status.status_name,
+                    'ebay_sku': item.sku,
+                    'ebay_product_name': item.product_name,
+                    'ebay_item_id': item.item_id,
+                    'ebay_offer_id': item.offer_id,
+                    'ebay_url': item.url,
+                    'ebay_quantity': item.quantity,
+                    'ebay_status': item.status.status_name,
+                    'ebay_price_dollar': item.price_dollar,
+                    'ebay_price_yen': item.price_yen,
+                    'ebay_shipping_price': item.shipping_price,
+                    'ebay_final_profit_dollar': item.final_profit_dollar,
+                    'ebay_final_profit_yen': item.final_profit_yen,
+                    'ebay_view_count': item.view_count,
+                    'ebay_watch_count': item.watch_count,
+                    'yfm_id': item.yahoo_free_market_id.id,
+                    'yfm_unique_id': item.yahoo_free_market_id.unique_id,
+                    'yfm_url': item.yahoo_free_market_id.url,
+                    'yfm_item_name': item.yahoo_free_market_id.item_name,
+                    'yfm_item_price': str(item.yahoo_free_market_id.item_price),
+                    'yfm_shipping': str(item.yahoo_free_market_id.shipping),
+                    'yfm_status': item.yahoo_free_market_id.status.status_name,
+                    'yfm_purchase_amount': int(item.yahoo_free_market_id.item_price + item.yahoo_free_market_id.shipping),
                     'insert_datetime': item.insert_datetime,
                     'update_datetime': item.update_datetime
                 }

@@ -69,7 +69,7 @@ class SynchronizeYahooFreeMarket():
             'count_change_status_items': count_change_status_items
         }
 
-    def synchronize(self):
+    def synchronize(self, yahoo_free_market_item: YahooFreeMarket = None):
         """
         Yahooフリーマーケットの商品ステータスを同期する
         """
@@ -81,13 +81,22 @@ class SynchronizeYahooFreeMarket():
             total_change_status_items = 0
             
             with transaction.atomic():
-                yahoo_free_market_items = (
-                    YahooFreeMarket.objects
-                    .select_for_update()
-                    .select_related('status')
-                    .prefetch_related('ebay_set__status')
-                    .filter(status_id=1)
-                )
+                if yahoo_free_market_item.id:
+                    yahoo_free_market_items = (
+                        YahooFreeMarket.objects
+                        .select_for_update()
+                        .select_related('status')
+                        .prefetch_related('ebay_set__status')
+                        .filter(id=yahoo_free_market_item.id)
+                    )
+                else:
+                    yahoo_free_market_items = (
+                        YahooFreeMarket.objects
+                        .select_for_update()
+                        .select_related('status')
+                        .prefetch_related('ebay_set__status')
+                        .filter(status_id=1)
+                    )
 
                 total_items = yahoo_free_market_items.count()
                 yahoo_end_status = YahooFreeMarketStatus.objects.get(id=3)

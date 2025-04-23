@@ -37,12 +37,17 @@ class Ebay(models.Model):
     """eBayのモデル"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sku = models.CharField(max_length=255, unique=True)
+    product_name = models.CharField(max_length=255, null=True, blank=True)
     item_id = models.CharField(max_length=255, null=True, blank=True)
     offer_id = models.CharField(max_length=255, null=True, blank=True)
+    url = models.CharField(max_length=255, null=True, blank=True)
+    quantity = models.IntegerField(default=1)
     status = models.ForeignKey(Status, on_delete=models.PROTECT)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    shipping_price = models.DecimalField(max_digits=10, decimal_places=2)
-    final_profit = models.DecimalField(max_digits=10, decimal_places=2)
+    price_dollar = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    price_yen = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    final_profit_dollar = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    final_profit_yen = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     view_count = models.IntegerField(default=0)
     watch_count = models.IntegerField(default=0)
     yahoo_auction_id = models.ForeignKey(YahooAuction, on_delete=models.PROTECT, null=True, blank=True)
@@ -56,3 +61,20 @@ class Ebay(models.Model):
             models.Index(fields=['sku']),
             models.Index(fields=['status']),
         ]
+
+class EbaySKUHistory(models.Model):
+    """eBayのSKU履歴モデル"""
+    ebay = models.ForeignKey(Ebay, on_delete=models.CASCADE, related_name='sku_histories')
+    previous_sku = models.CharField(max_length=255)
+    new_sku = models.CharField(max_length=255)
+    insert_datetime = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 't_ebay_sku_history'
+        indexes = [
+            models.Index(fields=['previous_sku']),
+            models.Index(fields=['new_sku']),
+        ]
+
+    def __str__(self):
+        return f"{self.previous_sku} → {self.new_sku}"
