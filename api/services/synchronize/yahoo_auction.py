@@ -106,7 +106,7 @@ class SynchronizeYahooAuction():
             total_change_status_items = 0
             
             with transaction.atomic():
-                if yahoo_auction_item.id:
+                if yahoo_auction_item:
                     yahoo_auction_items = (
                         YahooAuction.objects
                         .select_for_update()
