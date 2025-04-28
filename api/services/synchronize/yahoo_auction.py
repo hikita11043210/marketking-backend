@@ -94,7 +94,7 @@ class SynchronizeYahooAuction():
             'count_change_status_items': count_change_status_items
         }
 
-    def synchronize(self, yahoo_auction_item: YahooAuction = None):
+    def synchronize(self, yahoo_auction_id: int = None):
         """
         Yahooオークションの商品ステータスを同期する
         """
@@ -106,7 +106,7 @@ class SynchronizeYahooAuction():
             total_change_status_items = 0
             
             with transaction.atomic():
-                if yahoo_auction_item:
+                if yahoo_auction_id:
                     yahoo_auction_items = (
                         YahooAuction.objects
                         .select_for_update()
@@ -118,7 +118,7 @@ class SynchronizeYahooAuction():
                                 to_attr='prefetched_ebay'
                             )
                         )
-                        .filter(id=yahoo_auction_item.id)
+                        .filter(id=yahoo_auction_id)
                     )
                 else:
                     yahoo_auction_items = (
