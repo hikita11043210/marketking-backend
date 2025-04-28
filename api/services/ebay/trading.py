@@ -1,7 +1,8 @@
 import requests
 import xml.etree.ElementTree as ET
 from api.services.ebay.common import Common
-
+from api.models.master import Setting
+import textwrap
 class Trading(Common):
     def get_item_specifics(self, ebay_item_id: str, category_tree_id: str):
         """
@@ -131,3 +132,88 @@ class Trading(Common):
 
         except Exception as e:
             raise Exception(f"ウォッチ数の取得に失敗しました: {str(e)}")
+            
+    def update_item_description(self, ebay_item_id: str, description: str):
+        """
+        Trading APIを使用して商品説明を更新する
+        Trading APIから登録した商品しか編集不可
+        Args:
+            ebay_item_id (str): 更新する商品のitemID
+            description (str): 新しい商品説明
+            
+        Returns:
+            dict: 更新結果を含む辞書
+        """
+        try:
+            endpoint = f"{self.api_url}/ws/api.dll"
+            setting = Setting.objects.get(user=self.user)
+            headers = self._get_headers()
+            headers.update({
+                'X-EBAY-API-COMPATIBILITY-LEVEL': '967',
+                'X-EBAY-API-CALL-NAME': 'ReviseItem',
+                'X-EBAY-API-SITEID': '0',
+                'Content-Type': 'text/xml',
+                'X-EBAY-API-APP-NAME': setting.ebay_client_id,
+                'X-EBAY-API-DEV-NAME': setting.ebay_dev_id,
+                'X-EBAY-API-CERT-NAME': setting.ebay_client_secret
+            })
+
+            # インデントを除去 + 前後改行除去
+            safe_description = textwrap.dedent(description).strip()
+
+            # 改行とタブをすべて削除（1行にする）
+            safe_description = safe_description.replace('\n', '').replace('\r', '').replace('\t', '')
+
+            # 万一]]>があったら壊れるので安全処理
+            safe_description = safe_description.replace(']]>', ']]]]><![CDATA[>')
+
+            request_xml = textwrap.dedent(f"""\
+                <?xml version="1.0" encoding="UTF-8"?>
+                <ReviseItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+                <RequesterCredentials>
+                    <eBayAuthToken>{self.auth_service.get_user_token().access_token}</eBayAuthToken>
+                </RequesterCredentials>
+                <Item>
+                    <ItemID>{ebay_item_id}</ItemID>
+                    <Description><![CDATA[{safe_description}]]></Description>
+                </Item>
+                </ReviseItemRequest>""")
+            
+            # ログに出力して確認
+            print(f"リクエストXML: {request_xml}")
+            
+            response = requests.post(endpoint, headers=headers, data=request_xml)
+            response.raise_for_status()
+            
+            # レスポンスをログに出力
+            print(f"レスポンス: {response.text}")
+            
+            root = ET.fromstring(response.content)
+            ns = {'': 'urn:ebay:apis:eBLBaseComponents'}
+            
+            # 応答を解析
+            ack = root.findtext('.//Ack', namespaces=ns)
+            if ack == 'Success' or ack == 'Warning':
+                item_id = root.findtext('.//ItemID', namespaces=ns)
+                return {
+                    'success': True,
+                    'message': '商品情報の更新に成功しました',
+                    'data': {
+                        'item_id': item_id
+                    }
+                }
+            else:
+                error_messages = []
+                for error in root.findall('.//Errors', ns):
+                    error_code = error.findtext('ErrorCode', namespaces=ns)
+                    error_message = error.findtext('LongMessage', namespaces=ns)
+                    error_messages.append(f"コード: {error_code}, メッセージ: {error_message}")
+                
+                error_text = "; ".join(error_messages)
+                return {
+                    'success': False,
+                    'message': f'商品情報の更新に失敗しました: {error_text}'
+                }
+                
+        except Exception as e:
+            raise Exception(f"商品情報の更新に失敗しました: {str(e)}")

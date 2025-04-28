@@ -176,21 +176,21 @@ class RegisterView(APIView):
             # https://developer.ebay.com/api-docs/sell/static/metadata/condition-id-values.html
             condition_enum = Condition.objects.get(condition_id=product_data['condition']['conditionId']).condition_enum
 
-            # Settingからdescriptionを取得
-            description_template_1 = Setting.objects.get(user=request.user).description_template_1
-            description_template_2 = Setting.objects.get(user=request.user).description_template_2
-            description_template_3 = Setting.objects.get(user=request.user).description_template_3
+            # # Settingからdescriptionを取得
+            # description_template_1 = Setting.objects.get(user=request.user).description_template_1
+            # description_template_2 = Setting.objects.get(user=request.user).description_template_2
+            # description_template_3 = Setting.objects.get(user=request.user).description_template_3
 
-            # descriptionを作成
-            if product_data['description'] == "":
-                description = description_template_1 + description_template_2 + description_template_3
-            else:
-                # descriptionの各行を<p>タグで囲む
-                formatted_description = '\n'.join([f'<p>{line}</p>' for line in product_data['description'].split('\n') if line.strip()])
-                description = description_template_1 + formatted_description + description_template_3
+            # # descriptionを作成
+            # if product_data['description'] == "":
+            #     description = description_template_1 + description_template_2 + description_template_3
+            # else:
+            #     # descriptionの各行を<p>タグで囲む
+            #     formatted_description = '\n'.join([f'<p>{line}</p>' for line in product_data['description'].split('\n') if line.strip()])
+            #     description = description_template_1 + formatted_description + description_template_3
 
             # 説明が4000文字以内であることを確認
-            if len(description) > 4000:
+            if len(product_data['description']) > 4000:
                 return create_error_response("説明が4000文字を超えています")
 
             # 登録商品情報の構築
@@ -203,7 +203,7 @@ class RegisterView(APIView):
                 "condition": condition_enum,
                 "product": {
                     "title": product_data['title'],
-                    "description": description,
+                    "description": product_data['description'],
                     "aspects": aspects,
                     "imageUrls": product_data['images']
                 }
@@ -233,7 +233,7 @@ class RegisterView(APIView):
                 "marketplaceId": settings.EBAY_MARKETPLACE_ID,
                 "format": "FIXED_PRICE",
                 "categoryId": product_data['categoryId'],
-                "listingDescription": description,
+                "listingDescription": product_data['description'],
                 "listingPolicies": {
                     "fulfillmentPolicyId": product_data['shippingPolicyId'],
                     "paymentPolicyId": product_data['paymentPolicyId'],
