@@ -47,7 +47,8 @@ class WithdrawItemView(APIView):
             # 商品を取下げ（「終了済み」に変更）
             if ebay_register_item.item_id:
                 offer_service.end_fixed_price_item(ebay_register_item.item_id)
-                
+            else:
+                return create_error_response(f"item_idが見つかりません: SKU={sku}")
             # ステータスを更新
             ebay_register_item.status = Status.objects.get(id=2)  # 取下げステータス
             ebay_register_item.save()
