@@ -151,6 +151,7 @@ class PurchaseRegistrationView(APIView):
                 
                 # 仕入データを作成
                 purchase = Purchase.objects.create(
+                    ebay_id=ebay_item.id,
                     transaction_date=timezone.now().date(),
                     product_name=yahoo_item.item_name,
                     url=yahoo_item.url,
@@ -266,6 +267,7 @@ class SalesRegistrationView(APIView):
                 
                 # 売上データを作成
                 sale = Sale.objects.create(
+                    ebay_id=ebay_item.id,
                     transaction_date=timezone.now().date(),
                     product_name=ebay_item.product_name,
                     management_code=ebay_item.sku,

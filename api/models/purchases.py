@@ -1,7 +1,8 @@
 from django.db import models
-
+from .ebay import Ebay
 class Purchase(models.Model):
     """購入台帳テーブル"""
+    ebay_id = models.ForeignKey(Ebay, on_delete=models.CASCADE, null=True, blank=True)
     transaction_date = models.DateField(null=False)
     product_name = models.TextField(null=True)
     management_code = models.CharField(max_length=100, null=True, blank=True)
