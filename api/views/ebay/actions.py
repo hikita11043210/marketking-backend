@@ -254,6 +254,11 @@ class SalesRegistrationView(APIView):
             except Ebay.DoesNotExist:
                 return create_error_response(f"指定されたSKU({sku})の商品が見つかりません")
 
+            # 重複チェック - 既に売上データが登録されていないか確認
+            sales_exists = Sale.objects.filter(management_code=sku).exists()
+            if sales_exists:
+                return create_error_response(f"このSKU({sku})の売上は既に登録されています")
+
             with transaction.atomic():
                 # ebayのステータスを完了に更新
                 ebay_item.status = Status.objects.get(id=4)  # 完了ステータスID
