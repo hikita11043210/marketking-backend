@@ -4,7 +4,7 @@ class Expense(models.Model):
     """経費台帳テーブル"""
     transaction_date = models.DateField(null=False)
     product_name = models.TextField(null=False)
-    detail = models.TextField(null=False)
+    detail = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=False, default=0)
     tax = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)

@@ -1,13 +1,13 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from api.models import Sale
+from api.models import Sales
 from api.serializers.sales import SalesSerializer
 
 
 class SaleListCreateAPIView(generics.ListCreateAPIView):
     """売上データの一覧取得・新規作成API"""
-    queryset = Sale.objects.filter(is_deleted=False)
+    queryset = Sales.objects.filter(is_deleted=False)
     serializer_class = SalesSerializer
     permission_classes = [IsAuthenticated]
 
@@ -29,7 +29,7 @@ class SaleListCreateAPIView(generics.ListCreateAPIView):
 
 class SaleDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """売上データの詳細取得・更新・削除API"""
-    queryset = Sale.objects.filter(is_deleted=False)
+    queryset = Sales.objects.filter(is_deleted=False)
     serializer_class = SalesSerializer
     permission_classes = [IsAuthenticated]
 

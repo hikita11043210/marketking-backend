@@ -1,7 +1,7 @@
 from django.db import models
 from .ebay import Ebay
 class Purchase(models.Model):
-    """購入台帳テーブル"""
+    """仕入テーブル"""
     ebay_id = models.ForeignKey(Ebay, on_delete=models.CASCADE, null=True, blank=True)
     transaction_date = models.DateField(null=False)
     product_name = models.TextField(null=True)
@@ -11,12 +11,10 @@ class Purchase(models.Model):
     identification_number = models.CharField(max_length=100, null=True, blank=True)
     quantity = models.IntegerField(null=False, default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=False, default=0)
-    import_tax = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
-    final_value_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
-    international_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     tax = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=0)
+    invoice_number = models.CharField(max_length=100, null=True, blank=True)
     client_name = models.CharField(max_length=100, null=True, blank=True)
     client_company_name = models.CharField(max_length=100, null=True, blank=True)
     client_postal_code = models.CharField(max_length=100, null=True, blank=True)

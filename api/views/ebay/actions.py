@@ -4,8 +4,8 @@ from api.utils.response_helpers import create_success_response, create_error_res
 from api.models.master import Status
 from api.models.ebay import Ebay
 from api.models.yahoo import YahooAuction
+from api.models.sales import Sales
 from api.models.purchases import Purchase
-from api.models.sales import Sale
 from api.services.ebay.offer import Offer
 from api.services.ebay.sku_manager import SKUManager
 from api.services.synchronize.ebay import Status as SyncStatus
@@ -151,7 +151,7 @@ class PurchaseRegistrationView(APIView):
                 
                 # 仕入データを作成
                 purchase = Purchase.objects.create(
-                    ebay_id=ebay_item.id,
+                    ebay_id_id=ebay_item.id,
                     transaction_date=timezone.now().date(),
                     product_name=yahoo_item.item_name,
                     url=yahoo_item.url,
@@ -256,7 +256,7 @@ class SalesRegistrationView(APIView):
                 return create_error_response(f"指定されたSKU({sku})の商品が見つかりません")
 
             # 重複チェック - 既に売上データが登録されていないか確認
-            sales_exists = Sale.objects.filter(management_code=sku).exists()
+            sales_exists = Sales.objects.filter(management_code=sku).exists()
             if sales_exists:
                 return create_error_response(f"このSKU({sku})の売上は既に登録されています")
 
@@ -266,8 +266,8 @@ class SalesRegistrationView(APIView):
                 ebay_item.save()
                 
                 # 売上データを作成
-                sale = Sale.objects.create(
-                    ebay_id=ebay_item.id,
+                sale = Sales.objects.create(
+                    ebay_id_id=ebay_item.id,
                     transaction_date=timezone.now().date(),
                     product_name=ebay_item.product_name,
                     management_code=ebay_item.sku,
@@ -275,7 +275,7 @@ class SalesRegistrationView(APIView):
                     quantity=ebay_item.quantity,
                     price=ebay_item.price_yen,
                     shipping_cost=ebay_item.shipping_price,
-                    total_amount=ebay_item.price_yen + ebay_item.shipping_price,
+                    total_amount=ebay_item.price_yen - ebay_item.shipping_price,
                 )
 
             return create_success_response(
