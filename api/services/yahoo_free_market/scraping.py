@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class ScrapingService:
     BASE_SEARCH_URL = settings.YAHOO_FREE_MARKET_URL
-    BASE_ITEM_URL = settings.YAHOO_FREE_MARKET_URL
+    BASE_ITEM_URL = settings.YAHOO_FREE_MARKET_ITEM_URL
     MAX_RETRIES = 3
     MIN_REQUEST_INTERVAL = 3  # 最小リクエスト間隔（秒）
 

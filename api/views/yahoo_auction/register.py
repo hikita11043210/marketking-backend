@@ -56,8 +56,10 @@ class ItemDetailView(APIView):
             # カテゴリツリーIDの取得
             category_tree_id = ebay_service_category.get_categories_tree_id()
 
+            keywords = ai.get_keywords(title)
+
             # カテゴリを取得
-            category = ebay_service_category.get_categories(category_tree_id, title)
+            category = ebay_service_category.get_categories(category_tree_id, keywords)
 
             # カテゴリIDを取得
             category_id = ai.get_category_id(category, title)
@@ -83,7 +85,11 @@ class ItemDetailView(APIView):
 
             data = {
                 'item_details': result,
-                'item_specifics': item_specifics,
+                'title_en': item_specifics['title_en'],
+                'title_ja': item_specifics['title_ja'],
+                'description_en': item_specifics['description_en'],
+                'description_ja': item_specifics['description_ja'],
+                'item_specifics': item_specifics['specifics'],
                 'category': category,
                 'category_id': category_id,
                 'condition_description_en': condition_description_en,
@@ -201,6 +207,7 @@ class RegisterView(APIView):
                     }
                 },
                 "condition": condition_enum,
+                "conditionDescription":product_data['conditionDescription'],
                 "product": {
                     "title": product_data['title'],
                     "description": product_data['description'],

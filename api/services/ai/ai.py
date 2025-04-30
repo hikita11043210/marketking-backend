@@ -34,75 +34,110 @@ class Ai:
         items = ', '.join([str(item) for item in category_aspects])
 
         try:
+            # システムプロンプトのテンプレートを定義
+            system_prompt_template = """
+                        # 目的
+                        別の販売サイトに売られている商品の情報から、Ebayへ出品するための商品情報に作り直してください。
+
+                        # 作成する情報
+                        - 商品のタイトル
+                        - 商品の説明
+                        - 商品の詳細
+                
+                        # 作成ルール
+                        ## 商品のタイトル
+                        - 英語で70文字以内で作成すること
+                        - 英語で作成したタイトルを日本語に翻訳した情報も含めること
+                        - Ebayの検索にヒットしやすいキーワードを利用して作成すること
+
+                        ## 商品の説明
+                        - 英語で4000文字以内で作成すること
+                        - 英語で作成した説明を日本語に翻訳した情報も含めること
+                        - 商品の「説明」・「スペック」・「状態」を分かる範囲で記載すること
+                        - 配送や値下げなどの情報は記載しないこと
+                    
+                        ## 商品の詳細
+                        - EbayのitemSpecificsに登録するための情報を作成すること
+                        - keyもvalueも英語で作成すること
+                        - 貴方がもつ商品の情報から作成することも可能です
+                        - 必須項目は必ず作成すること
+                        
+                        # 共通ルール
+                        - 出力は出力フォーマットに従って作成すること
+                        - 出力フォーマットに記載されていない情報は作成しないこと
+                        - Ebayで商品を出品する際に売れやすくするような情報を作成すること
+
+                        # 出力フォーマット
+                        {{
+                            "title_en": "title",
+                            "title_ja": "商品のタイトル",
+                            "description_en": "description",
+                            "description_ja": "商品の説明",
+                            "specifics": [
+                                {{
+                                    "key": "value",
+                                    "key": "value",
+                                    "key": "value",
+                                }}
+                            ],
+                        }}
+
+                        # 他の販売サイトの商品情報
+                        ## タイトル
+                        - title: {title}
+                        ## 説明
+                        - description: {description}
+
+                        # 必須項目
+                        - {items}
+
+                        """
+            
+            # テンプレートに変数を埋め込む
+            system_prompt = system_prompt_template.format(
+                title=title,
+                description=description,
+                items=items
+            )
+
             response = self.openai_client.chat.completions.create(
                 model="gpt-3.5-turbo",  # または "gpt-4-turbo-preview"
                 messages=[
                     {
                         "role": "system",
-                        "content": """
-                        製品タイトル、製品説明を元に、商品の詳細を抽出してください。
-                        製品タイトル、製品説明以外からもあなたが持つ知識を元に、商品の詳細を抽出してください。
-
-                        # 抽出ルール
-                        - 情報は英語で返してください。
-                        - 必ず出力フォーマットに従ってください。
-                        - 製品に関するスペックのみを抽出してください。
-                        - 必須項目は必ずキーに含めてください。
-                        - 結果はすべてトップレベルでフラットに返してください。
-                        - ネスト構造ではなく、各項目を独立して返してください。
-                        - いかなる情報も1項目として、キーと値を返してください。
-
-                        # 出力フォーマット
-                        {
-                            "key1": "value1",
-                            "key2": "value2",
-                            "key3": "value3"
-                        }
-                        """
-                    },
-                    {
-                        "role": "user",
-                        "content": f"製品タイトル: {title}"
-                    },
-                    {
-                        "role": "user",
-                        "content": f"製品説明: {description}"
-                    },
-                    {
-                        "role": "user",
-                        "content": f"必須項目: {items}"
+                        "content": system_prompt
                     },
                 ],
                 temperature=0.0  # より適切な回答を得るためにtemperatureを追加
             )
 
             # 使用量情報をログに記録
-            total_tokens = response.usage.total_tokens
-            max_tokens = 4096 if response.model == "gpt-3.5-turbo" else 128000  # GPT-4の場合
+            # total_tokens = response.usage.total_tokens
+            # max_tokens = 4096 if response.model == "gpt-3.5-turbo" else 128000  # GPT-4の場合
 
-            log_data = {
-                'モデル': response.model,
-                'トークン使用状況': {
-                    'プロンプトトークン数': response.usage.prompt_tokens,
-                    '応答トークン数': response.usage.completion_tokens,
-                    '合計トークン数': total_tokens,
-                    '使用率': f"{(total_tokens / max_tokens * 100):.2f}%",
-                    '残りトークン数': max_tokens - total_tokens
-                },
-                '応答時間': {
-                    '作成日時': response.created,
-                    '処理時間': f"{response.response_ms / 1000:.2f}秒" if hasattr(response, 'response_ms') else "不明"
-                },
-                'モデル設定': {
-                    '温度設定': 0.0,
-                    'モデルバージョン': response.model
-                },
-                '応答内容': response.choices[0].message.content,
-                '応答状態': {
-                    '終了理由': response.choices[0].finish_reason,
-                    '応答インデックス': response.choices[0].index
-                }
-            }
+            # log_data = {
+            #     'モデル': response.model,
+            #     'トークン使用状況': {
+            #         'プロンプトトークン数': response.usage.prompt_tokens,
+            #         '応答トークン数': response.usage.completion_tokens,
+            #         '合計トークン数': total_tokens,
+            #         '使用率': f"{(total_tokens / max_tokens * 100):.2f}%",
+            #         '残りトークン数': max_tokens - total_tokens
+            #     },
+            #     '応答時間': {
+            #         '作成日時': response.created,
+            #         '処理時間': f"{response.response_ms / 1000:.2f}秒" if hasattr(response, 'response_ms') else "不明"
+            #     },
+            #     'モデル設定': {
+            #         '温度設定': 0.0,
+            #         'モデルバージョン': response.model
+            #     },
+            #     '応答内容': response.choices[0].message.content,
+            #     '応答状態': {
+            #         '終了理由': response.choices[0].finish_reason,
+            #         '応答インデックス': response.choices[0].index
+            #     }
+            # }
 
             # generate_log_file(log_data, "extract_specifics", date=True)
 
@@ -111,7 +146,7 @@ class Ai:
             try:
                 # JSONとしてパース
                 parsed_result = json.loads(result_text)
-                
+
                 # 必ず保持するキーのリスト（空でも削除しないキー）
                 required_keys = category_aspects  # category_aspectsは必須項目のリスト
                 
@@ -181,13 +216,8 @@ class Ai:
                     "path": category.get("path", "")
                 })
             
-            # OpenAI APIを使用して最適なカテゴリを選択
-            response = self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": """
+            # システムプロンプトのテンプレートを定義
+            system_prompt_template = """
                         あなたは商品カテゴリ分類の専門家です。
                         商品タイトルを分析し、提供されたカテゴリリストから最も適切なカテゴリを選択してください。
                         
@@ -197,33 +227,50 @@ class Ai:
                         - 結果は必ずカテゴリIDのみを返してください（数字のみ）
                         - 説明や理由は不要です
                         """
+            
+            # ユーザープロンプトのテンプレートを定義
+            user_prompt_template = "商品タイトル: {title}\nカテゴリリスト: {category_info}"
+            
+            # テンプレートに変数を埋め込む
+            user_prompt = user_prompt_template.format(
+                title=title,
+                category_info=json.dumps(category_info, ensure_ascii=False)
+            )
+            
+            # OpenAI APIを使用して最適なカテゴリを選択
+            response = self.openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": system_prompt_template
                     },
                     {
                         "role": "user",
-                        "content": f"商品タイトル: {title}\nカテゴリリスト: {json.dumps(category_info, ensure_ascii=False)}"
+                        "content": user_prompt
                     }
                 ],
                 temperature=0.0
             )
             
-            # 使用量情報をログに記録
-            total_tokens = response.usage.total_tokens
-            max_tokens = 4096 if response.model == "gpt-3.5-turbo" else 128000
+            # # 使用量情報をログに記録
+            # total_tokens = response.usage.total_tokens
+            # max_tokens = 4096 if response.model == "gpt-3.5-turbo" else 128000
             
-            log_data = {
-                'モデル': response.model,
-                'トークン使用状況': {
-                    'プロンプトトークン数': response.usage.prompt_tokens,
-                    '応答トークン数': response.usage.completion_tokens,
-                    '合計トークン数': total_tokens,
-                    '使用率': f"{(total_tokens / max_tokens * 100):.2f}%",
-                    '残りトークン数': max_tokens - total_tokens
-                },
-                '応答内容': response.choices[0].message.content,
-                '応答状態': {
-                    '終了理由': response.choices[0].finish_reason
-                }
-            }
+            # log_data = {
+            #     'モデル': response.model,
+            #     'トークン使用状況': {
+            #         'プロンプトトークン数': response.usage.prompt_tokens,
+            #         '応答トークン数': response.usage.completion_tokens,
+            #         '合計トークン数': total_tokens,
+            #         '使用率': f"{(total_tokens / max_tokens * 100):.2f}%",
+            #         '残りトークン数': max_tokens - total_tokens
+            #     },
+            #     '応答内容': response.choices[0].message.content,
+            #     '応答状態': {
+            #         '終了理由': response.choices[0].finish_reason
+            #     }
+            # }
             
             # generate_log_file(log_data, "get_category_id", date=True)
             
@@ -252,3 +299,65 @@ class Ai:
         except Exception as e:
             # エラーが発生した場合はログに記録し、最初のカテゴリを返す
             return categories[0].get("categoryId", "")
+
+    def get_keywords(self, title: str) -> List[str]:
+        """
+        商品タイトルからキーワードを抽出する
+        
+        Args:
+            title: 商品タイトル
+            
+        Returns:
+            List[str]: 抽出されたキーワードのリスト
+        """
+        if not title:
+            return []
+            
+        try:
+            # システムプロンプトのテンプレート定義
+            system_prompt_template = """
+            あなたは検索キーワード最適化の専門家です。
+            eBayでの商品検索に最適なキーワードを抽出してください。
+
+            # 抽出ルール
+            - 商品タイトルから検索に有効な主要キーワードを抽出してください
+            - キーワードは必ず英語で出力してください（日本語のタイトルは英語に翻訳）
+            - ブランド名、モデル名、商品カテゴリなどの重要な情報を優先してください
+            - キーワードは1~2個程度に絞ってください
+            - 出力は英単語をスペースで区切ったシンプルな形式にしてください
+            - 説明や余計な文章は含めないでください
+            """
+            
+            # ユーザープロンプトのテンプレート定義
+            user_prompt_template = "商品タイトル: {title}"
+            
+            # テンプレートに変数を埋め込む
+            user_prompt = user_prompt_template.format(title=title)
+            
+            # OpenAI APIを使用してキーワードを抽出
+            response = self.openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": system_prompt_template
+                    },
+                    {
+                        "role": "user",
+                        "content": user_prompt
+                    }
+                ],
+                temperature=0.0
+            )
+            
+            # レスポンスからキーワードを取得
+            keywords_text = response.choices[0].message.content.strip()
+            
+            return keywords_text
+            
+        except Exception as e:
+            # エラーが発生した場合は空のリストを返す
+            logging.error(f"キーワード抽出中にエラーが発生しました: {str(e)}")
+            return []
+
+        
