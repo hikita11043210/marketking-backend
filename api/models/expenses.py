@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.conf import settings
 class Expense(models.Model):
     """経費台帳テーブル"""
     transaction_date = models.DateField(null=False)
@@ -17,7 +17,8 @@ class Expense(models.Model):
     is_deleted = models.BooleanField(default=False)
     update_datetime = models.DateTimeField(auto_now=True)
     insert_datetime = models.DateTimeField(auto_now_add=True)
-
+    insert_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='expense_insert_user')
+    update_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='expense_update_user')
     class Meta:
         db_table = 't_expenses'
 

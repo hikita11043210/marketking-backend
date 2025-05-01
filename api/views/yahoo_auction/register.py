@@ -273,7 +273,9 @@ class RegisterView(APIView):
                     item_name=yahoo_auction_data['yahoo_auction_item_name'],
                     item_price=Decimal(str(yahoo_auction_data['yahoo_auction_item_price'])),
                     shipping=Decimal(str(yahoo_auction_data['yahoo_auction_shipping'])),
-                    end_time=yahoo_auction_data['yahoo_auction_end_time']
+                    end_time=yahoo_auction_data['yahoo_auction_end_time'],
+                    insert_user=request.user,
+                    update_user=request.user
                 )
 
                 # ebayのデータを保存
@@ -291,7 +293,9 @@ class RegisterView(APIView):
                     final_profit_dollar=Decimal(str(other_data['final_profit_dollar'])),
                     final_profit_yen=Decimal(str(other_data['final_profit_yen'])),
                     yahoo_auction_id=yahoo_auction,
-                    item_id=item_id
+                    item_id=item_id,
+                    insert_user=request.user,
+                    update_user=request.user
                 )
 
             return create_success_response(

@@ -14,7 +14,8 @@ class YahooAuction(models.Model):
     end_time = models.DateTimeField()
     update_datetime = models.DateTimeField(auto_now=True)
     insert_datetime = models.DateTimeField(auto_now_add=True)
-
+    insert_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='yahoo_auction_insert_user')
+    update_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='yahoo_auction_update_user')
     class Meta:
         db_table = 't_yahoo_auction'
         indexes = [
@@ -32,7 +33,8 @@ class YahooFreeMarket(models.Model):
     shipping = models.DecimalField(max_digits=10, decimal_places=2)
     update_datetime = models.DateTimeField(auto_now=True)
     insert_datetime = models.DateTimeField(auto_now_add=True)
-
+    insert_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='yahoo_free_market_insert_user')
+    update_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='yahoo_free_market_update_user')
     class Meta:
         db_table = 't_yahoo_free_market'
         indexes = [

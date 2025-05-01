@@ -160,6 +160,8 @@ class PurchaseRegistrationView(APIView):
                     price=yahoo_item.item_price,
                     shipping_cost=yahoo_item.shipping,
                     total_amount=yahoo_item.item_price + yahoo_item.shipping,
+                    insert_user=request.user,
+                    update_user=request.user
                 )
 
             return create_success_response(
@@ -277,6 +279,8 @@ class SalesRegistrationView(APIView):
                     price=ebay_item.price_yen,
                     shipping_cost=ebay_item.shipping_price,
                     total_amount=ebay_item.price_yen - ebay_item.shipping_price,
+                    insert_user=request.user,
+                    update_user=request.user
                 )
 
             return create_success_response(

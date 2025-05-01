@@ -54,7 +54,8 @@ class Ebay(models.Model):
     yahoo_free_market_id = models.ForeignKey(YahooFreeMarket, on_delete=models.PROTECT, null=True, blank=True)
     update_datetime = models.DateTimeField(auto_now=True)
     insert_datetime = models.DateTimeField(auto_now_add=True)
-
+    insert_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='ebay_insert_user')
+    update_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='ebay_update_user')
     class Meta:
         db_table = 't_ebay'
         indexes = [
@@ -68,6 +69,9 @@ class EbaySKUHistory(models.Model):
     previous_sku = models.CharField(max_length=255)
     new_sku = models.CharField(max_length=255)
     insert_datetime = models.DateTimeField(auto_now_add=True)
+    insert_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='ebay_sku_history_insert_user')
+    update_datetime = models.DateTimeField(auto_now=True)
+    update_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='ebay_sku_history_update_user')
 
     class Meta:
         db_table = 't_ebay_sku_history'

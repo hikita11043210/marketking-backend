@@ -20,7 +20,7 @@ class ListView(APIView):
                 'yahoo_auction_id',
                 'yahoo_auction_id__status',
                 'status'
-            ).filter(yahoo_auction_id__isnull=False).order_by('status', '-update_datetime')
+            ).filter(yahoo_auction_id__isnull=False, insert_user=request.user).order_by('status', '-update_datetime')
             
             # # 出品情報を削除するためのインスタンスを生成
             # ebay_service_offer = Offer(request.user)

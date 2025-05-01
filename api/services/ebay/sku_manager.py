@@ -360,7 +360,9 @@ class SKUManager:
                     item_name=old_yahoo_auction.item_name,
                     item_price=old_yahoo_auction.item_price,
                     shipping=old_yahoo_auction.shipping,
-                    end_time=old_yahoo_auction.end_time
+                    end_time=old_yahoo_auction.end_time,
+                    insert_user=self.user,
+                    update_user=self.user
                 )
                 new_yahoo_auction_id = new_yahoo_auction.id
                 logger.info(f"新しいYahooオークションレコードを作成しました: id={new_yahoo_auction_id}")
@@ -381,7 +383,9 @@ class SKUManager:
                     url=old_yahoo_free_market.url,
                     item_name=old_yahoo_free_market.item_name,
                     item_price=old_yahoo_free_market.item_price,
-                    shipping=old_yahoo_free_market.shipping
+                    shipping=old_yahoo_free_market.shipping,
+                    insert_user=self.user,
+                    update_user=self.user
                 )
                 new_yahoo_free_market_id = new_yahoo_free_market.id
                 logger.info(f"新しいYahooフリマレコードを作成しました: id={new_yahoo_free_market_id}")
@@ -404,7 +408,9 @@ class SKUManager:
                 final_profit_dollar=old_ebay_item.final_profit_dollar,
                 final_profit_yen=old_ebay_item.final_profit_yen,
                 yahoo_auction_id_id=new_yahoo_auction_id,  # 新しく作成したYahooオークションID
-                yahoo_free_market_id_id=new_yahoo_free_market_id  # 新しく作成したYahooフリマID
+                yahoo_free_market_id_id=new_yahoo_free_market_id,  # 新しく作成したYahooフリマID
+                insert_user=self.user,
+                update_user=self.user
             )
             
             logger.info(f"新しいeBayレコードを作成しました: id={new_ebay_item.id}, SKU={new_sku}")

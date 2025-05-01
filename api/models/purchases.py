@@ -1,5 +1,6 @@
 from django.db import models
 from .ebay import Ebay
+from django.conf import settings
 class Purchase(models.Model):
     """仕入テーブル"""
     ebay_id = models.ForeignKey(Ebay, on_delete=models.CASCADE, null=True, blank=True)
@@ -24,7 +25,8 @@ class Purchase(models.Model):
     is_deleted = models.BooleanField(default=False)
     update_datetime = models.DateTimeField(auto_now=True)
     insert_datetime = models.DateTimeField(auto_now_add=True)
-
+    insert_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='purchase_insert_user')
+    update_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='purchase_update_user')
     class Meta:
         db_table = 't_purchases'
 

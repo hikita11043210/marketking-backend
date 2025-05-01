@@ -221,6 +221,8 @@ class YahooFreeMarketRegisterView(APIView):
                     item_name=yahoo_free_market_data['yahoo_free_market_item_name'],
                     item_price=Decimal(str(yahoo_free_market_data['yahoo_free_market_item_price'])),
                     shipping=Decimal(str(yahoo_free_market_data['yahoo_free_market_shipping'])),
+                    insert_user=request.user,
+                    update_user=request.user
                 )
 
                 # ebayのデータを保存
@@ -238,7 +240,9 @@ class YahooFreeMarketRegisterView(APIView):
                     shipping_price=Decimal(str(other_data['ebay_shipping_price'])),
                     final_profit_dollar=Decimal(str(other_data['final_profit_dollar'])),
                     final_profit_yen=Decimal(str(other_data['final_profit_yen'])),
-                    yahoo_free_market_id=yahoo_free_market
+                    yahoo_free_market_id=yahoo_free_market,
+                    insert_user=request.user,
+                    update_user=request.user
                 )
 
             return create_success_response(

@@ -149,7 +149,7 @@ class Tax(models.Model):
 class Setting(models.Model):
     """設定マスタ"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='settings')
-    ebay_store_type = models.ForeignKey(EbayStoreType, on_delete=models.PROTECT, related_name='settings')
+    ebay_store_type = models.ForeignKey(EbayStoreType, on_delete=models.PROTECT, related_name='settings', null=True, blank=True)
     yahoo_client_id = models.CharField(max_length=255, null=True, blank=True)
     yahoo_client_secret = models.CharField(max_length=255, null=True, blank=True)
     ebay_client_id = models.CharField(max_length=255, null=True, blank=True)
