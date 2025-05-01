@@ -81,7 +81,7 @@ class ItemDetailView(APIView):
             selected_condition = 3000
 
             # 価格計算
-            price = calculator_service.calc_price_dollar([price, shipping, 0])
+            # price = calculator_service.calc_price_dollar(price, shipping, 0)
 
             data = {
                 'item_details': result,
@@ -93,7 +93,7 @@ class ItemDetailView(APIView):
                 'category': category,
                 'category_id': category_id,
                 'condition_description_en': condition_description_en,
-                'price': price,
+                'price': '',
                 'conditions': conditions,
                 'selected_condition': selected_condition
             }
@@ -289,7 +289,7 @@ class RegisterView(APIView):
                     quantity=product_data['quantity'],
                     price_dollar=Decimal(str(other_data['calculated_price_dollar'])),
                     price_yen=Decimal(str(other_data['calculated_price_yen'])),
-                    shipping_price=Decimal(str(other_data['ebay_shipping_price'])),
+                    shipping_price=Decimal(str(other_data['shipping_cost'])),
                     final_profit_dollar=Decimal(str(other_data['final_profit_dollar'])),
                     final_profit_yen=Decimal(str(other_data['final_profit_yen'])),
                     yahoo_auction_id=yahoo_auction,

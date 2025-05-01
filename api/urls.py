@@ -1,5 +1,6 @@
 from django.urls import path
 from .views.master.setting import SettingAPIView
+from .views.master.ebay_store_type import EbayStoreTypeAPIView, CurrentEbayStoreTypeAPIView
 from .views.yahoo_auction.search import SearchView as YahooAuctionSearchView
 from .views.yahoo_auction.register import ItemDetailView, RegisterView
 from .views.utils.calculator_shipping import CalculatorShippingView
@@ -16,7 +17,7 @@ from .views.ebay.policies import EbayPoliciesView
 from .views.ebay.category import EbayCategoryView
 from .views.ebay.itemSpecifics import EbayItemSpecificsView
 from .views.ebay.condition import EbayConditionView
-from .views.yahoo_auction.list import ListView, SynchronizeYahooAuctionView
+from .views.yahoo_auction.list import YahooAuctionListView, SynchronizeYahooAuctionView
 from .views.ebay.offer import OfferView, SkuHistoryView
 from .views.ebay.categoryItemSpecifics import EbayCategoryItemSpecificsView
 from .views.synchronize.script import SynchronizeScriptView
@@ -44,8 +45,11 @@ urlpatterns = [
     path('auth/refresh/', RefreshTokenView.as_view(), name='auth-refresh'),
     path('auth/logout/', LogoutView.as_view(), name='auth-logout'),
     path('settings/', SettingAPIView.as_view(), name='settings'),
+    path('ebay-store-types/', EbayStoreTypeAPIView.as_view(), name='ebay-store-types'),
+    path('ebay-store-types/current/', CurrentEbayStoreTypeAPIView.as_view(), name='current-ebay-store-type'),
     path('yahoo-auction/items/', YahooAuctionSearchView.as_view(), name='yahoo-auction-item'),
     path('yahoo-auction/detail/', ItemDetailView.as_view(), name='yahoo-auction-detail'),
+    path('yahoo-auction/list/', YahooAuctionListView.as_view(), name='yahoo-auction-list'),
     path('shipping-calculator/', CalculatorShippingView.as_view(), name='shipping-calculator'),
     path('calculator-price/', CalculatorPriceView.as_view(), name='calculator-price'),
     path('translate/', TranslatorView.as_view(), name='translate'),
@@ -59,7 +63,6 @@ urlpatterns = [
     path('ebay/itemSpecifics/', EbayItemSpecificsView.as_view()),
     path('ebay/register/', RegisterView.as_view()),
     path('ebay/condition/', EbayConditionView.as_view()),
-    path('list/', ListView.as_view()),
     path('ebay/offer/', OfferView.as_view(), name='ebay-offer'),
     path('ebay/sku-history/', SkuHistoryView.as_view(), name='ebay-sku-history'),
     path('synchronize/ebay/', SynchronizeEbayView.as_view()),

@@ -6,12 +6,16 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.tasks import sync_yahoo_auction, sync_yahoo_free_market, sync_ebay, send_sync_notification
 from celery import chain, group
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 class SynchronizeScriptView(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            # 現在時刻を開始時刻として記録（UTC）
+            start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
             # 同期タスクをグループ化
             sync_tasks = group([
                 sync_yahoo_auction.s(),
@@ -19,10 +23,10 @@ class SynchronizeScriptView(APIView):
                 sync_ebay.s()
             ])
 
-            # 同期タスク完了後にメール送信タスクを実行
+            # メール送信タスクに開始時刻を渡す
             workflow = chain(
                 sync_tasks,
-                send_sync_notification.s()
+                send_sync_notification.s(start_time=start_time)
             )
             
             # タスクチェーンを実行

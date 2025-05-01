@@ -98,7 +98,8 @@ def run_sync():
         logger.error(f"同期処理中にエラーが発生しました: {str(e)}")
         # エラー時もメール通知
         error_body = f"同期処理でエラーが発生しました。\nエラー: {str(e)}"
-        # send_notification(error_body)
+        email_service = EmailService()
+        email_service.send_email_to_multiple_users(RECIPIENT_EMAILS, 'Market King 同期更新エラー', error_body)
 
 if __name__ == '__main__':
     run_sync() 

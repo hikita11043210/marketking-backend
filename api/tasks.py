@@ -5,6 +5,7 @@ from api.services.synchronize.yahoo_free_market import SynchronizeYahooFreeMarke
 from api.services.mail.mail import EmailService
 from api.utils.email_body import create_email_body
 import logging
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -40,17 +41,40 @@ def sync_ebay():
 
 # メール送信用の新しいタスクを追加
 @shared_task
-def send_sync_notification(results):
+def send_sync_notification(results, start_time=None):
     """
     同期処理の結果をメールで通知するタスク
     results: 各同期タスクの結果のリスト
+    start_time: 同期処理の開始時刻
     """
     try:
+        from datetime import datetime, timedelta
+
+        # 現在時刻を終了時刻として記録（UTC）
+        utc_end_time = datetime.now()
+        
+        # UTC時間を日本時間（JST）に変換（+9時間）
+        jst_end_time = (utc_end_time + timedelta(hours=9)).strftime('%Y-%m-%d %H:%M:%S')
+        
+        # 開始時刻も日本時間に変換
+        jst_start_time = None
+        if start_time:
+            try:
+                # 文字列から日時オブジェクトに変換
+                utc_start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+                # JST（+9時間）に変換
+                jst_start_time = (utc_start_time + timedelta(hours=9)).strftime('%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                # 変換できない場合はそのまま使用
+                jst_start_time = start_time
+        
         # 結果データの整形
         response_data = {
             'yahoo_auction': results[0].get('data') if results[0].get('status') == 'success' else {'error': results[0].get('error')},
             'yahoo_free_market': results[1].get('data') if results[1].get('status') == 'success' else {'error': results[1].get('error')},
-            'ebay': results[2].get('data') if results[2].get('status') == 'success' else {'error': results[2].get('error')}
+            'ebay': results[2].get('data') if results[2].get('status') == 'success' else {'error': results[2].get('error')},
+            'start_time': jst_start_time,
+            'end_time': jst_end_time
         }
 
         # メール本文の作成と送信
