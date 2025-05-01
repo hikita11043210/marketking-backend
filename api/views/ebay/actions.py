@@ -217,11 +217,11 @@ class SynchronizeItemView(APIView):
                 # Yahoo情報を同期
                 if ebay_item.yahoo_auction_id:
                     yahoo_sync = SynchronizeYahooAuction(request.user)
-                    yahoo_result = yahoo_sync.synchronize(ebay_item.yahoo_auction_id)
+                    yahoo_result = yahoo_sync.synchronize(ebay_item.yahoo_auction_id.id)
                     result['yahoo_auction'] = yahoo_result
                 elif ebay_item.yahoo_free_market_id:
                     yahoo_sync = SynchronizeYahooFreeMarket(request.user)
-                    yahoo_result = yahoo_sync.synchronize(ebay_item.yahoo_free_market_id)
+                    yahoo_result = yahoo_sync.synchronize(ebay_item.yahoo_free_market_id.id)
                     result['yahoo_free_market'] = yahoo_result
 
             return create_success_response(
