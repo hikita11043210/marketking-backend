@@ -13,6 +13,7 @@
         "corsheaders",
         "currentprice",
         "DEEPL",
+        "deepseek",
         "dotenv",
         "errorlevel",
         "exflg",

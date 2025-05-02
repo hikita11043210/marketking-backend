@@ -49,6 +49,7 @@ class ItemDetailView(APIView):
             # 商品詳細の値セット
             title = result['title']
             description = result['description']
+            descriptionHtml = result['descriptionHtml']
             condition = result['condition']
             price = int(result['buy_now_price_in_tax'])
             shipping = int(request.query_params.get('shipping'))
@@ -71,7 +72,7 @@ class ItemDetailView(APIView):
             )
 
             # 商品詳細の取得
-            item_specifics = ai.extract_cameras_specifics(title, category_aspects, description)
+            item_specifics = ai.extract_cameras_specifics(title, category_aspects, descriptionHtml)
 
             # 商品の状態の説明の取得
             condition_description_en = translator_service.translate_text(condition, 'EN-US')

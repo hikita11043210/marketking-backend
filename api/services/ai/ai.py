@@ -5,13 +5,15 @@ import os
 from dotenv import load_dotenv
 import logging
 from api.utils.generate_log_file import generate_log_file
+import re
 
 # 環境変数の読み込み
 load_dotenv(override=True)
 
 class Ai:
     def __init__(self):
-        self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://api.deepseek.com")
+        self.model = "deepseek-chat"
 
     def extract_cameras_specifics(self, title: str, category_aspects: List[str], description: str) -> Dict[str, Any]:
         """
@@ -37,29 +39,45 @@ class Ai:
             # システムプロンプトのテンプレートを定義
             system_prompt_template = """
                         # 目的
-                        別の販売サイトに売られている商品の情報から、Ebayへ出品するための商品情報に作り直してください。
+                        以下の情報をもとに、eBayへ出品するための商品情報を英語で生成してください。
 
-                        # 作成する情報
-                        - 商品のタイトル
-                        - 商品の説明
-                        - 商品の詳細
-                
-                        # 作成ルール
-                        ## 商品のタイトル
-                        - 英語で70文字以内で作成すること
-                        - 英語で作成したタイトルを日本語に翻訳した情報も含めること
-                        - Ebayの検索にヒットしやすいキーワードを利用して作成すること
+                        # 出力する項目
+                        - 商品のタイトル（英語 + 日本語訳）
+                        - 商品の説明（英語 + 日本語訳、3セクション形式）
+                        - 商品の詳細（eBay item specifics）
 
-                        ## 商品の説明
-                        - 英語で4000文字以内で作成すること
-                        - 英語で作成した説明を日本語に翻訳した情報も含めること
-                        - 商品の「説明」・「スペック」・「状態」を分かる範囲で記載すること
-                        - 配送や値下げなどの情報は記載しないこと
+                        # 出力形式
+                        以下の形式で出力してください：
+                        {{
+                            "title_en": "英語タイトル（70文字以内）",
+                            "title_ja": "日本語タイトル",
+                            "description_en": "以下の形式に従ってください：\n\n** Overview **\n...\n\n** Condition **\n...\n\n** Specification **\n- ...\n- ...",
+                            "description_ja": "英語説明文の日本語訳（同様に3セクションに分けてください）",
+                            "specifics": [
+                                {{"key": "value"}},
+                                {{"key": "value"}},
+                                ...
+                            ]
+                        }}
+
+                        # タイトルのルール
+                        - 英語タイトルは70文字以内
+                        - 日本語訳を含めること
+                        - 検索性の高いキーワードを意識すること
+
+                        # 説明文のルール
+                        - 英語で4000文字以内
+                        - 以下の3つのセクションに分けて記載：
+                            overview：概要・セールスポイント（最後に1行改行）
+                            condition：状態説明（最後に1行改行）
+                            spec：仕様を箇条書きで記載（最後に1行改行）
+                        - 日本語訳も同様の構成で作成すること
+                        - 不明な情報は "--" と記載
+                        - 配送・返品・価格・連絡先などには触れない
                     
-                        ## 商品の詳細
-                        - EbayのitemSpecificsに登録するための情報を作成すること
-                        - keyもvalueも英語で作成すること
-                        - 貴方がもつ商品の情報から作成することも可能です
+                        # 商品の詳細
+                        - keyとvalueは英語で作成すること
+                        - 既存商品の説明も参考にして作成すること
                         - 必須項目は必ず作成すること
                         
                         # 共通ルール
@@ -67,25 +85,11 @@ class Ai:
                         - 出力フォーマットに記載されていない情報は作成しないこと
                         - Ebayで商品を出品する際に売れやすくするような情報を作成すること
 
-                        # 出力フォーマット
-                        {{
-                            "title_en": "title",
-                            "title_ja": "商品のタイトル",
-                            "description_en": "description",
-                            "description_ja": "商品の説明",
-                            "specifics": [
-                                {{
-                                    "key": "value",
-                                    "key": "value",
-                                    "key": "value",
-                                }}
-                            ],
-                        }}
-
-                        # 他の販売サイトの商品情報
-                        ## タイトル
+                        # 既存商品の情報
+                        ## 既存商品のタイトル
                         - title: {title}
-                        ## 説明
+
+                        ## 既存商品の説明
                         - description: {description}
 
                         # 必須項目
@@ -101,13 +105,14 @@ class Ai:
             )
 
             response = self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",  # または "gpt-4-turbo-preview"
+                model=self.model,  # または "gpt-4-turbo-preview"
                 messages=[
                     {
                         "role": "system",
                         "content": system_prompt
                     },
                 ],
+                # stream=False
                 temperature=0.0  # より適切な回答を得るためにtemperatureを追加
             )
 
@@ -142,10 +147,15 @@ class Ai:
             # generate_log_file(log_data, "extract_specifics", date=True)
 
             result_text = response.choices[0].message.content
-            
+
             try:
                 # JSONとしてパース
-                parsed_result = json.loads(result_text)
+                match = re.search(r'\{[\s\S]*\}', result_text)
+                if match:
+                    json_str = match.group(0)
+                    parsed_result = json.loads(json_str)
+                else:
+                    parsed_result = json.loads(result_text)
 
                 # 必ず保持するキーのリスト（空でも削除しないキー）
                 required_keys = category_aspects  # category_aspectsは必須項目のリスト
@@ -239,7 +249,7 @@ class Ai:
             
             # OpenAI APIを使用して最適なカテゴリを選択
             response = self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=self.model,
                 messages=[
                     {
                         "role": "system",
@@ -336,7 +346,7 @@ class Ai:
             
             # OpenAI APIを使用してキーワードを抽出
             response = self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=self.model,
                 messages=[
                     {
                         "role": "system",

@@ -265,11 +265,10 @@ class ScrapingService:
                         data['end_time'] = item_detail.get('endTime', '')
                         
                         # 商品説明
-                        description = item_detail.get('description', [])
-                        if isinstance(description, list):
-                            data['description'] = '\n'.join(description)
-                        else:
-                            data['description'] = str(description)
+                        data['description'] = item_detail.get('description', [])
+                        descriptionHtml = item_detail.get('descriptionHtml', [])
+                        descriptionHtml = BeautifulSoup(descriptionHtml, 'html.parser')
+                        data['descriptionHtml'] = descriptionHtml.get_text(separator='\n')
                         return data
                 except json.JSONDecodeError:
                     logger.warning("JSONデータの解析に失敗しました")
