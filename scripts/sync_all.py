@@ -33,7 +33,7 @@ def get_access_token():
     try:
         login_url = f'{API_BASE_URL}/auth/login/'
         login_data = {
-            'username': 'anakin0512',
+            'username': 'anakin0719',
             'password': 'Popo3gou!'
         }
         

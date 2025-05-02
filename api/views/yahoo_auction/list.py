@@ -116,8 +116,6 @@ class YahooAuctionListView(APIView):
             purchase_available_count = all_items.filter(yahoo_auction_id__status__status_name='仕入可').count()
             purchase_unavailable_count = all_items.filter(yahoo_auction_id__status__status_name='仕入不可').count()
             
-            logger.info(f"集計: active={active_count}, sold_out={sold_out_count}, completed={completed_count}, purchase_available={purchase_available_count}, purchase_unavailable={purchase_unavailable_count}")
-            
             # ステータスごとの商品数を追加
             response_data = {
                 'items': items_data,
