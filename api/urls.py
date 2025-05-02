@@ -6,7 +6,7 @@ from .views.yahoo_auction.register import ItemDetailView, RegisterView
 from .views.utils.calculator_shipping import CalculatorShippingView
 from .views.utils.calculator_price import CalculatorPriceView
 from .views.utils.translator import TranslatorView
-from .views.login import LoginView, RefreshTokenView, LogoutView
+from .views.login import LoginView, RefreshTokenView, LogoutView, LoginMeView
 from .views.ebay.auth import (
     EbayAuthStatusView,
     EbayAuthURLView,
@@ -44,6 +44,7 @@ urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='auth-login'),
     path('auth/refresh/', RefreshTokenView.as_view(), name='auth-refresh'),
     path('auth/logout/', LogoutView.as_view(), name='auth-logout'),
+    path('auth/login/me/', LoginMeView.as_view(), name='auth-login-me'),
     path('settings/', SettingAPIView.as_view(), name='settings'),
     path('ebay-store-types/', EbayStoreTypeAPIView.as_view(), name='ebay-store-types'),
     path('ebay-store-types/current/', CurrentEbayStoreTypeAPIView.as_view(), name='current-ebay-store-type'),

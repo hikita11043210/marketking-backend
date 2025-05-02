@@ -24,7 +24,7 @@ class SettingAPIView(APIView):
                     'ebay_dev_id': setting.ebay_dev_id or '',
                     'ebay_client_secret': setting.ebay_client_secret or '',
                     'ebay_store_type_id': setting.ebay_store_type.id if setting.ebay_store_type else None,
-                    'rate': setting.rate or '',
+                    'rate': setting.rate or 0,
                     'deepl_api_key': setting.deepl_api_key or '',
                     'created_at': setting.created_at.isoformat() if setting.created_at else '',
                     'updated_at': setting.updated_at.isoformat() if setting.updated_at else '',

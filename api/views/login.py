@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.exceptions import TokenError
@@ -114,3 +114,15 @@ class LogoutView(APIView):
                 'error': 'unauthorized',
                 'message': '無効なトークンです'
             }, status=status.HTTP_401_UNAUTHORIZED) 
+
+class LoginMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        return Response({
+            'id': user.id,
+            'name': user.name,
+            'email': user.email,
+        })
+
