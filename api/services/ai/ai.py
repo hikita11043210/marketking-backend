@@ -12,8 +12,11 @@ load_dotenv(override=True)
 
 class Ai:
     def __init__(self):
-        self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://api.deepseek.com")
-        self.model = "deepseek-chat"
+        # self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://api.deepseek.com")
+        # self.model = "deepseek-chat"
+
+        self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.model = "gpt-3.5-turbo"
 
     def extract_cameras_specifics(self, title: str, category_aspects: List[str], description: str) -> Dict[str, Any]:
         """
