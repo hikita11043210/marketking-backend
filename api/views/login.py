@@ -32,7 +32,7 @@ class LoginView(TokenObtainPairView):
             'refreshToken': str(refresh),
             'user': {
                 'id': user.id,
-                'username': user.username,
+                'name': user.name,
                 'email': user.email
             }
         })
