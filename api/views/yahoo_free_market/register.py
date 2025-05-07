@@ -49,30 +49,46 @@ class YahooFreeMarketItemDetailView(APIView):
             price = result['price']
 
             # カテゴリツリーIDの取得
+            logging.info(f"カテゴリツリーIDの取得開始")
             category_tree_id = ebay_service_category.get_categories_tree_id()
+            logging.info(f"カテゴリツリーIDの取得完了")
 
+            logging.info(f"キーワードの取得開始")
             keywords = ai.get_keywords(title)
+            logging.info(f"キーワードの取得完了")
 
             # カテゴリを取得
+            logging.info(f"カテゴリの取得開始")
             category = ebay_service_category.get_categories(category_tree_id, keywords)
+            logging.info(f"カテゴリの取得完了")
 
             # カテゴリIDを取得
+            logging.info(f"カテゴリIDの取得開始")
             category_id = ai.get_category_id(category, title)
+            logging.info(f"カテゴリIDの取得完了")
 
             # カテゴリ固有の仕様を取得
+            logging.info(f"カテゴリ固有の仕様の取得開始")
             category_aspects = trading_api.get_category_aspects(
                 category_id=category_id,
                 category_tree_id=category_tree_id
             )
+            logging.info(f"カテゴリ固有の仕様の取得完了")
 
             # 商品詳細の取得
+            logging.info(f"商品詳細取得開始")
             item_specifics = ai.extract_cameras_specifics(title, category_aspects, description)
+            logging.info(f"商品詳細取得完了")
 
             # 商品の状態の説明の取得
+            logging.info(f"商品の状態の説明の取得開始")
             condition_description_en = translator_service.translate_text(condition, 'EN-US')
+            logging.info(f"商品の状態の説明の取得完了")
 
             # カテゴリのコンディション情報を取得
+            logging.info(f"カテゴリのコンディション情報の取得開始")
             conditions = ebay_service_marketplace.get_category_conditions(category_id)
+            logging.info(f"カテゴリのコンディション情報の取得完了")
             selected_condition = 3000
 
             # 価格計算

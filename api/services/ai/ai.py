@@ -32,11 +32,11 @@ class Ai:
         Raises:
             ValueError: タイトルまたは項目リストが無効な場合
         """
-        if not title or not category_aspects:
-            return ""
-
-        # 動的なJSONフォーマットの生成
-        items = ', '.join([str(item) for item in category_aspects])
+        if not category_aspects:
+            items = "必須項目無し"
+        else:
+            # 動的なJSONフォーマットの生成
+            items = ', '.join([str(item) for item in category_aspects])
 
         try:
             # システムプロンプトのテンプレートを定義
@@ -75,7 +75,7 @@ class Ai:
                             condition：状態説明（最後に1行改行）
                             spec：仕様を箇条書きで記載（最後に1行改行）
                         - 日本語訳も同様の構成で作成すること
-                        - 不明な情報は "--" と記載
+                        - 不明な情報は "undefined" と記載
                         - 配送・返品・価格・連絡先などには触れない
                     
                         # 商品の詳細
@@ -118,36 +118,6 @@ class Ai:
                 # stream=False
                 temperature=0.0  # より適切な回答を得るためにtemperatureを追加
             )
-
-            # 使用量情報をログに記録
-            # total_tokens = response.usage.total_tokens
-            # max_tokens = 4096 if response.model == "gpt-3.5-turbo" else 128000  # GPT-4の場合
-
-            # log_data = {
-            #     'モデル': response.model,
-            #     'トークン使用状況': {
-            #         'プロンプトトークン数': response.usage.prompt_tokens,
-            #         '応答トークン数': response.usage.completion_tokens,
-            #         '合計トークン数': total_tokens,
-            #         '使用率': f"{(total_tokens / max_tokens * 100):.2f}%",
-            #         '残りトークン数': max_tokens - total_tokens
-            #     },
-            #     '応答時間': {
-            #         '作成日時': response.created,
-            #         '処理時間': f"{response.response_ms / 1000:.2f}秒" if hasattr(response, 'response_ms') else "不明"
-            #     },
-            #     'モデル設定': {
-            #         '温度設定': 0.0,
-            #         'モデルバージョン': response.model
-            #     },
-            #     '応答内容': response.choices[0].message.content,
-            #     '応答状態': {
-            #         '終了理由': response.choices[0].finish_reason,
-            #         '応答インデックス': response.choices[0].index
-            #     }
-            # }
-
-            # generate_log_file(log_data, "extract_specifics", date=True)
 
             result_text = response.choices[0].message.content
 
@@ -194,9 +164,11 @@ class Ai:
                     # 想定外の形式の場合はそのまま返す
                     return parsed_result
             except json.JSONDecodeError:
+                logging.error(f"JSONデコードエラー: {result_text}")
                 return {item: None for item in category_aspects}
 
         except Exception as e:
+            logging.error(f"商品情報の抽出中にエラーが発生しました: {str(e)}")
             raise Exception(f"商品情報の抽出中にエラーが発生しました: {str(e)}")
 
     def get_category_id(self, categories: List[Dict[str, Any]], title: str) -> str:

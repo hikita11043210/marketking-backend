@@ -21,7 +21,7 @@ class SynchronizeYahooAuction():
         self.scraping_service = ScrapingService()
         self.offer_service = Offer(self.user)
 
-    def _process_batch(self, items, active_status, end_status, ebay_end_status):
+    def _process_batch(self, ebay_items, active_status, end_status, ebay_end_status):
         """
         バッチ単位でアイテムを処理
         """
@@ -30,61 +30,84 @@ class SynchronizeYahooAuction():
         count_sold_out_items = 0
         count_change_status_items = 0
 
-        for item in items:
+        for ebay_item in ebay_items:
             try:
-                detail = self.scraping_service.check_item_exist({'url': item.url})
+                # YahooAuctionを取得
+                yahoo_auction = ebay_item.yahoo_auction_id
+                if not yahoo_auction:
+                    logger.warning(f"関連するYahooオークションが見つかりませんでした - SKU: {ebay_item.sku}")
+                    continue
+                logger.info(f"------------------------------------------------------------------------------------------")
+                logger.info(f"Yahoo名前: {yahoo_auction.item_name}")
+                logger.info(f"YahooURL: {yahoo_auction.url}")
+                logger.info(f"ebaySKU: {yahoo_auction.unique_id}")
+                
+                detail = self.scraping_service.check_item_exist({'url': yahoo_auction.url})
                 if detail.get('success') is False:
-                    logger.error(f"商品情報の取得に失敗しました - unique_id: {item.unique_id}, エラー: {detail.get('error')}")
+                    logger.error(f"商品情報の取得に失敗しました - unique_id: {yahoo_auction.unique_id}, エラー: {detail.get('error')}")
                     continue
 
-                old_status_id = item.status.id
+                old_status_id = yahoo_auction.status.id
 
                 # オークション終了判定
                 if detail.get('end_flag'):
-                    item.status = end_status
+                    yahoo_auction.status = end_status
 
                     # まだ出品中の場合は出品を取り消す
                     if old_status_id == 1:
-                        ebay_items = getattr(item, 'prefetched_ebay', [])
-                        ebay_item = next((e for e in ebay_items), None)
-                        
-                        if ebay_item and ebay_item.offer_id:
-                            try:
-                                self.offer_service.withdraw_offer(ebay_item.offer_id)
-                                ebay_item.status = ebay_end_status
-                                ebay_item.save()
-                            except Exception as e:
-                                logger.error(f"eBay出品の取り消しに失敗しました - offer_id: {ebay_item.offer_id}, エラー: {str(e)}")
-                        else:
-                            logger.warning(f"関連するEbayレコードが見つかりませんでした - Yahoo Auction ID: {item.id}")
+                        try:
+                            self.offer_service.end_fixed_price_item(ebay_item.item_id)
+                            logger.info(f"出品取消SKU: {ebay_item.sku}") 
+                            ebay_item.status = ebay_end_status
+                            ebay_item.save()
+                            logger.info(f"出品取消完了")
+                        except Exception as e:
+                            logger.error(f"eBay出品の取り消しに失敗しました - offer_id: {ebay_item.offer_id}, エラー: {str(e)}")
                         
                         count_change_status_items += 1
                 else:
+                    yahoo_auction.status = active_status
+
                     # 価格と終了時間を更新
                     if detail.get('buy_now_price_in_tax'):
-                        item.item_price = detail['buy_now_price_in_tax']
+                        price_value = Decimal(str(detail['buy_now_price_in_tax']))
+                        logger.info(f"価格更新: {price_value}")
+                        logger.info(f"Yahoo価格変更前: {yahoo_auction.item_price}")
+                        if yahoo_auction.item_price != price_value:
+                            yahoo_auction.item_price = price_value
+                            logger.info(f"Yahoo価格変更後: {yahoo_auction.item_price}")
+                        else:
+                            logger.info(f"価格に変更なし")
+                    
                     if detail.get('end_time'):
-                        item.end_time = convert_yahoo_date(detail['end_time'])
-                    item.status = active_status
+                        end_time = convert_yahoo_date(detail['end_time'])
+                        logger.info(f"終了時間更新: {end_time}")
+                        logger.info(f"Yahoo終了時間変更前: {yahoo_auction.end_time}")
+                        # タイムゾーン情報を含めて比較するために文字列化
+                        if str(yahoo_auction.end_time) != str(end_time):
+                            yahoo_auction.end_time = end_time
+                            logger.info(f"Yahoo終了時間変更後: {yahoo_auction.end_time}")
+                        else:
+                            logger.info(f"終了時間に変更なし")
 
-                item.save()
+                yahoo_auction.save()
                 
                 # ステータスカウントの更新
-                if item.status.id == 1:  # アクティブ
+                if yahoo_auction.status.id == 1:  # アクティブ
                     count_active_items += 1
-                elif item.status.id == 3:  # 終了済み
+                elif yahoo_auction.status.id == 3:  # 終了済み
                     count_sold_out_items += 1
                 
                 # 更新情報を記録
-                if old_status_id != item.status.id:
+                if old_status_id != yahoo_auction.status.id:
                     updated_items.append({
-                        'unique_id': item.unique_id,
+                        'unique_id': yahoo_auction.unique_id,
                         'old_status': old_status_id,
-                        'new_status': item.status.id
+                        'new_status': yahoo_auction.status.id
                     })
-
+                logger.info(f"---------------------------------------------")
             except Exception as item_error:
-                logger.error(f"Yahooオークションの同期中にエラーが発生しました - unique_id: {item.unique_id}, エラー: {str(item_error)}")
+                logger.error(f"Yahooオークションの同期中にエラーが発生しました - SKU: {ebay_item.sku}, エラー: {str(item_error)}")
                 continue
 
         return {
@@ -107,41 +130,32 @@ class SynchronizeYahooAuction():
             
             with transaction.atomic():
                 if yahoo_auction_id:
-                    yahoo_auction_items = (
-                        YahooAuction.objects
+                    # 特定のYahooオークションIDに紐づくEbayアイテムを取得
+                    ebay_items = (
+                        Ebay.objects
                         .select_for_update()
-                        .select_related('status')
-                        .prefetch_related(
-                            models.Prefetch(
-                                'ebay_set',
-                                queryset=Ebay.objects.select_related('status'),
-                                to_attr='prefetched_ebay'
-                            )
-                        )
-                        .filter(id=yahoo_auction_id)
+                        .select_related('status', 'yahoo_auction_id', 'yahoo_auction_id__status')
+                        .filter(status_id=1, yahoo_auction_id=yahoo_auction_id)
                     )
                 else:
-                    yahoo_auction_items = (
-                        YahooAuction.objects
+                    # ステータスが1（出品中）のEbayアイテムを取得
+                    ebay_items = (
+                        Ebay.objects
                         .select_for_update()
-                        .select_related('status')
-                        .prefetch_related(
-                            models.Prefetch(
-                                'ebay_set',
-                                queryset=Ebay.objects.select_related('status'),
-                                to_attr='prefetched_ebay'
-                            )
-                        )
+                        .select_related('status', 'yahoo_auction_id', 'yahoo_auction_id__status')
                         .filter(status_id=1)
+                        .filter(yahoo_auction_id__isnull=False)
                     )
 
-                total_items = yahoo_auction_items.count()
+                total_items = ebay_items.count()
+                logger.info(f"同期対象のeBay商品数: {total_items}")
+                
                 active_status = YahooAuctionStatus.objects.get(id=1)
                 end_status = YahooAuctionStatus.objects.get(id=3)
                 ebay_end_status = StatusModel.objects.get(id=2)
 
                 # バッチ処理
-                it = iter(yahoo_auction_items)
+                it = iter(ebay_items)
                 while True:
                     batch = list(islice(it, self.BATCH_SIZE))
                     if not batch:

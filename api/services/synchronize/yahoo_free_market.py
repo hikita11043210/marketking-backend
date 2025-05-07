@@ -31,6 +31,11 @@ class SynchronizeYahooFreeMarket():
             try:
                 result = self.scraping_service.check_item_exist({'item_id': item.unique_id})
 
+                logger.info(f"---------------------------------------------")
+                logger.info(f"Yahooフリーマーケット名: {item.item_name}")
+                logger.info(f"YahooフリーマーケットURL: {item.url}")
+                logger.info(f"ebaySKU: {item.unique_id}")
+
                 if result:
                     old_status = item.status.id
                     item.status = yahoo_end_status
@@ -38,7 +43,7 @@ class SynchronizeYahooFreeMarket():
                     ebay_item = item.ebay_set.first()
                     if ebay_item and ebay_item.status.id == 1:
                         offer_service = Offer(self.user)
-                        offer_service.withdraw_offer(ebay_item.offer_id)
+                        offer_service.end_fixed_price_item(ebay_item.item_id)
                         ebay_item.status = ebay_end_status
                         ebay_item.save()
 
