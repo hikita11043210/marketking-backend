@@ -5,9 +5,9 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 def get_default_user():
-    """デフォルトユーザー（anakin0512）を取得する共通処理"""
+    """デフォルトユーザー（anakin0719）を取得する共通処理"""
     try:
-        return User.objects.get(username='anakin0512')
+        return User.objects.get(username='anakin0719')
     except User.DoesNotExist:
-        logger.error("デフォルトユーザー（anakin0512）が見つかりません")
+        logger.error("デフォルトユーザー（anakin0719）が見つかりません")
         raise 

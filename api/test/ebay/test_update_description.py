@@ -23,7 +23,7 @@ def test_update_description():
     """
     try:
         # テスト用のユーザーを取得（実際の存在するユーザーのユーザー名に変更してください）
-        user = User.objects.get(username='anakin0512')
+        user = User.objects.get(username='anakin0719')
         
         # テスト用の商品ID
         ebay_item_id = '205452963255'  # テスト用のeBay商品ID（実際に存在するIDに変更してください）
