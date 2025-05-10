@@ -30,20 +30,25 @@ class Status():
             item_view_data = self.item_status_service.get_item_view_and_watch_count()
 
             with transaction.atomic():
-                if ebay_item:
-                    ebay_register_items = (
-                        Ebay.objects
-                        .select_for_update()
-                        .filter(id=ebay_item.id)
-                        .exclude(status_id=2)
-                    )
-                else:
-                    ebay_register_items = (
+                # if ebay_item:
+                #     ebay_register_items = (
+                #         Ebay.objects
+                #         .select_for_update()
+                #         .filter(id=ebay_item.id)
+                #         .exclude(status_id=2)
+                #     )
+                # else:
+                #     ebay_register_items = (
+                #         Ebay.objects
+                #         .select_for_update()
+                #         .filter(status_id=1)
+                #     )
+                ebay_register_items = (
                         Ebay.objects
                         .select_for_update()
                         .filter(status_id=1)
                     )
-                
+
                 ebay_register_items = ebay_register_items.select_related('status')
                 total_items = ebay_register_items.count()
                 
