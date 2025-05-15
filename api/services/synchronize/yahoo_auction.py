@@ -138,7 +138,7 @@ class SynchronizeYahooAuction():
                                 to_attr='prefetched_ebay'
                             )
                         )
-                        .filter(status_id__in=[1,3])
+                        .filter(status_id__in=[1])
                     )
 
                 total_items = yahoo_auction_items.count()
