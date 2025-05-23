@@ -237,8 +237,7 @@ class ScrapingService:
             if next_data:
                 try:
                     json_data = json.loads(next_data.string)
-                    item_detail = json_data.get('props', {}).get('pageProps', {}).get('initialState', {}).get('item', {}).get('detail', {})
-                    
+                    item_detail = json_data.get('props', {}).get('pageProps', {}).get('initialState', {}).get('item', {}).get('detail', {}).get('item', {})
                     if item_detail:
                         # 基本情報の取得
                         data['title'] = item_detail.get('title', '')
@@ -469,8 +468,7 @@ class ScrapingService:
                 if next_data:
                     try:
                         json_data = json.loads(next_data.string)
-                        item_detail = json_data.get('props', {}).get('pageProps', {}).get('initialState', {}).get('item', {}).get('detail', {})
-                        
+                        item_detail = json_data.get('props', {}).get('pageProps', {}).get('initialState', {}).get('item', {}).get('detail', {}).get('item', {})
                         if item_detail:
                             # 終了判定
                             result['end_flag'] = item_detail.get('status') == 'closed' or item_detail.get('status') == 'cancelled'
